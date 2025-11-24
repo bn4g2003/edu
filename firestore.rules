@@ -30,5 +30,10 @@ service cloud.firestore {
     match /quizResults/{resultId} {
       allow read, write: if true;
     }
+    
+    // Collection enrollments - Đăng ký khóa học
+    match /enrollments/{enrollmentId} {
+      allow read, write: if true;
+    }
   }
 }

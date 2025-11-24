@@ -1,17 +1,27 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Shield, Users, BookOpen, BarChart3, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { CourseManagement } from '@/components/admin/CourseManagement';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+interface Stats {
+  totalUsers: number;
+  totalCourses: number;
+  totalEnrollments: number;
+}
 
 export default function AdminPage() {
   const { userProfile, loading, signOut } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'courses'>('overview');
+  const [stats, setStats] = useState<Stats>({ totalUsers: 0, totalCourses: 0, totalEnrollments: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!loading) {
@@ -22,6 +32,36 @@ export default function AdminPage() {
       }
     }
   }, [userProfile, loading, router]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoadingStats(true);
+        
+        // Get total users
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const totalUsers = usersSnapshot.size;
+
+        // Get total courses
+        const coursesSnapshot = await getDocs(collection(db, 'courses'));
+        const totalCourses = coursesSnapshot.size;
+
+        // Get total enrollments
+        const enrollmentsSnapshot = await getDocs(collection(db, 'enrollments'));
+        const totalEnrollments = enrollmentsSnapshot.size;
+
+        setStats({ totalUsers, totalCourses, totalEnrollments });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    if (userProfile?.role === 'admin') {
+      fetchStats();
+    }
+  }, [userProfile]);
 
   if (loading) {
     return (
@@ -87,7 +127,11 @@ export default function AdminPage() {
               <div className="bg-blue-100 p-3 rounded-lg">
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
-              <span className="text-2xl font-bold text-slate-900">1,234</span>
+              {loadingStats ? (
+                <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="text-2xl font-bold text-slate-900">{stats.totalUsers}</span>
+              )}
             </div>
             <h3 className="text-slate-600 text-sm font-medium">Tổng người dùng</h3>
           </div>
@@ -97,7 +141,11 @@ export default function AdminPage() {
               <div className="bg-green-100 p-3 rounded-lg">
                 <BookOpen className="w-6 h-6 text-green-600" />
               </div>
-              <span className="text-2xl font-bold text-slate-900">89</span>
+              {loadingStats ? (
+                <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="text-2xl font-bold text-slate-900">{stats.totalCourses}</span>
+              )}
             </div>
             <h3 className="text-slate-600 text-sm font-medium">Khóa học</h3>
           </div>
@@ -107,9 +155,13 @@ export default function AdminPage() {
               <div className="bg-purple-100 p-3 rounded-lg">
                 <BarChart3 className="w-6 h-6 text-purple-600" />
               </div>
-              <span className="text-2xl font-bold text-slate-900">45.2K</span>
+              {loadingStats ? (
+                <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="text-2xl font-bold text-slate-900">{stats.totalEnrollments}</span>
+              )}
             </div>
-            <h3 className="text-slate-600 text-sm font-medium">Lượt học</h3>
+            <h3 className="text-slate-600 text-sm font-medium">Lượt đăng ký</h3>
           </div>
 
           <div className="bg-white rounded-xl p-6 border border-slate-200">
@@ -117,9 +169,11 @@ export default function AdminPage() {
               <div className="bg-orange-100 p-3 rounded-lg">
                 <Settings className="w-6 h-6 text-orange-600" />
               </div>
-              <span className="text-2xl font-bold text-slate-900">98%</span>
+              <span className="text-2xl font-bold text-slate-900">
+                {stats.totalCourses > 0 ? Math.round((stats.totalEnrollments / stats.totalCourses) * 10) / 10 : 0}
+              </span>
             </div>
-            <h3 className="text-slate-600 text-sm font-medium">Uptime</h3>
+            <h3 className="text-slate-600 text-sm font-medium">TB đăng ký/khóa</h3>
           </div>
         </div>
 
@@ -191,18 +245,8 @@ export default function AdminPage() {
 
                 <div className="bg-slate-50 rounded-xl p-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-4">Hoạt động gần đây</h3>
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="flex items-center gap-4 p-3 bg-white rounded-lg">
-                        <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-full flex items-center justify-center text-white font-bold">
-                          U{i}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-slate-900">Người dùng {i} đã đăng ký khóa học mới</p>
-                          <p className="text-xs text-slate-500">{i} phút trước</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-slate-500">
+                    <p>Chưa có hoạt động nào</p>
                   </div>
                 </div>
               </div>
