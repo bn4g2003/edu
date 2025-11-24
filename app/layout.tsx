@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduPro - Nền tảng học tập trực tuyến",
+  title: "Kama - Nền tảng học tập trực tuyến",
   description: "Nền tảng học tập trực tuyến với AI",
 };
 

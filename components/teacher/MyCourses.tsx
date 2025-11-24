@@ -6,13 +6,12 @@ import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
 import { UserProfile } from '@/types/user';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, Users, Clock } from 'lucide-react';
-import { CourseManagement } from './CourseManagement';
+import { BookOpen } from 'lucide-react';
+import { CourseDetailPage } from '@/components/admin/CourseDetailPage';
 
 export const MyCourses: React.FC = () => {
   const { userProfile } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [students, setStudents] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
@@ -38,17 +37,6 @@ export const MyCourses: React.FC = () => {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as Course[];
       setCourses(coursesData);
-
-      // Load all students
-      const usersRef = collection(db, 'users');
-      const studentsQuery = query(usersRef, where('role', '==', 'student'));
-      const studentsSnapshot = await getDocs(studentsQuery);
-      const studentsMap: Record<string, UserProfile> = {};
-      studentsSnapshot.docs.forEach(doc => {
-        const student = doc.data() as UserProfile;
-        studentsMap[student.uid] = student;
-      });
-      setStudents(studentsMap);
     } catch (error) {
       console.error('Error loading courses:', error);
     } finally {
@@ -80,9 +68,10 @@ export const MyCourses: React.FC = () => {
 
   if (selectedCourse) {
     return (
-      <CourseManagement
+      <CourseDetailPage
         course={selectedCourse}
         onBack={() => setSelectedCourse(null)}
+        isAdmin={false}
       />
     );
   }
@@ -101,53 +90,67 @@ export const MyCourses: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-slate-900">Khóa học của tôi</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course) => (
-          <div key={course.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="aspect-video bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-              {course.thumbnail ? (
-                <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
-              ) : (
-                <BookOpen className="w-16 h-16 text-white" />
-              )}
-            </div>
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-bold text-slate-900 line-clamp-2">{course.title}</h3>
-                {getLevelBadge(course.level)}
-              </div>
-              <p className="text-sm text-slate-600 mb-3 line-clamp-2">{course.description}</p>
-              
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 flex items-center gap-1">
-                    <Users size={14} />
-                    Học sinh
-                  </span>
-                  <span className="font-medium text-slate-900">{course.students?.length || 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 flex items-center gap-1">
-                    <Clock size={14} />
-                    Thời lượng
-                  </span>
-                  <span className="font-medium text-slate-900">{course.duration}h</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Danh mục</span>
-                  <span className="font-medium text-slate-900">{course.category}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedCourse(course)}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Quản lý
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Course List Table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Khóa học
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Danh mục
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Cấp độ
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Giáo viên
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Thời lượng
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {courses.map((course) => (
+                <tr key={course.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="font-medium text-slate-900">{course.title}</div>
+                      <div className="text-sm text-slate-500 line-clamp-1">{course.description}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-900">
+                    {course.category}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {getLevelBadge(course.level)}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="font-medium text-slate-900">{course.students?.length || 0}</span>
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-900">
+                    {course.duration}h
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => setSelectedCourse(course)}
+                      className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium ml-auto"
+                    >
+                      <BookOpen size={16} />
+                      Quản lý lớp học
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
 

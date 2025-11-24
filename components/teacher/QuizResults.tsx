@@ -109,8 +109,8 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ lesson, onBack }) => {
               <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-10 h-10 text-slate-400" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Chưa có học sinh làm bài</h3>
-              <p className="text-slate-600">Kết quả sẽ hiển thị khi có học sinh hoàn thành bài kiểm tra</p>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Chưa có giáo viên làm bài</h3>
+              <p className="text-slate-600">Kết quả sẽ hiển thị khi có giáo viên hoàn thành bài kiểm tra</p>
             </div>
           </div>
         ) : (
@@ -123,7 +123,7 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ lesson, onBack }) => {
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                       <Users className="w-5 h-5 text-blue-600" />
                     </div>
-                    <span className="text-sm font-medium text-slate-600">Học sinh</span>
+                    <span className="text-sm font-medium text-slate-600">Giáo viên</span>
                   </div>
                   <p className="text-3xl font-bold text-slate-900">{stats.totalStudents}</p>
                 </div>
@@ -168,7 +168,7 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ lesson, onBack }) => {
                 <table className="w-full">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-700">Học sinh</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-700">Giáo viên</th>
                       <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">Điểm</th>
                       <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">Đúng/Tổng</th>
                       <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">Thời gian</th>
@@ -181,7 +181,7 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ lesson, onBack }) => {
                       <tr key={result.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4">
                           <div>
-                            <p className="font-medium text-slate-900">{result.userName || 'Học sinh'}</p>
+                            <p className="font-medium text-slate-900">{result.userName || 'Giáo viên'}</p>
                             <p className="text-sm text-slate-500">{result.userEmail}</p>
                           </div>
                         </td>
@@ -235,7 +235,7 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ lesson, onBack }) => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900">Chi tiết bài làm</h3>
-                  <p className="text-slate-600 mt-1">{selectedResult.userName || 'Học sinh'}</p>
+                  <p className="text-slate-600 mt-1">{selectedResult.userName || 'Giáo viên'}</p>
                   <div className="flex items-center gap-4 mt-2 text-sm">
                     <span className="text-slate-600">
                       Điểm: <span className="font-bold text-purple-600">{selectedResult.score}</span>

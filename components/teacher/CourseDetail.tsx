@@ -112,7 +112,7 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) =>
             </div>
             <span className="text-2xl font-bold text-slate-900">{students.length}</span>
           </div>
-          <p className="text-sm text-slate-600">Tổng học sinh</p>
+          <p className="text-sm text-slate-600">Tổng giáo viên</p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200">
@@ -153,7 +153,7 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) =>
       {students.length === 0 ? (
         <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
           <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600">Chưa có học sinh nào đăng ký khóa học này</p>
+          <p className="text-slate-600">Chưa có giáo viên nào đăng ký khóa học này</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -161,7 +161,7 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) =>
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div className="p-4 border-b border-slate-200 bg-slate-50">
-                <h3 className="font-bold text-slate-900">Danh sách học sinh</h3>
+                <h3 className="font-bold text-slate-900">Danh sách giáo viên</h3>
               </div>
               <div className="divide-y divide-slate-200 max-h-[600px] overflow-y-auto">
                 {students.map((student) => {
@@ -302,7 +302,7 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) =>
             ) : (
               <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
                 <TrendingUp className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <p className="text-slate-600">Chọn học sinh để xem chi tiết tiến độ</p>
+                <p className="text-slate-600">Chọn giáo viên để xem chi tiết tiến độ</p>
               </div>
             )}
           </div>

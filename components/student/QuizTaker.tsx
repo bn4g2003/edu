@@ -112,7 +112,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
       const quizResult: QuizResult = {
         id: `${userProfile.uid}_${lessonId}_${Date.now()}`,
         userId: userProfile.uid,
-        userName: userProfile.displayName || userProfile.email || 'Học sinh',
+        userName: userProfile.displayName || userProfile.email || 'Giáo viên',
         userEmail: userProfile.email || '',
         lessonId: lessonId,
         courseId: courseId,

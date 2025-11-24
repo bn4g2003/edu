@@ -28,11 +28,11 @@ export interface Question {
 export interface QuizResult {
   id: string;
   userId: string;
-  userName?: string; // Tên học sinh
-  userEmail?: string; // Email học sinh
+  userName?: string; // Tên giáo viên
+  userEmail?: string; // Email giáo viên
   lessonId: string;
   courseId: string;
-  answers: number[]; // Đáp án của học sinh
+  answers: number[]; // Đáp án của giáo viên
   correctCount: number;
   totalQuestions: number;
   score: number; // Điểm (0-100)

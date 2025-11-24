@@ -19,7 +19,7 @@ export const UserManagement: React.FC = () => {
     email: '',
     password: '',
     displayName: '',
-    role: 'student' as UserRole
+    role: 'staff' as UserRole
   });
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export const UserManagement: React.FC = () => {
       email: '',
       password: '',
       displayName: '',
-      role: 'student'
+      role: 'staff'
     });
     setShowModal(true);
   };
@@ -157,11 +157,13 @@ export const UserManagement: React.FC = () => {
   const getRoleBadge = (role: UserRole) => {
     const styles = {
       admin: 'bg-red-100 text-red-700',
+      staff: 'bg-blue-100 text-blue-700',
       teacher: 'bg-blue-100 text-blue-700',
       student: 'bg-green-100 text-green-700'
     };
     const labels = {
       admin: 'Admin',
+      staff: 'Nhân viên',
       teacher: 'Giáo viên',
       student: 'Học sinh'
     };
@@ -206,13 +208,12 @@ export const UserManagement: React.FC = () => {
         >
           <option value="all">Tất cả vai trò</option>
           <option value="admin">Admin</option>
-          <option value="teacher">Giáo viên</option>
-          <option value="student">Học sinh</option>
+          <option value="staff">Nhân viên</option>
         </select>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-600">Tổng số</p>
           <p className="text-2xl font-bold text-slate-900">{users.length}</p>
@@ -222,12 +223,8 @@ export const UserManagement: React.FC = () => {
           <p className="text-2xl font-bold text-red-600">{users.filter(u => u.role === 'admin').length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Giáo viên</p>
-          <p className="text-2xl font-bold text-blue-600">{users.filter(u => u.role === 'teacher').length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Học sinh</p>
-          <p className="text-2xl font-bold text-green-600">{users.filter(u => u.role === 'student').length}</p>
+          <p className="text-sm text-slate-600">Nhân viên</p>
+          <p className="text-2xl font-bold text-blue-600">{users.filter(u => u.role === 'staff').length}</p>
         </div>
       </div>
 
@@ -325,8 +322,7 @@ export const UserManagement: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
-                  <option value="student">Học sinh</option>
-                  <option value="teacher">Giáo viên</option>
+                  <option value="staff">Nhân viên</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>

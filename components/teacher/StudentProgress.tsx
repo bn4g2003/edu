@@ -112,7 +112,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-2xl font-bold text-slate-900">{course.title}</h3>
-            <p className="text-slate-600">Thống kê tiến độ học sinh</p>
+            <p className="text-slate-600">Thống kê tiến độ giáo viên</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X size={24} />
@@ -121,7 +121,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
 
         {students.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
-            <p>Chưa có học sinh nào đăng ký khóa học này</p>
+            <p>Chưa có giáo viên nào đăng ký khóa học này</p>
           </div>
         ) : (
           <div className="space-y-4">

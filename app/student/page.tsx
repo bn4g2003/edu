@@ -15,7 +15,7 @@ export default function StudentPage() {
     if (!loading) {
       if (!userProfile) {
         router.push('/');
-      } else if (userProfile.role !== 'student') {
+      } else if (userProfile.role !== 'student' && userProfile.role !== 'staff') {
         router.push('/');
       }
     }
@@ -32,7 +32,7 @@ export default function StudentPage() {
     );
   }
 
-  if (!userProfile || userProfile.role !== 'student') {
+  if (!userProfile || (userProfile.role !== 'student' && userProfile.role !== 'staff')) {
     return null;
   }
 

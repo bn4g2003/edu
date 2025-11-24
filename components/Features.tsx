@@ -45,7 +45,7 @@ export const Features: React.FC = () => {
     <section id="features" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-base font-semibold text-brand-600 uppercase tracking-wide">Tại sao chọn EduPro?</h2>
+          <h2 className="text-base font-semibold text-brand-600 uppercase tracking-wide">Tại sao chọn Kama?</h2>
           <p className="mt-2 text-3xl font-extrabold text-slate-900 sm:text-4xl">
             Công Nghệ Giáo Dục Đỉnh Cao
           </p>

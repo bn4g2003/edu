@@ -68,12 +68,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <div onClick={handleLogoClick} className="flex items-center gap-2 cursor-pointer group">
-            <div className={`p-2 rounded-lg transition-colors ${isScrolled ? 'bg-brand-600 text-white' : 'bg-white text-brand-600'}`}>
-              <BookOpen size={24} />
-            </div>
+          <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer group">
+            <img src="/logo.png" alt="Kama" className="h-12 w-auto" />
             <span className={`text-2xl font-bold tracking-tight transition-colors ${logoColorClass}`}>
-              EduPro
+              Kama
             </span>
           </div>
 

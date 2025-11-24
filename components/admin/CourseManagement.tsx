@@ -1,28 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
-import { UserProfile } from '@/types/user';
 import { Search, Plus, Edit2, Trash2, X, Save, BookOpen, Users } from 'lucide-react';
 import { Button } from '@/components/Button';
-import { CourseStudents } from './CourseStudents';
+import { CourseDetailPage } from './CourseDetailPage';
 
-export const CourseManagement: React.FC = () => {
+interface CourseManagementProps {
+  onNavigateToApproval?: () => void;
+}
+
+export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateToApproval }) => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [teachers, setTeachers] = useState<UserProfile[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [managingCourse, setManagingCourse] = useState<Course | null>(null);
+  const [detailCourse, setDetailCourse] = useState<Course | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    teacherId: '',
-    teacherName: '',
     category: '',
     level: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
     duration: 0,
@@ -50,12 +50,6 @@ export const CourseManagement: React.FC = () => {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as Course[];
       setCourses(coursesData);
-
-      const usersRef = collection(db, 'users');
-      const teachersQuery = query(usersRef, where('role', '==', 'teacher'));
-      const teachersSnapshot = await getDocs(teachersQuery);
-      const teachersData = teachersSnapshot.docs.map(doc => doc.data()) as UserProfile[];
-      setTeachers(teachersData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -68,8 +62,7 @@ export const CourseManagement: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(course =>
         course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.teacherName.toLowerCase().includes(searchTerm.toLowerCase())
+        course.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     setFilteredCourses(filtered);
@@ -80,8 +73,6 @@ export const CourseManagement: React.FC = () => {
     setFormData({
       title: '',
       description: '',
-      teacherId: '',
-      teacherName: '',
       category: '',
       level: 'beginner',
       duration: 0,
@@ -96,8 +87,6 @@ export const CourseManagement: React.FC = () => {
     setFormData({
       title: course.title,
       description: course.description,
-      teacherId: course.teacherId,
-      teacherName: course.teacherName,
       category: course.category,
       level: course.level,
       duration: course.duration,
@@ -109,30 +98,36 @@ export const CourseManagement: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      if (!formData.title || !formData.teacherId || !formData.category) {
+      if (!formData.title || !formData.category) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc');
-        return;
-      }
-
-      const teacher = teachers.find(t => t.uid === formData.teacherId);
-      if (!teacher) {
-        alert('Giáo viên không hợp lệ');
         return;
       }
 
       if (editingCourse) {
         const courseRef = doc(db, 'courses', editingCourse.id);
         await updateDoc(courseRef, {
-          ...formData,
-          teacherName: teacher.displayName,
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          level: formData.level,
+          duration: formData.duration,
+          price: formData.price,
+          thumbnail: formData.thumbnail,
           updatedAt: new Date()
         });
         alert('Cập nhật khóa học thành công!');
       } else {
         const newCourse = {
           id: `course_${Date.now()}`,
-          ...formData,
-          teacherName: teacher.displayName,
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          level: formData.level,
+          duration: formData.duration,
+          price: formData.price,
+          thumbnail: formData.thumbnail,
+          teacherId: 'admin',
+          teacherName: 'Admin',
           students: [],
           pendingStudents: [],
           createdAt: new Date(),
@@ -187,14 +182,41 @@ export const CourseManagement: React.FC = () => {
     return <div className="text-center py-8">Đang tải...</div>;
   }
 
+  // Show course detail page
+  if (detailCourse) {
+    return (
+      <CourseDetailPage
+        course={detailCourse}
+        onBack={() => setDetailCourse(null)}
+        isAdmin={true}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-900">Quản lý khóa học</h2>
-        <Button onClick={handleAdd} className="flex items-center gap-2">
-          <Plus size={18} />
-          Thêm khóa học
-        </Button>
+        <div className="flex gap-3">
+          {onNavigateToApproval && (
+            <Button 
+              onClick={onNavigateToApproval} 
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+            >
+              <Users size={18} />
+              Duyệt nhân viên
+              {courses.filter(c => c.pendingStudents && c.pendingStudents.length > 0).length > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-xs font-bold">
+                  {courses.filter(c => c.pendingStudents && c.pendingStudents.length > 0).length}
+                </span>
+              )}
+            </Button>
+          )}
+          <Button onClick={handleAdd} className="flex items-center gap-2">
+            <Plus size={18} />
+            Thêm khóa học
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4">
@@ -229,61 +251,104 @@ export const CourseManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
-          <div key={course.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="aspect-video bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
-              {course.thumbnail ? (
-                <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
-              ) : (
-                <BookOpen className="w-16 h-16 text-white" />
-              )}
-            </div>
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-bold text-slate-900 line-clamp-2">{course.title}</h3>
-                {getLevelBadge(course.level)}
-              </div>
-              <p className="text-sm text-slate-600 mb-2 line-clamp-2">{course.description}</p>
-              <div className="flex items-center justify-between text-sm text-slate-500 mb-3">
-                <span>👨‍🏫 {course.teacherName}</span>
-                <div className="flex items-center gap-2">
-                  <span>👥 {course.students?.length || 0}</span>
-                  {course.pendingStudents && course.pendingStudents.length > 0 && (
-                    <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                      +{course.pendingStudents.length} chờ
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-sm mb-3">
-                <span className="text-slate-600">⏱️ {course.duration}h</span>
-                <span className="font-bold text-brand-600">{course.price.toLocaleString('vi-VN')}đ</span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setManagingCourse(course)}
-                  className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 flex items-center justify-center gap-1"
-                >
-                  <Users size={14} />
-                  Học sinh
-                </button>
-                <button
-                  onClick={() => handleEdit(course)}
-                  className="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
-                >
-                  <Edit2 size={14} />
-                </button>
-                <button
-                  onClick={() => handleDelete(course)}
-                  className="px-3 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
+      {/* Course List Table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Khóa học
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Danh mục
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Cấp độ
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Giáo viên
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Thời lượng
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Giá
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredCourses.map((course) => (
+                <tr key={course.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="font-medium text-slate-900">{course.title}</div>
+                      <div className="text-sm text-slate-500 line-clamp-1">{course.description}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-900">
+                    {course.category}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {getLevelBadge(course.level)}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="font-medium text-slate-900">{course.students?.length || 0}</span>
+                      {course.pendingStudents && course.pendingStudents.length > 0 && (
+                        <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                          +{course.pendingStudents.length}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-900">
+                    {course.duration}h
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-medium text-slate-900">
+                    {course.price.toLocaleString('vi-VN')}đ
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setDetailCourse(course)}
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+                        title="Chi tiết lớp học"
+                      >
+                        <BookOpen size={16} />
+                        Chi tiết
+                      </button>
+                      <button
+                        onClick={() => handleEdit(course)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(course)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Xóa"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {filteredCourses.length === 0 && (
+          <div className="text-center py-12">
+            <BookOpen className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600">Không tìm thấy khóa học nào</p>
           </div>
-        ))}
+        )}
       </div>
 
       {showModal && (
@@ -319,31 +384,15 @@ export const CourseManagement: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Giáo viên phụ trách *</label>
-                  <select
-                    value={formData.teacherId}
-                    onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="">Chọn giáo viên</option>
-                    {teachers.map(teacher => (
-                      <option key={teacher.uid} value={teacher.uid}>{teacher.displayName}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Danh mục *</label>
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="VD: Lập trình, Thiết kế..."
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Danh mục *</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  placeholder="VD: Lập trình, Thiết kế..."
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -409,14 +458,6 @@ export const CourseManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Course Students Management Modal */}
-      {managingCourse && (
-        <CourseStudents
-          course={managingCourse}
-          onClose={() => setManagingCourse(null)}
-          onUpdate={loadData}
-        />
-      )}
     </div>
   );
 };

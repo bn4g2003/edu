@@ -8,11 +8,9 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-white">
-              <div className="bg-brand-600 p-1.5 rounded-lg">
-                <BookOpen size={20} />
-              </div>
-              <span className="text-xl font-bold">EduPro</span>
+            <div className="flex items-center gap-3 text-white">
+              <img src="/logo.png" alt="Kama" className="h-10 w-auto" />
+              <span className="text-xl font-bold">Kama</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
               Nền tảng học tập trực tuyến hàng đầu, kết nối người học với tri thức nhân loại thông qua công nghệ AI tiên tiến.
@@ -61,14 +59,14 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="flex-shrink-0 text-brand-500" />
-                <span>contact@edupro.vn</span>
+                <span>contact@kama.vn</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm text-slate-500">
-          © 2024 EduPro Inc. All rights reserved. Designed for Excellence.
+          © 2024 Kama Inc. All rights reserved. Designed for Excellence.
         </div>
       </div>
     </footer>

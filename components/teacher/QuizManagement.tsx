@@ -447,7 +447,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
                             </span>
                           </div>
                           <p className="text-sm text-slate-600 mb-3">
-                            Học sinh sẽ chỉ thấy số câu và 4 nút A/B/C/D
+                            Giáo viên sẽ chỉ thấy số câu và 4 nút A/B/C/D
                           </p>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-slate-600">Đáp án đúng:</span>
@@ -579,7 +579,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
                       <p className="text-sm font-bold text-purple-900 mb-1">Lưu ý</p>
                       <p className="text-xs text-purple-800">
                         Hệ thống sẽ tạo <span className="font-bold">{bulkData.count} câu hỏi trống</span> với đáp án đúng là <span className="font-bold">{String.fromCharCode(65 + bulkData.correctAnswer)}</span>. 
-                        Học sinh sẽ chỉ thấy số câu và 4 nút A/B/C/D.
+                        Giáo viên sẽ chỉ thấy số câu và 4 nút A/B/C/D.
                       </p>
                     </div>
                   </div>

@@ -30,9 +30,11 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
     try {
       setLoading(true);
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('role', '==', 'student'));
-      const snapshot = await getDocs(q);
-      const studentsData = snapshot.docs.map(doc => doc.data()) as UserProfile[];
+      const snapshot = await getDocs(usersRef);
+      const allUsersData = snapshot.docs.map(doc => doc.data()) as UserProfile[];
+      
+      // Filter for staff and student roles only
+      const studentsData = allUsersData.filter(u => u.role === 'staff' || u.role === 'student');
       
       setAllStudents(studentsData);
       
@@ -60,7 +62,7 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
         pendingStudents: arrayRemove(studentId),
         students: arrayUnion(studentId)
       });
-      alert('Đã phê duyệt học sinh!');
+      alert('Đã phê duyệt nhân viên!');
       onUpdate();
       loadStudents();
     } catch (error) {
@@ -98,7 +100,7 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
       await updateDoc(courseRef, {
         students: arrayRemove(studentId)
       });
-      alert('Đã xóa học sinh!');
+      alert('Đã xóa nhân viên!');
       onUpdate();
       loadStudents();
     } catch (error) {
@@ -116,7 +118,7 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
       await updateDoc(courseRef, {
         students: arrayUnion(studentId)
       });
-      alert('Đã thêm học sinh vào khóa học!');
+      alert('Đã thêm nhân viên vào khóa học!');
       onUpdate();
       loadStudents();
     } catch (error) {
@@ -143,7 +145,7 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-2xl font-bold text-slate-900">{course.title}</h3>
-            <p className="text-slate-600">Quản lý học sinh</p>
+            <p className="text-slate-600">Quản lý nhân viên</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X size={24} />
@@ -204,7 +206,7 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
             Đã đăng ký
           </h4>
           {enrolledStudents.length === 0 ? (
-            <p className="text-slate-500 text-center py-4">Chưa có học sinh nào</p>
+            <p className="text-slate-500 text-center py-4">Chưa có nhân viên nào</p>
           ) : (
             <div className="space-y-2">
               {enrolledStudents.map((student) => (
@@ -238,10 +240,10 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
             <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm">
               {availableStudents.length}
             </span>
-            Thêm học sinh
+            Thêm nhân viên
           </h4>
           {availableStudents.length === 0 ? (
-            <p className="text-slate-500 text-center py-4">Không còn học sinh nào</p>
+            <p className="text-slate-500 text-center py-4">Không còn nhân viên nào</p>
           ) : (
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {availableStudents.map((student) => (

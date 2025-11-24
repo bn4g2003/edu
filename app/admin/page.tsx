@@ -7,6 +7,7 @@ import { Shield, Users, BookOpen, BarChart3, Settings, LogOut } from 'lucide-rea
 import { Button } from '@/components/Button';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { CourseManagement } from '@/components/admin/CourseManagement';
+import { StudentApprovalPage } from '@/components/admin/StudentApprovalPage';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -22,6 +23,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'courses'>('overview');
   const [stats, setStats] = useState<Stats>({ totalUsers: 0, totalCourses: 0, totalEnrollments: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [showApprovalPage, setShowApprovalPage] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -117,7 +119,7 @@ export default function AdminPage() {
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-8 text-white mb-8">
           <h2 className="text-3xl font-bold mb-2">Chào mừng, {userProfile.displayName}!</h2>
-          <p className="text-red-100">Quản lý toàn bộ hệ thống EduPro từ dashboard này</p>
+          <p className="text-red-100">Quản lý toàn bộ hệ thống Kama từ dashboard này</p>
         </div>
 
         {/* Stats Grid */}
@@ -215,7 +217,7 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6">
-            {activeTab === 'overview' && (
+            {activeTab === 'overview' && !showApprovalPage && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
@@ -252,8 +254,11 @@ export default function AdminPage() {
               </div>
             )}
 
-            {activeTab === 'users' && <UserManagement />}
-            {activeTab === 'courses' && <CourseManagement />}
+            {activeTab === 'users' && !showApprovalPage && <UserManagement />}
+            {activeTab === 'courses' && !showApprovalPage && (
+              <CourseManagement onNavigateToApproval={() => setShowApprovalPage(true)} />
+            )}
+            {showApprovalPage && <StudentApprovalPage onBack={() => setShowApprovalPage(false)} />}
           </div>
         </div>
       </main>

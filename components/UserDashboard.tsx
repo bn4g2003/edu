@@ -28,7 +28,7 @@ export const UserDashboard: React.FC = () => {
       case 'teacher':
         return 'Giáo viên';
       case 'student':
-        return 'Học sinh';
+        return 'Giáo viên';
     }
   };
 

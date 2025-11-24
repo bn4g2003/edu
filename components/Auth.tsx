@@ -35,6 +35,9 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
       case 'admin':
         router.push('/admin');
         break;
+      case 'staff':
+        router.push('/student');
+        break;
       case 'teacher':
         router.push('/teacher');
         break;
@@ -89,16 +92,14 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
         </div>
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          <div className="flex items-center gap-2 text-white/90 cursor-pointer" onClick={onBack}>
-             <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-               <BookOpen size={24} />
-             </div>
-             <span className="text-2xl font-bold tracking-tight">EduPro</span>
+          <div className="flex items-center gap-3 text-white/90 cursor-pointer" onClick={onBack}>
+             <img src="/logo.png" alt="Kama" className="h-12 w-auto" />
+             <span className="text-2xl font-bold tracking-tight">Kama</span>
           </div>
 
           <div className="space-y-6 max-w-md">
             <blockquote className="text-2xl font-medium leading-relaxed">
-              "EduPro không chỉ là một nền tảng học tập, nó là bệ phóng sự nghiệp của tôi. Từ một người mới bắt đầu, tôi đã trở thành Senior Developer chỉ sau 6 tháng."
+              "Kama không chỉ là một nền tảng học tập, nó là bệ phóng sự nghiệp của tôi. Từ một người mới bắt đầu, tôi đã trở thành Senior Developer chỉ sau 6 tháng."
             </blockquote>
             <div className="flex items-center gap-4">
               <img 
@@ -114,7 +115,7 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
           </div>
           
           <div className="text-sm text-slate-500">
-            © 2024 EduPro Inc. Privacy Policy & Terms.
+            © 2024 Kama Inc. Privacy Policy & Terms.
           </div>
         </div>
       </div>
@@ -167,7 +168,7 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
                     onChange={(e) => setRole(e.target.value as UserRole)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
                   >
-                    <option value="student">Học sinh</option>
+                    <option value="student">Giáo viên</option>
                     <option value="teacher">Giáo viên</option>
                     <option value="admin">Quản trị viên</option>
                   </select>
