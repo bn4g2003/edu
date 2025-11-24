@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:3000", "https://classroom-257dc.web.app", "https://classroom-257dc.firebaseapp.com"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "X-Requested-With"]
+  }
+]

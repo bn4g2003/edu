@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Collection users - Cho phép đọc/ghi tự do
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    
+    // Collection courses
+    match /courses/{courseId} {
+      allow read, write: if true;
+    }
+    
+    // Collection lessons
+    match /lessons/{lessonId} {
+      allow read, write: if true;
+    }
+    
+    // Collection progress - Lưu tiến độ học
+    match /progress/{progressId} {
+      allow read, write: if true;
+    }
+    
+    // Collection questions - Câu hỏi bài kiểm tra
+    match /questions/{questionId} {
+      allow read, write: if true;
+    }
+    
+    // Collection quizResults - Kết quả bài kiểm tra
+    match /quizResults/{resultId} {
+      allow read, write: if true;
+    }
+  }
+}
