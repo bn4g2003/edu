@@ -89,17 +89,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
             
             <div className="flex items-center gap-4 pl-4 border-l border-white/20">
               {userProfile ? (
-                <button
+                <Button 
+                  variant={buttonVariant} 
+                  size="sm"
                   onClick={handleDashboardClick}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    isScrolled 
-                      ? 'bg-brand-500 text-white hover:bg-brand-600' 
-                      : 'bg-white text-brand-600 hover:bg-brand-50'
-                  }`}
+                  className={!isScrolled ? "shadow-none bg-brand-600 hover:bg-brand-500 text-white" : ""}
                 >
-                  <User size={18} />
-                  {userProfile.displayName}
-                </button>
+                  Quay lại Dashboard
+                </Button>
               ) : (
                 <>
                   <button 
@@ -150,11 +147,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
             {userProfile ? (
               <Button 
                 variant="primary" 
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full"
                 onClick={() => { handleDashboardClick(); setMobileMenuOpen(false); }}
               >
-                <User size={18} />
-                {userProfile.displayName}
+                Quay lại Dashboard
               </Button>
             ) : (
               <>

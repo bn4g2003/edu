@@ -8,7 +8,6 @@ import { CourseList } from '@/components/CourseList';
 import { Pricing } from '@/components/Pricing';
 import { Footer } from '@/components/Footer';
 import { Auth } from '@/components/Auth';
-import { UserDashboard } from '@/components/UserDashboard';
 import { ChatbaseWidget } from '@/components/ChatbaseWidget';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -51,13 +50,6 @@ const App: React.FC = () => {
         onNavigateHome={() => handleViewChange('home')}
       />
       <main>
-        {userProfile && (
-          <section className="py-12 px-4">
-            <div className="max-w-4xl mx-auto">
-              <UserDashboard />
-            </div>
-          </section>
-        )}
         <Hero />
         <Features />
         <CourseList />
