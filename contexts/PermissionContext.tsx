@@ -42,6 +42,14 @@ export const PermissionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       // Staff: Load permissions từ phòng ban
       if (userProfile.role === 'staff') {
+        // ✅ CÁCH ĐƠN GIẢN: Kiểm tra position trước (không cần query Firestore)
+        if (userProfile.position === 'Trưởng phòng' && userProfile.departmentId) {
+          // Trưởng phòng tự động có quyền manager
+          setPermissions(DEFAULT_ROLES.MANAGER.permissions);
+          return;
+        }
+
+        // Staff thường: Load permissions từ phòng ban
         if (userProfile.departmentId) {
           const deptSnapshot = await getDocs(
             query(collection(db, 'departments'), where('__name__', '==', userProfile.departmentId))
@@ -51,15 +59,7 @@ export const PermissionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             const deptData = deptSnapshot.docs[0].data();
             const deptPermissions = deptData.permissions || [];
 
-            // Check if user is department manager
-            if (deptData.managerId === userProfile.uid) {
-              // Manager: Kết hợp quyền phòng ban + quyền manager mặc định
-              const managerPerms = [...new Set([...deptPermissions, ...DEFAULT_ROLES.MANAGER.permissions])];
-              setPermissions(managerPerms);
-              return;
-            }
-
-            // Staff: Chỉ có quyền của phòng ban (không fallback)
+            // Staff: Chỉ có quyền của phòng ban
             setPermissions(deptPermissions);
             return;
           }

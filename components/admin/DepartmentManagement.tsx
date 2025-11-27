@@ -7,7 +7,7 @@ import { Building2, Plus, Edit2, Trash2, X, Save, Users, Search, Shield } from '
 import { Button } from '@/components/Button';
 import { Department } from '@/types/department';
 import { UserProfile } from '@/types/user';
-import { DepartmentPermissions } from './DepartmentPermissions';
+
 
 export const DepartmentManagement: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -17,7 +17,8 @@ export const DepartmentManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [permissionDept, setPermissionDept] = useState<Department | null>(null);
+
+  const [viewStaffDept, setViewStaffDept] = useState<Department | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -95,6 +96,11 @@ export const DepartmentManagement: React.FC = () => {
     setShowModal(true);
   };
 
+  const getUsersInDepartment = (deptId: string) => {
+    // Lấy danh sách nhân viên trong phòng ban
+    return users.filter(u => u.departmentId === deptId && u.approved);
+  };
+
   const handleSave = async () => {
     try {
       if (!formData.name) {
@@ -103,22 +109,19 @@ export const DepartmentManagement: React.FC = () => {
       }
 
       const deptId = editingDept?.id || `dept_${Date.now()}`;
-      const manager = users.find(u => u.uid === formData.managerId);
+      const manager = formData.managerId ? users.find(u => u.uid === formData.managerId) : null;
       
       const deptData: any = {
         name: formData.name,
         description: formData.description,
+        managerId: formData.managerId || null,
+        managerName: manager?.displayName || null,
         createdAt: editingDept?.createdAt || new Date(),
         updatedAt: new Date(),
       };
 
-      // Only add managerId and managerName if manager is selected
-      if (formData.managerId && manager) {
-        deptData.managerId = formData.managerId;
-        deptData.managerName = manager.displayName;
-      }
-
       await setDoc(doc(db, 'departments', deptId), deptData);
+      
       alert(editingDept ? 'Cập nhật phòng ban thành công!' : 'Thêm phòng ban thành công!');
       setShowModal(false);
       loadData();
@@ -150,7 +153,7 @@ export const DepartmentManagement: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Quản lý phòng ban</h1>
-          <p className="text-slate-600">Quản lý các phòng ban trong công ty</p>
+          <p className="text-slate-600">Chọn trưởng phòng từ danh sách nhân viên trong phòng ban</p>
         </div>
         <Button onClick={handleAdd} className="flex items-center gap-2">
           <Plus size={20} />
@@ -202,13 +205,6 @@ export const DepartmentManagement: React.FC = () => {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setPermissionDept(dept)}
-                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                  title="Phân quyền"
-                >
-                  <Shield size={18} />
-                </button>
-                <button
                   onClick={() => handleEdit(dept)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="Chỉnh sửa"
@@ -226,22 +222,30 @@ export const DepartmentManagement: React.FC = () => {
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">{dept.name}</h3>
             <p className="text-slate-600 text-sm mb-2 line-clamp-2">{dept.description}</p>
-            {dept.managerName && (
-              <p className="text-sm text-slate-500 mb-2">
-                👤 Trưởng phòng: <span className="font-medium">{dept.managerName}</span>
-              </p>
+            {dept.managerName ? (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-slate-500">👤 Trưởng phòng:</span>
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  <Users size={14} />
+                  {dept.managerName}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                  ⚠️ Chưa có trưởng phòng
+                </span>
+              </div>
             )}
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex items-center justify-between text-sm mt-4">
+              <button
+                onClick={() => setViewStaffDept(dept)}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+              >
                 <Users size={16} />
                 <span>{getStaffCount(dept.id)} nhân viên</span>
-              </div>
-              {dept.permissions && dept.permissions.length > 0 && (
-                <div className="flex items-center gap-1 text-purple-600">
-                  <Shield size={14} />
-                  <span className="font-medium">{dept.permissions.length} quyền</span>
-                </div>
-              )}
+              </button>
+
             </div>
           </div>
         ))}
@@ -297,12 +301,17 @@ export const DepartmentManagement: React.FC = () => {
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">-- Chọn trưởng phòng --</option>
-                  {users.map(user => (
+                  {editingDept && getUsersInDepartment(editingDept.id).map(user => (
                     <option key={user.uid} value={user.uid}>
-                      {user.displayName} ({user.email})
+                      {user.displayName} - {user.position || 'Nhân viên'}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  {editingDept 
+                    ? `Chọn từ ${getUsersInDepartment(editingDept.id).length} nhân viên trong phòng`
+                    : 'Lưu phòng ban trước, sau đó sửa để chọn trưởng phòng'}
+                </p>
               </div>
             </div>
             <div className="p-6 border-t border-slate-200 flex gap-3">
@@ -318,13 +327,78 @@ export const DepartmentManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Permission Modal */}
-      {permissionDept && (
-        <DepartmentPermissions
-          department={permissionDept}
-          onClose={() => setPermissionDept(null)}
-          onUpdate={loadData}
-        />
+
+
+      {/* View Staff Modal */}
+      {viewStaffDept && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Danh sách nhân viên</h3>
+                <p className="text-sm text-slate-600 mt-1">{viewStaffDept.name}</p>
+              </div>
+              <button 
+                onClick={() => setViewStaffDept(null)} 
+                className="p-2 hover:bg-white rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              {users.filter(u => u.departmentId === viewStaffDept.id).length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-600">Chưa có nhân viên nào trong phòng ban này</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {users
+                    .filter(u => u.departmentId === viewStaffDept.id)
+                    .map((user) => (
+                      <div 
+                        key={user.uid} 
+                        className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            {user.displayName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-slate-900">{user.displayName}</h4>
+                            <p className="text-sm text-slate-600">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {user.uid === viewStaffDept.managerId && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                              <Shield size={12} />
+                              Trưởng phòng
+                            </span>
+                          )}
+                          {user.monthlySalary && (
+                            <p className="text-sm text-slate-600 mt-1">
+                              {user.monthlySalary.toLocaleString('vi-VN')}đ/tháng
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-slate-200 bg-slate-50">
+              <div className="flex items-center justify-between text-sm text-slate-600">
+                <span>Tổng số nhân viên: <strong className="text-slate-900">{users.filter(u => u.departmentId === viewStaffDept.id).length}</strong></span>
+                <Button onClick={() => setViewStaffDept(null)} className="bg-slate-500 hover:bg-slate-600">
+                  Đóng
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

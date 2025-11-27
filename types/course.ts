@@ -9,9 +9,10 @@ export interface Course {
   duration: number; // số giờ
   price: number;
   thumbnail: string;
+  banner?: string; // Banner ảnh hiển thị ở đầu trang chi tiết khóa học
   demoVideoId?: string; // Bunny Stream video ID cho video demo
-  students: string[]; // array of approved student IDs
-  pendingStudents: string[]; // array of pending student IDs
+  departmentId?: string; // Phòng ban được xem khóa học này ('all' = chung, undefined = không ai, hoặc ID phòng ban cụ thể)
+  students: string[]; // Danh sách UID học viên được tự động cập nhật dựa trên departmentId
   createdAt: Date;
   updatedAt: Date;
 }

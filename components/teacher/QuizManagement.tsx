@@ -7,6 +7,7 @@ import { Lesson, Question } from '@/types/lesson';
 import { Plus, Trash2, X, Save, FileText, Wand2, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { QuizResults } from './QuizResults';
+import { BunnyDocumentUpload } from '@/components/shared/BunnyDocumentUpload';
 
 interface QuizManagementProps {
   lesson: Lesson;
@@ -30,7 +31,9 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
   const [bulkData, setBulkData] = useState({
     count: 10,
     duration: 30, // minutes
-    correctAnswer: 0 // default answer A
+    correctAnswer: 0, // default answer A
+    quizDocumentUrl: lesson.quizDocumentUrl || '',
+    quizDocumentName: lesson.quizDocumentName || ''
   });
 
   const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
@@ -110,6 +113,8 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
         ...lesson,
         hasQuiz: true,
         quizDuration: bulkData.duration,
+        quizDocumentUrl: bulkData.quizDocumentUrl || null,
+        quizDocumentName: bulkData.quizDocumentName || null,
         updatedAt: new Date()
       });
 
@@ -185,6 +190,8 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
         ...lesson,
         hasQuiz: true,
         quizDuration: bulkData.duration,
+        quizDocumentUrl: bulkData.quizDocumentUrl || null,
+        quizDocumentName: bulkData.quizDocumentName || null,
         updatedAt: new Date()
       });
 
@@ -496,7 +503,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
         {/* Bulk Create Modal */}
         {showBulkModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900">Tạo hàng loạt câu hỏi</h3>
@@ -568,6 +575,21 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-bold text-center"
                   />
                   <p className="text-xs text-slate-500 mt-2 text-center">Từ 1 đến 180 phút</p>
+                </div>
+
+                <div>
+                  <BunnyDocumentUpload
+                    label="Tài liệu đính kèm (không bắt buộc)"
+                    currentDocument={bulkData.quizDocumentUrl}
+                    currentDocumentName={bulkData.quizDocumentName}
+                    onUploadComplete={(url, fileName) => {
+                      setBulkData({ ...bulkData, quizDocumentUrl: url, quizDocumentName: fileName });
+                    }}
+                    folder="quiz-documents"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Tài liệu tham khảo cho học viên khi làm bài (PDF, Word, PowerPoint, Excel)
+                  </p>
                 </div>
 
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-4">

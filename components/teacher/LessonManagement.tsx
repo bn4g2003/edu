@@ -26,8 +26,10 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    order: 1
+    order: 1,
+    tags: [] as string[]
   });
+  const [tagInput, setTagInput] = useState('');
 
   const CDN_HOSTNAME = process.env.NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME || 'vz-69258c0a-d89.b-cdn.net';
 
@@ -62,8 +64,10 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
     setFormData({
       title: '',
       description: '',
-      order: lessons.length + 1
+      order: lessons.length + 1,
+      tags: []
     });
+    setTagInput('');
     setShowModal(true);
   };
 
@@ -72,9 +76,22 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
     setFormData({
       title: lesson.title,
       description: lesson.description,
-      order: lesson.order
+      order: lesson.order,
+      tags: lesson.tags || []
     });
+    setTagInput('');
     setShowModal(true);
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setFormData({ ...formData, tags: formData.tags.filter(t => t !== tag) });
   };
 
   const handleSave = async () => {
@@ -275,48 +292,59 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
           <div className="space-y-4">
             {lessons.map((lesson) => (
               <div key={lesson.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all">
-                {/* Lesson Header */}
-                <div className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-lg">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Order Number */}
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg">
                       {lesson.order}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-slate-900 mb-1">{lesson.title}</h3>
-                      <p className="text-sm text-slate-600 mb-3">{lesson.description}</p>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => handleEdit(lesson)}
-                          className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-                        >
-                          <Edit2 size={16} />
-                          Sửa thông tin
-                        </button>
-                        <button
-                          onClick={() => handleDelete(lesson)}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-                        >
-                          <Trash2 size={16} />
-                          Xóa bài học
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Content Sections */}
-                <div className="border-t border-slate-200 bg-slate-50">
-                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
-                    
+                    {/* Title & Tags */}
+                    <div className="flex-1 min-w-[200px]">
+                      <h3 className="text-lg font-bold text-slate-900 mb-1">{lesson.title}</h3>
+                      <p className="text-xs text-slate-600 mb-1 line-clamp-1">{lesson.description}</p>
+                      {lesson.tags && lesson.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {lesson.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(lesson)}
+                        className="px-3 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 flex items-center gap-1 text-xs font-medium transition-colors"
+                      >
+                        <Edit2 size={14} />
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(lesson)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1 text-xs font-medium transition-colors"
+                      >
+                        <Trash2 size={14} />
+                        Xóa
+                      </button>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="w-full border-t border-slate-200 my-2"></div>
+
                     {/* Video Section */}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
                           <Play className="w-4 h-4 text-green-600" />
                         </div>
-                        <h4 className="font-bold text-slate-900">Video</h4>
+                        <h4 className="font-semibold text-slate-900 text-sm">Video</h4>
                       </div>
                       
                       {lesson.videoId ? (
@@ -368,12 +396,12 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                     </div>
 
                     {/* Document Section */}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
                           <FileText className="w-4 h-4 text-blue-600" />
                         </div>
-                        <h4 className="font-bold text-slate-900">Tài liệu</h4>
+                        <h4 className="font-semibold text-slate-900 text-sm">Tài liệu</h4>
                       </div>
                       
                       <DocumentUploader
@@ -386,12 +414,12 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                     </div>
 
                     {/* Quiz Section */}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 bg-purple-100 rounded-lg flex items-center justify-center">
                           <HelpCircle className="w-4 h-4 text-purple-600" />
                         </div>
-                        <h4 className="font-bold text-slate-900">Bài kiểm tra</h4>
+                        <h4 className="font-semibold text-slate-900 text-sm">Bài kiểm tra</h4>
                       </div>
                       
                       <div className="space-y-2">
@@ -410,7 +438,6 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                         </button>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -470,6 +497,47 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center text-lg font-bold"
                   />
                   <p className="text-xs text-slate-500 mt-2">Bài học sẽ được sắp xếp theo thứ tự này</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Tags</label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                      className="flex-1 px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Nhập tag và nhấn Enter"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTag}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium"
+                    >
+                      Thêm
+                    </button>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="hover:text-blue-900"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-500 mt-2">Ví dụ: cơ bản, quan trọng, nâng cao</p>
                 </div>
               </div>
 

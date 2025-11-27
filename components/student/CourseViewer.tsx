@@ -18,6 +18,7 @@ interface CourseViewerProps {
 export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) => {
   const { userProfile } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [filteredLessons, setFilteredLessons] = useState<Lesson[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
@@ -27,6 +28,9 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   const [takingQuiz, setTakingQuiz] = useState(false);
   const [showAttentionCheck, setShowAttentionCheck] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(course.id);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const saveProgressTimer = useRef<NodeJS.Timeout | null>(null);
   const hlsRef = useRef<any>(null);
@@ -38,10 +42,30 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   // Check if user is staff (needs anti-cheat features)
   const isStaff = userProfile?.role === 'staff';
 
+  // Get all unique tags from lessons
+  const allTags = Array.from(new Set(lessons.flatMap(lesson => lesson.tags || []))).sort();
+  
+  // Get current course info
+  const currentCourse = allCourses.find(c => c.id === selectedCourseId) || course;
+
   useEffect(() => {
-    loadLessons();
-    loadProgress();
-  }, [course.id]);
+    loadUserCourses();
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      loadLessons();
+      loadProgress();
+    }
+  }, [selectedCourseId]);
+
+  useEffect(() => {
+    if (selectedTag === 'all') {
+      setFilteredLessons(lessons);
+    } else {
+      setFilteredLessons(lessons.filter(lesson => lesson.tags?.includes(selectedTag)));
+    }
+  }, [lessons, selectedTag]);
 
   useEffect(() => {
     if (selectedLesson && selectedLesson.videoId && progressLoaded) {
@@ -182,11 +206,34 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     }
   };
 
+  const loadUserCourses = async () => {
+    if (!userProfile) return;
+
+    try {
+      const coursesRef = collection(db, 'courses');
+      const snapshot = await getDocs(coursesRef);
+      const coursesData = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate()
+      })) as Course[];
+
+      // Filter courses that user is enrolled in
+      const userCourses = coursesData.filter(c => 
+        c.students?.includes(userProfile.uid) || userProfile.role === 'admin'
+      );
+
+      setAllCourses(userCourses);
+    } catch (error) {
+      console.error('Error loading user courses:', error);
+    }
+  };
+
   const loadLessons = async () => {
     try {
       setLoading(true);
       const lessonsRef = collection(db, 'lessons');
-      const q = query(lessonsRef, where('courseId', '==', course.id));
+      const q = query(lessonsRef, where('courseId', '==', selectedCourseId));
       const snapshot = await getDocs(q);
       const lessonsData = snapshot.docs.map(doc => ({
         ...doc.data(),
@@ -377,10 +424,31 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     return <div className="text-center py-8">Đang tải...</div>;
   }
 
+  // Debug: Log banner URL
+  console.log('🖼️ Course banner:', course.banner);
+
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Banner - Text based */}
-      <div className="w-full bg-gradient-to-r from-brand-600 to-brand-700 text-white">
+      {/* Banner Image - Full width, trên cùng */}
+      {course.banner && (
+        <div className="w-full bg-slate-900 relative">
+          <img 
+            src={course.banner} 
+            alt={`Banner ${course.title}`}
+            className="w-full h-32 md:h-40 lg:h-48 object-cover"
+            onError={(e) => {
+              console.error('❌ Banner load error:', course.banner);
+              e.currentTarget.style.display = 'none';
+            }}
+            onLoad={() => console.log('✅ Banner loaded successfully')}
+          />
+          {/* Overlay gradient để text dễ đọc hơn */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60"></div>
+        </div>
+      )}
+
+      {/* Header - Overlay trên banner hoặc standalone */}
+      <div className={`w-full ${course.banner ? 'bg-gradient-to-r from-brand-600/95 to-brand-700/95 backdrop-blur-sm' : 'bg-gradient-to-r from-brand-600 to-brand-700'} text-white`}>
         <div className="max-w-7xl mx-auto px-4 py-8">
           <button onClick={onBack} className="text-white hover:text-slate-200 mb-4 flex items-center gap-2">
             ← Quay lại khóa học
@@ -424,7 +492,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       )}
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Content Area */}
           <div className="lg:col-span-2">
             {selectedLesson && (
@@ -585,6 +653,8 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   lessonId={selectedLesson.id}
                   courseId={course.id}
                   quizDuration={selectedLesson.quizDuration}
+                  quizDocumentUrl={selectedLesson.quizDocumentUrl}
+                  quizDocumentName={selectedLesson.quizDocumentName}
                   onComplete={() => setTakingQuiz(false)}
                 />
               ) : (
@@ -652,16 +722,22 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24">
               <div className="p-4 border-b border-slate-200">
                 <h3 className="font-bold text-slate-900">Nội dung khóa học</h3>
-                <p className="text-sm text-slate-600">{lessons.length} bài học</p>
+                <p className="text-sm text-slate-600">{currentCourse.title}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {selectedTag === 'all' ? `${lessons.length} bài học` : `${filteredLessons.length}/${lessons.length} bài học`}
+                </p>
               </div>
+
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-                {lessons.length === 0 ? (
+                {filteredLessons.length === 0 ? (
                   <div className="p-6 text-center text-slate-500">
-                    <p>Chưa có bài học nào</p>
+                    <p className="text-sm">
+                      {selectedTag === 'all' ? 'Chưa có bài học nào' : `Không có bài học nào với tag "${selectedTag}"`}
+                    </p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-200">
-                    {lessons.map((lesson) => {
+                    {filteredLessons.map((lesson) => {
                       const hasContent = lesson.videoId || lesson.documentUrl || lesson.hasQuiz;
                       return (
                         <button
@@ -735,6 +811,72 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar - Tag Filter & Course Switcher */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 sticky top-24">
+              <h3 className="font-bold text-slate-900 mb-3">Lọc theo chủ đề</h3>
+              
+              {allTags.length > 0 ? (
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setSelectedTag('all')}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedTag === 'all'
+                        ? 'bg-brand-500 text-white'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    Tất cả ({lessons.length})
+                  </button>
+                  {allTags.map((tag) => {
+                    const count = lessons.filter(l => l.tags?.includes(tag)).length;
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => setSelectedTag(tag)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          selectedTag === tag
+                            ? 'bg-brand-500 text-white'
+                            : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {tag} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">Chưa có tag nào</p>
+              )}
+
+              {/* Course Switcher */}
+              {allCourses.length > 1 && (
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <h3 className="font-bold text-slate-900 mb-3">Khóa học khác</h3>
+                  <div className="space-y-1">
+                    {allCourses.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          setSelectedCourseId(c.id);
+                          setSelectedTag('all');
+                          setSelectedLesson(null);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          selectedCourseId === c.id
+                            ? 'bg-purple-100 text-purple-700 font-medium'
+                            : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="line-clamp-2">{c.title}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -4,18 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
-import { Search, Plus, Edit2, Trash2, X, Save, BookOpen, Users, UserPlus } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Save, BookOpen, Users } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { CourseDetailPage } from './CourseDetailPage';
-import { CourseStudentManagement } from './CourseStudentManagement';
 import { BunnyImageUpload } from '@/components/shared/BunnyImageUpload';
-import { BunnyVideoUpload } from '@/components/shared/BunnyVideoUpload';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CourseManagementProps {
   onNavigateToApproval?: () => void;
 }
 
-export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateToApproval }) => {
+export const CourseManagement: React.FC<CourseManagementProps> = () => {
+  const { userProfile: currentUser } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [detailCourse, setDetailCourse] = useState<Course | null>(null);
-  const [managingStudentsCourse, setManagingStudentsCourse] = useState<Course | null>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -34,8 +34,13 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
     duration: 0,
     price: 0,
     thumbnail: '',
-    demoVideoId: ''
+    banner: '',
+    demoVideoId: '',
+    departmentId: ''
   });
+  const [departments, setDepartments] = useState<Array<{id: string, name: string, managerId?: string, managerName?: string}>>([]);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -57,6 +62,14 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
         updatedAt: doc.data().updatedAt?.toDate()
       })) as Course[];
       setCourses(coursesData);
+
+      // Load departments
+      const deptSnapshot = await getDocs(collection(db, 'departments'));
+      const depts = deptSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name
+      }));
+      setDepartments(depts);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -66,6 +79,13 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
 
   const filterCourses = () => {
     let filtered = courses;
+    
+    // Nếu là trưởng phòng (không phải admin), chỉ thấy khóa học của phòng mình
+    if (currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && currentUser?.departmentId) {
+      filtered = filtered.filter(course => 
+        course.departmentId === currentUser.departmentId || course.departmentId === 'all'
+      );
+    }
     
     // Search filter
     if (searchTerm) {
@@ -98,6 +118,11 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
 
   const handleAdd = () => {
     setEditingCourse(null);
+    
+    // Nếu là trưởng phòng, mặc định chọn phòng ban của mình
+    const isManager = currentUser?.role !== 'admin' && currentUser?.departmentId && departments.find(d => d.managerId === currentUser.uid);
+    const defaultDepartmentId = isManager ? currentUser.departmentId : '';
+    
     setFormData({
       title: '',
       description: '',
@@ -106,7 +131,9 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
       duration: 0,
       price: 0,
       thumbnail: '',
-      demoVideoId: ''
+      banner: '',
+      demoVideoId: '',
+      departmentId: defaultDepartmentId || ''
     });
     setShowModal(true);
   };
@@ -121,9 +148,50 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
       duration: course.duration,
       price: course.price,
       thumbnail: course.thumbnail,
-      demoVideoId: course.demoVideoId || ''
+      banner: course.banner || '',
+      demoVideoId: course.demoVideoId || '',
+      departmentId: course.departmentId || ''
     });
     setShowModal(true);
+  };
+
+  const getStudentsForDepartment = async (departmentId: string): Promise<string[]> => {
+    try {
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      const users = snapshot.docs.map(doc => doc.data());
+      
+      console.log('📊 Total users in database:', users.length);
+      console.log('🎯 Selected departmentId:', departmentId);
+      
+      if (departmentId === 'all') {
+        // Chung: lấy tất cả nhân viên (staff, teacher, student) đã được duyệt hoặc admin
+        const allUsers = users.filter(u => {
+          const isValidRole = u.role === 'staff' || u.role === 'teacher' || u.role === 'student' || u.role === 'admin';
+          const isApproved = u.role === 'admin' || u.approved === true;
+          return isValidRole && isApproved;
+        });
+        console.log('🌐 Chung - Found users:', allUsers.length);
+        return allUsers.map(u => u.uid);
+      } else if (departmentId) {
+        // Phòng ban cụ thể: lấy nhân viên của phòng ban đó (đã duyệt)
+        const deptUsers = users.filter(u => {
+          const matchDept = u.departmentId === departmentId;
+          const isApproved = u.role === 'admin' || u.approved === true;
+          return matchDept && isApproved;
+        });
+        console.log(`🏢 Phòng ban ${departmentId} - Found users:`, deptUsers.length);
+        console.log('Users:', deptUsers.map(u => ({ uid: u.uid, name: u.displayName, dept: u.departmentId })));
+        return deptUsers.map(u => u.uid);
+      } else {
+        // Không chọn: không có học viên nào
+        console.log('🔒 Nháp - No users');
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Error getting students:', error);
+      return [];
+    }
   };
 
   const handleSave = async () => {
@@ -133,9 +201,19 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
         return;
       }
 
+      console.log('💾 Saving course with departmentId:', formData.departmentId);
+      console.log('🖼️ Thumbnail URL:', formData.thumbnail);
+      console.log('🎨 Banner URL:', formData.banner);
+      console.log('📦 Full formData:', formData);
+      
+      // Tự động cập nhật danh sách students dựa trên departmentId
+      const students = await getStudentsForDepartment(formData.departmentId);
+      
+      console.log('✅ Students to be saved:', students.length, students);
+
       if (editingCourse) {
         const courseRef = doc(db, 'courses', editingCourse.id);
-        await updateDoc(courseRef, {
+        const updateData: any = {
           title: formData.title,
           description: formData.description,
           category: formData.category,
@@ -143,12 +221,20 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
           duration: formData.duration,
           price: formData.price,
           thumbnail: formData.thumbnail,
+          banner: formData.banner || null,
           demoVideoId: formData.demoVideoId,
+          students: students,
           updatedAt: new Date()
-        });
+        };
+        if (formData.departmentId) {
+          updateData.departmentId = formData.departmentId;
+        } else {
+          updateData.departmentId = null;
+        }
+        await updateDoc(courseRef, updateData);
         alert('Cập nhật khóa học thành công!');
       } else {
-        const newCourse = {
+        const newCourse: any = {
           id: `course_${Date.now()}`,
           title: formData.title,
           description: formData.description,
@@ -157,14 +243,17 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
           duration: formData.duration,
           price: formData.price,
           thumbnail: formData.thumbnail,
+          banner: formData.banner || null,
           demoVideoId: formData.demoVideoId,
           teacherId: 'admin',
           teacherName: 'Admin',
-          students: [],
-          pendingStudents: [],
+          students: students,
           createdAt: new Date(),
           updatedAt: new Date()
         };
+        if (formData.departmentId) {
+          newCourse.departmentId = formData.departmentId;
+        }
         await setDoc(doc(db, 'courses', newCourse.id), newCourse);
         alert('Thêm khóa học thành công!');
       }
@@ -225,50 +314,47 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
     );
   }
 
-  // Show student management page
-  if (managingStudentsCourse) {
-    return (
-      <div className="space-y-6">
-        <button
-          onClick={() => {
-            setManagingStudentsCourse(null);
-            loadData();
-          }}
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-2 font-medium"
-        >
-          ← Quay lại danh sách khóa học
-        </button>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">{managingStudentsCourse.title}</h2>
-          <p className="text-slate-600">{managingStudentsCourse.description}</p>
-        </div>
-        <CourseStudentManagement 
-          course={managingStudentsCourse} 
-          onUpdate={loadData}
-        />
-      </div>
-    );
-  }
+
 
   return (
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-slate-900">Quản lý khóa học</h2>
-        <div className="flex gap-3">
-          {onNavigateToApproval && (
-            <Button 
-              onClick={onNavigateToApproval} 
-              className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-            >
-              <Users size={18} />
-              Duyệt khóa học
-              {courses.filter(c => c.pendingStudents && c.pendingStudents.length > 0).length > 0 && (
-                <span className="ml-1 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-xs font-bold">
-                  {courses.filter(c => c.pendingStudents && c.pendingStudents.length > 0).length}
-                </span>
-              )}
-            </Button>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Quản lý khóa học</h2>
+          {currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && (
+            <p className="text-sm text-blue-600 mt-1">
+              🏢 Bạn đang xem khóa học của phòng ban: <strong>{departments.find(d => d.id === currentUser.departmentId)?.name}</strong>
+            </p>
           )}
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            onClick={async () => {
+              if (!confirm('Cập nhật lại danh sách học viên cho TẤT CẢ khóa học dựa trên phòng ban?\n\nLưu ý: Thao tác này sẽ ghi đè danh sách học viên hiện tại.')) {
+                return;
+              }
+              setLoading(true);
+              try {
+                let updated = 0;
+                for (const course of courses) {
+                  const students = await getStudentsForDepartment(course.departmentId || '');
+                  await updateDoc(doc(db, 'courses', course.id), { students });
+                  updated++;
+                }
+                alert(`✅ Đã cập nhật ${updated} khóa học!`);
+                loadData();
+              } catch (error) {
+                console.error('Error updating students:', error);
+                alert('❌ Lỗi khi cập nhật!');
+              } finally {
+                setLoading(false);
+              }
+            }}
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
+          >
+            <Users size={18} />
+            Cập nhật học viên
+          </Button>
           <Button onClick={handleAdd} className="flex items-center gap-2">
             <Plus size={18} />
             Thêm khóa học
@@ -343,6 +429,9 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                 <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Cấp độ
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Đối tượng
+                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Học viên
                 </th>
@@ -372,15 +461,26 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                   <td className="px-6 py-4 text-center">
                     {getLevelBadge(course.level)}
                   </td>
+                  <td className="px-6 py-4">
+                    {course.departmentId === 'all' ? (
+                      <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        🌐 Chung
+                      </span>
+                    ) : course.departmentId ? (
+                      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                        🏢 {departments.find(d => d.id === course.departmentId)?.name || 'N/A'}
+                      </span>
+                    ) : (
+                      <span className="inline-block px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-sm font-medium">
+                        🔒 Nháp
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="font-medium text-slate-900">{course.students?.length || 0}</span>
-                      {course.pendingStudents && course.pendingStudents.length > 0 && (
-                        <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                          +{course.pendingStudents.length}
-                        </span>
-                      )}
-                    </div>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                      <span>{course.students?.length || 0}</span>
+                      <span className="text-xs">người</span>
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-slate-900">
                     {course.duration}h
@@ -398,14 +498,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                         <BookOpen size={16} />
                         Chi tiết
                       </button>
-                      <button
-                        onClick={() => setManagingStudentsCourse(course)}
-                        className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
-                        title="Thêm học viên"
-                      >
-                        <UserPlus size={16} />
-                        Thêm HV
-                      </button>
+
                       <button
                         onClick={() => handleEdit(course)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -480,6 +573,33 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Đối tượng học *</label>
+                <select
+                  value={formData.departmentId}
+                  onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                  disabled={!!(currentUser?.role !== 'admin' && currentUser?.departmentId && departments.find(d => d.managerId === currentUser.uid))}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">-- Không hiển thị cho ai --</option>
+                  <option value="all">🌐 Chung (Tất cả nhân viên)</option>
+                  {departments.map(dept => (
+                    <option key={dept.id} value={dept.id}>🏢 {dept.name}</option>
+                  ))}
+                </select>
+                {currentUser?.role !== 'admin' && currentUser?.departmentId && departments.find(d => d.managerId === currentUser.uid) ? (
+                  <p className="text-xs text-blue-600 mt-1">
+                    🔒 Trưởng phòng chỉ có thể tạo khóa học cho phòng ban của mình
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-1">
+                    • <strong>Chung</strong>: Tất cả nhân viên đều thấy<br/>
+                    • <strong>Phòng ban cụ thể</strong>: Chỉ nhân viên phòng ban đó thấy<br/>
+                    • <strong>Không chọn</strong>: Không ai thấy (nháp)
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Cấp độ</label>
@@ -518,21 +638,67 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
               <BunnyImageUpload
                 label="Thumbnail (Ảnh đại diện)"
                 currentImage={formData.thumbnail}
-                onUploadComplete={(url) => setFormData({ ...formData, thumbnail: url })}
+                onUploadStart={() => setUploadingThumbnail(true)}
+                onUploadEnd={() => setUploadingThumbnail(false)}
+                onUploadComplete={(url) => setFormData(prev => ({ ...prev, thumbnail: url }))}
                 folder="courses/thumbnails"
               />
 
-              <BunnyVideoUpload
+              <div>
+                <BunnyImageUpload
+                  label="Banner (Ảnh bìa khóa học - Hiển thị ở đầu trang chi tiết)"
+                  currentImage={formData.banner}
+                  onUploadStart={() => {
+                    console.log('⏳ Banner upload started...');
+                    setUploadingBanner(true);
+                  }}
+                  onUploadEnd={() => {
+                    console.log('✅ Banner upload ended');
+                    setUploadingBanner(false);
+                  }}
+                  onUploadComplete={(url) => {
+                    console.log('🎉 Banner uploaded, URL:', url);
+                    setFormData(prev => {
+                      const updated = { ...prev, banner: url };
+                      console.log('📝 Updated formData with banner:', updated);
+                      return updated;
+                    });
+                  }}
+                  folder="courses/banners"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  📐 <strong>Kích cỡ khuyến nghị:</strong> 1920x600px (tỷ lệ 16:5) hoặc 1920x1080px (16:9)<br/>
+                  📦 <strong>Kích thước file:</strong> Tối đa 5MB<br/>
+                  📄 <strong>Định dạng:</strong> JPG, PNG, WebP
+                </p>
+                {uploadingBanner && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 font-semibold">⏳ Đang tải banner lên... Vui lòng đợi!</p>
+                  </div>
+                )}
+                {!uploadingBanner && formData.banner && (
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs text-green-700 font-semibold mb-1">✅ Banner đã được tải lên</p>
+                    <p className="text-xs text-green-600 break-all font-mono">{formData.banner}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* <BunnyVideoUpload
                 label="Video Demo (Video giới thiệu khóa học)"
                 currentVideoId={formData.demoVideoId}
                 onUploadComplete={(videoId) => setFormData({ ...formData, demoVideoId: videoId })}
-              />
+              /> */}
             </div>
 
             <div className="flex gap-3 mt-6">
-              <Button onClick={handleSave} className="flex-1 flex items-center justify-center gap-2">
+              <Button 
+                onClick={handleSave} 
+                disabled={uploadingThumbnail || uploadingBanner}
+                className="flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Save size={18} />
-                Lưu
+                {uploadingThumbnail || uploadingBanner ? 'Đang tải ảnh...' : 'Lưu'}
               </Button>
               <button
                 onClick={() => setShowModal(false)}
@@ -541,6 +707,11 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                 Hủy
               </button>
             </div>
+            {(uploadingThumbnail || uploadingBanner) && (
+              <p className="text-xs text-orange-600 text-center mt-2">
+                ⚠️ Vui lòng đợi ảnh tải lên hoàn tất trước khi lưu
+              </p>
+            )}
           </div>
         </div>
       )}

@@ -11,6 +11,9 @@ export interface Lesson {
   documentName?: string;
   hasQuiz?: boolean; // Có bài kiểm tra không
   quizDuration?: number; // Thời gian làm bài (phút)
+  quizDocumentUrl?: string; // Tài liệu đính kèm cho bài kiểm tra
+  quizDocumentName?: string; // Tên file tài liệu kiểm tra
+  tags?: string[]; // Tags cho bài học (ví dụ: ['cơ bản', 'quan trọng', 'nâng cao'])
   createdAt: Date;
   updatedAt: Date;
 }

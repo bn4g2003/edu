@@ -3,31 +3,35 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Question, QuizResult } from '@/types/lesson';
+import { Question, QuizResult, Lesson } from '@/types/lesson';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckCircle, XCircle, Award, Save, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Award, Save, Clock, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/Button';
 
 interface QuizTakerProps {
   lessonId: string;
   courseId: string;
   quizDuration?: number; // minutes
+  quizDocumentUrl?: string;
+  quizDocumentName?: string;
   onComplete: () => void;
 }
 
-export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDuration, onComplete }) => {
+export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDuration, quizDocumentUrl, quizDocumentName, onComplete }) => {
   const { userProfile } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [existingResult, setExistingResult] = useState<QuizResult | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [startTime, setStartTime] = useState<number>(Date.now());
 
   useEffect(() => {
     loadQuestions();
+    checkExistingResult();
   }, [lessonId]);
 
   useEffect(() => {
@@ -46,6 +50,32 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
       return () => clearInterval(timer);
     }
   }, [timeLeft, showResult]);
+
+  const checkExistingResult = async () => {
+    if (!userProfile) return;
+
+    try {
+      const resultsRef = collection(db, 'quizResults');
+      const q = query(
+        resultsRef,
+        where('userId', '==', userProfile.uid),
+        where('lessonId', '==', lessonId)
+      );
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        // User has already completed this quiz
+        const resultData = snapshot.docs[0].data() as QuizResult;
+        const completedAt = resultData.completedAt as any;
+        setExistingResult({
+          ...resultData,
+          completedAt: completedAt?.toDate ? completedAt.toDate() : new Date(completedAt)
+        });
+      }
+    } catch (error) {
+      console.error('Error checking existing result:', error);
+    }
+  };
 
   const loadQuestions = async () => {
     try {
@@ -151,6 +181,97 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
     );
   }
 
+  // Show existing result if user has already completed the quiz
+  if (existingResult && !showResult) {
+    return (
+      <div className="bg-white rounded-xl p-8">
+        <div className="text-center mb-8">
+          <Award className={`w-20 h-20 mx-auto mb-4 ${
+            existingResult.score >= 80 ? 'text-green-500' : existingResult.score >= 50 ? 'text-yellow-500' : 'text-red-500'
+          }`} />
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">Bạn đã hoàn thành bài kiểm tra này</h2>
+          <div className="text-5xl font-bold mb-2" style={{
+            color: existingResult.score >= 80 ? '#10b981' : existingResult.score >= 50 ? '#f59e0b' : '#ef4444'
+          }}>
+            {existingResult.score} điểm
+          </div>
+          <p className="text-slate-600 mb-2">
+            Bạn đã trả lời đúng {existingResult.correctCount}/{existingResult.totalQuestions} câu
+          </p>
+          <p className="text-sm text-slate-500">
+            Hoàn thành lúc: {existingResult.completedAt.toLocaleString('vi-VN')}
+          </p>
+        </div>
+
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-6">
+          <div className="flex gap-3">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-blue-900 mb-1">Lưu ý</p>
+              <p className="text-xs text-blue-800">
+                Mỗi học viên chỉ được làm bài kiểm tra <strong>1 lần duy nhất</strong>. Kết quả trên là kết quả cuối cùng của bạn.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          {questions.map((question, index) => {
+            const userAnswer = existingResult.answers[index];
+            const isCorrect = userAnswer === question.correctAnswer;
+
+            return (
+              <div key={question.id} className="border border-slate-200 rounded-xl p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {isCorrect ? <CheckCircle size={20} /> : <XCircle size={20} />}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-slate-900 mb-2">
+                      Câu {index + 1}: {question.question || `Câu hỏi ${index + 1}`}
+                    </h3>
+                    <div className="space-y-2">
+                      {question.options.map((option, optIndex) => {
+                        const isUserAnswer = userAnswer === optIndex;
+                        const isCorrectAnswer = question.correctAnswer === optIndex;
+                        const displayText = option || `Đáp án ${String.fromCharCode(65 + optIndex)}`;
+
+                        return (
+                          <div
+                            key={optIndex}
+                            className={`px-4 py-2 rounded-lg text-sm ${
+                              isCorrectAnswer
+                                ? 'bg-green-50 border-2 border-green-500 text-green-700 font-medium'
+                                : isUserAnswer
+                                ? 'bg-red-50 border-2 border-red-500 text-red-700'
+                                : 'bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            {String.fromCharCode(65 + optIndex)}. {displayText}
+                            {isCorrectAnswer && ' ✓ (Đáp án đúng)'}
+                            {isUserAnswer && !isCorrectAnswer && ' ✗ (Bạn đã chọn)'}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <Button onClick={onComplete} className="w-full">
+          Quay lại bài học
+        </Button>
+      </div>
+    );
+  }
+
   if (showResult && result) {
     return (
       <div className="bg-white rounded-xl p-8">
@@ -217,25 +338,23 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
           })}
         </div>
 
-        <div className="flex gap-3">
-          <Button onClick={onComplete} className="flex-1">
-            Quay lại bài học
-          </Button>
-          <Button
-            onClick={() => {
-              setShowResult(false);
-              setAnswers(new Array(questions.length).fill(-1));
-              if (quizDuration) {
-                setTimeLeft(quizDuration * 60);
-              }
-              setIsTimeUp(false);
-              setStartTime(Date.now());
-            }}
-            className="flex-1 bg-purple-600 hover:bg-purple-700"
-          >
-            Làm lại
-          </Button>
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-6">
+          <div className="flex gap-3">
+            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-orange-900 mb-1">Lưu ý quan trọng</p>
+              <p className="text-xs text-orange-800">
+                Kết quả này đã được lưu vào hệ thống. Mỗi học viên chỉ được làm bài kiểm tra <strong>1 lần duy nhất</strong>.
+              </p>
+            </div>
+          </div>
         </div>
+
+        <Button onClick={onComplete} className="w-full">
+          Quay lại bài học
+        </Button>
       </div>
     );
   }
@@ -271,6 +390,30 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
           />
         </div>
       </div>
+
+      {/* Document Attachment */}
+      {quizDocumentUrl && quizDocumentName && (
+        <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-blue-900 mb-1">Tài liệu tham khảo</p>
+              <p className="text-xs text-blue-700 mb-2">{quizDocumentName}</p>
+              <a
+                href={quizDocumentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Download size={14} />
+                Tải xuống tài liệu
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Questions */}
       <div className="space-y-4 mb-8">

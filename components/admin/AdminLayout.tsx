@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/contexts/PermissionContext';
 import { useRouter } from 'next/navigation';
@@ -30,11 +32,22 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
   const { hasPermission } = usePermissions();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [departments, setDepartments] = useState<Array<{id: string, managerId?: string}>>([]);
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      const snapshot = await getDocs(collection(db, 'departments'));
+      setDepartments(snapshot.docs.map(doc => ({ id: doc.id, managerId: doc.data().managerId })));
+    };
+    loadDepartments();
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
   };
+
+  const isManager = departments.some(d => d.managerId === userProfile?.uid);
 
   const menuItems = [
     { 
@@ -42,7 +55,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
       label: 'Tổng quan', 
       icon: LayoutDashboard,
       permission: 'view_dashboard' as const,
-      hideForStaff: false // Staff có thể thấy nếu có quyền
+      hideForStaff: false, // Staff có thể thấy nếu có quyền
+      hideForManager: true // Trưởng phòng KHÔNG thấy
     },
     { 
       id: 'learning', 
@@ -113,6 +127,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
           {menuItems.map((item) => {
             const isAdmin = userProfile?.role === 'admin';
             const isStaff = userProfile?.role === 'staff';
+            const isManager = userProfile?.position === 'Trưởng phòng';
             
             // Ẩn menu nếu role không phù hợp
             if (isAdmin && item.hideForAdmin) {
@@ -120,6 +135,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
             }
             if (isStaff && item.hideForStaff) {
               return null;
+            }
+            if (isManager && item.hideForManager) {
+              return null; // Trưởng phòng không thấy "Tổng quan"
             }
             
             // Check permission - nếu permission là null thì luôn hiển thị

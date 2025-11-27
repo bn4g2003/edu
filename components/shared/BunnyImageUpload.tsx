@@ -8,13 +8,17 @@ interface BunnyImageUploadProps {
   currentImage?: string;
   label?: string;
   folder?: string;
+  onUploadStart?: () => void;
+  onUploadEnd?: () => void;
 }
 
 export const BunnyImageUpload: React.FC<BunnyImageUploadProps> = ({
   onUploadComplete,
   currentImage,
   label = 'Tải ảnh lên',
-  folder = 'courses'
+  folder = 'courses',
+  onUploadStart,
+  onUploadEnd
 }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
@@ -37,6 +41,7 @@ export const BunnyImageUpload: React.FC<BunnyImageUploadProps> = ({
 
     try {
       setUploading(true);
+      onUploadStart?.();
 
       // Create preview
       const reader = new FileReader();
@@ -76,6 +81,7 @@ export const BunnyImageUpload: React.FC<BunnyImageUploadProps> = ({
       setPreview(currentImage || null);
     } finally {
       setUploading(false);
+      onUploadEnd?.();
     }
   };
 

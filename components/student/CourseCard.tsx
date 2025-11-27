@@ -2,26 +2,21 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Course } from '@/types/course';
-import { BookOpen, Clock, Users, CheckCircle, Play } from 'lucide-react';
+import { BookOpen, Clock, Play } from 'lucide-react';
 import { Button } from '@/components/Button';
 
 interface CourseCardProps {
   course: Course;
-  status: 'enrolled' | 'pending' | 'available';
-  onEnroll: (course: Course) => void;
   onView?: (courseId: string) => void;
-  enrolling: boolean;
+  departmentName?: string;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
   course,
-  status,
-  onEnroll,
   onView,
-  enrolling
+  departmentName
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -68,28 +63,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     );
   };
 
-  const getStatusBadge = () => {
-    if (status === 'enrolled') {
-      return (
-        <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-          <CheckCircle size={14} />
-          Đã đăng ký
-        </div>
-      );
-    }
-    if (status === 'pending') {
-      return (
-        <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-          ⏳ Chờ duyệt
-        </div>
-      );
-    }
-    return null;
-  };
-
   const getBorderColor = () => {
-    if (status === 'enrolled') return 'border-brand-500';
-    if (status === 'pending') return 'border-yellow-500';
     return 'border-slate-200';
   };
 
@@ -113,7 +87,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             muted
             loop
             playsInline
-            onLoadedData={() => setIsVideoReady(true)}
+
           >
             <source
               src={`https://${CDN_HOSTNAME}/${course.demoVideoId}/playlist.m3u8`}
@@ -145,8 +119,6 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             </div>
           </div>
         )}
-
-        {getStatusBadge()}
       </div>
 
       {/* Content */}
@@ -156,13 +128,28 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           {getLevelBadge(course.level)}
         </div>
         <p className="text-sm text-slate-600 mb-2 line-clamp-2">{course.description}</p>
-        <div className="flex items-center justify-between text-sm text-slate-500 mb-3">
+        <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
           <span>👨‍🏫 {course.teacherName}</span>
-          <span className="flex items-center gap-1">
-            <Users size={14} />
-            {course.students?.length || 0}
-          </span>
+          <span className="text-slate-400">{course.category}</span>
         </div>
+        
+        <div className="mb-3 flex items-center gap-2">
+          {course.departmentId === 'all' ? (
+            <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+              🌐 Chung
+            </span>
+          ) : departmentName ? (
+            <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+              🏢 {departmentName}
+            </span>
+          ) : null}
+          {course.students && course.students.length > 0 && (
+            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+              👥 {course.students.length} học viên
+            </span>
+          )}
+        </div>
+        
         <div className="flex items-center justify-between text-sm mb-3">
           <span className="text-slate-600 flex items-center gap-1">
             <Clock size={14} />
@@ -171,40 +158,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           <span className="font-bold text-brand-600">{course.price.toLocaleString('vi-VN')}đ</span>
         </div>
 
-        {/* Action Buttons */}
-        {status === 'enrolled' ? (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onView?.(course.id)}
-              className="flex-1 bg-green-500 hover:bg-green-600"
-            >
-              Học ngay
-            </Button>
-            <Button
-              onClick={() => onEnroll(course)}
-              disabled={enrolling}
-              className="flex-1 bg-blue-500 hover:bg-blue-600"
-            >
-              {enrolling ? 'Đang xử lý...' : 'Hoàn thành'}
-            </Button>
-          </div>
-        ) : status === 'pending' ? (
-          <Button
-            onClick={() => onEnroll(course)}
-            disabled={enrolling}
-            className="w-full bg-yellow-500 hover:bg-yellow-600"
-          >
-            {enrolling ? 'Đang xử lý...' : 'Hủy yêu cầu'}
-          </Button>
-        ) : (
-          <Button
-            onClick={() => onEnroll(course)}
-            disabled={enrolling}
-            className="w-full"
-          >
-            {enrolling ? 'Đang xử lý...' : 'Đăng ký ngay'}
-          </Button>
-        )}
+        {/* Action Button */}
+        <Button
+          onClick={() => onView?.(course.id)}
+          className="w-full bg-brand-500 hover:bg-brand-600"
+        >
+          Học ngay
+        </Button>
       </div>
     </div>
   );

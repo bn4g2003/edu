@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { DashboardNew } from '@/components/admin/DashboardNew';
+import { DashboardSimple } from '@/components/admin/DashboardSimple';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { CourseManagement } from '@/components/admin/CourseManagement';
 import { DepartmentManagement } from '@/components/admin/DepartmentManagement';
@@ -79,7 +79,7 @@ export default function AdminPage() {
       case 'dashboard':
         return (
           <ProtectedRoute requiredPermission="view_dashboard">
-            <DashboardNew />
+            <DashboardSimple />
           </ProtectedRoute>
         );
       case 'learning':
@@ -117,7 +117,7 @@ export default function AdminPage() {
       default:
         return (
           <ProtectedRoute requiredPermission="view_dashboard">
-            <DashboardNew />
+            <DashboardSimple />
           </ProtectedRoute>
         );
     }
