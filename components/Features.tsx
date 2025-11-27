@@ -4,38 +4,38 @@ import { Brain, Globe, Video, Award, Users, Zap } from 'lucide-react';
 const features = [
   {
     icon: <Brain className="w-6 h-6 text-white" />,
-    title: "AI Mentor 1:1",
-    description: "Trợ lý ảo phân tích điểm mạnh, điểm yếu và thiết kế lộ trình học riêng biệt cho bạn.",
+    title: "Học Thực Hành",
+    description: "Các khóa học tập trung vào kỹ năng thực tế, áp dụng ngay vào công việc hàng ngày.",
     color: "bg-purple-500"
   },
   {
     icon: <Video className="w-6 h-6 text-white" />,
-    title: "Bài Giảng 4K",
-    description: "Chất lượng video sắc nét, âm thanh sống động giúp tăng sự tập trung và hứng thú.",
+    title: "Video Chất Lượng Cao",
+    description: "Nội dung được sản xuất chuyên nghiệp, dễ hiểu và thu hút người học.",
     color: "bg-blue-500"
   },
   {
     icon: <Globe className="w-6 h-6 text-white" />,
-    title: "Học Mọi Nơi",
-    description: "Đồng bộ hóa tiến độ trên mọi thiết bị. Học trên xe bus, quán cafe hay tại nhà.",
+    title: "Học Mọi Lúc Mọi Nơi",
+    description: "Truy cập khóa học 24/7 trên mọi thiết bị, phù hợp với lịch làm việc của bạn.",
     color: "bg-green-500"
   },
   {
     icon: <Users className="w-6 h-6 text-white" />,
-    title: "Cộng Đồng Sôi Nổi",
-    description: "Kết nối với hàng triệu học viên, thảo luận và làm bài tập nhóm dễ dàng.",
+    title: "Học Theo Phòng Ban",
+    description: "Khóa học được phân bổ theo phòng ban, phù hợp với nhu cầu công việc cụ thể.",
     color: "bg-orange-500"
   },
   {
     icon: <Award className="w-6 h-6 text-white" />,
-    title: "Chứng Chỉ Uy Tín",
-    description: "Hoàn thành khóa học và nhận chứng chỉ có giá trị, liên kết với LinkedIn.",
+    title: "Theo Dõi Tiến Độ",
+    description: "Hệ thống theo dõi chi tiết giúp bạn và quản lý nắm rõ quá trình học tập.",
     color: "bg-red-500"
   },
   {
     icon: <Zap className="w-6 h-6 text-white" />,
-    title: "Cập Nhật Liên Tục",
-    description: "Nội dung khóa học luôn được làm mới theo xu hướng công nghệ mới nhất.",
+    title: "Nâng Cao Nhanh Chóng",
+    description: "Đầu tư vào kỹ năng hôm nay, thăng tiến sự nghiệp ngày mai.",
     color: "bg-yellow-500"
   }
 ];
@@ -45,12 +45,12 @@ export const Features: React.FC = () => {
     <section id="features" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-base font-semibold text-brand-600 uppercase tracking-wide">Tại sao chọn Kama?</h2>
+          <h2 className="text-base font-semibold text-brand-600 uppercase tracking-wide">Tại sao chọn chúng tôi?</h2>
           <p className="mt-2 text-3xl font-extrabold text-slate-900 sm:text-4xl">
-            Công Nghệ Giáo Dục Đỉnh Cao
+            Nền Tảng Đào Tạo Nội Bộ Toàn Diện
           </p>
           <p className="mt-4 max-w-2xl text-xl text-slate-500 mx-auto">
-            Chúng tôi không chỉ bán khóa học, chúng tôi mang đến một hệ sinh thái học tập toàn diện giúp bạn bứt phá.
+            Không chỉ là thư viện video—đây là công cụ thúc đẩy sự nghiệp cho mọi nhân viên trong tổ chức.
           </p>
         </div>
 

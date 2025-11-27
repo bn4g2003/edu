@@ -13,6 +13,7 @@ export interface Course {
   demoVideoId?: string; // Bunny Stream video ID cho video demo
   departmentId?: string; // Phòng ban được xem khóa học này ('all' = chung, undefined = không ai, hoặc ID phòng ban cụ thể)
   students: string[]; // Danh sách UID học viên được tự động cập nhật dựa trên departmentId
+  pendingStudents?: string[]; // Danh sách UID học viên chờ phê duyệt
   createdAt: Date;
   updatedAt: Date;
 }

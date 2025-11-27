@@ -29,20 +29,20 @@ export const Hero: React.FC = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
-              Nền tảng EdTech số 1 Việt Nam
+              Nền tảng Đào Tạo Nội Bộ
             </div>
             
             <h1 className="text-4xl lg:text-6xl font-extrabold text-white leading-[1.15] tracking-tight">
-              Đánh Thức <br/>
+              Đẩy Nhanh <br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">
-                Tiềm Năng Vô Hạn
+                Sự Nghiệp
               </span> <br/>
               Của Bạn
             </h1>
             
             <p className="text-lg text-slate-300 leading-relaxed max-w-xl">
-              Học tập chủ động với lộ trình được cá nhân hóa bởi AI. 
-              Kết nối với chuyên gia đầu ngành và nhận chứng chỉ quốc tế ngay hôm nay.
+              Không chỉ là thư viện video đơn thuần—đây là công cụ thúc đẩy sự nghiệp tối ưu cho mọi nhân viên. 
+              Các khóa học thực hành giúp bạn nâng cao kỹ năng nhanh chóng, tự tin hơn trong công việc và nắm bắt cơ hội thăng tiến sớm hơn.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
@@ -62,22 +62,15 @@ export const Hero: React.FC = () => {
             <div className="flex items-center gap-6 text-sm text-slate-300 pt-6 border-t border-white/10">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-brand-400" />
-                <span>Lộ trình AI 1:1</span>
+                <span>Học thực hành</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-brand-400" />
-                <span>Chứng chỉ thực</span>
+                <span>Nâng cao kỹ năng</span>
               </div>
               <div className="flex items-center gap-2">
-                 <div className="flex -space-x-2">
-                  {[1, 2, 3].map(i => (
-                    <img key={i} className="w-6 h-6 rounded-full border border-slate-900" src={`https://picsum.photos/50/50?random=${i + 10}`} alt="Student" />
-                  ))}
-                </div>
-                <div className="flex gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  <span className="font-bold text-white">4.9/5</span>
-                </div>
+                <CheckCircle2 className="w-5 h-5 text-brand-400" />
+                <span>Thăng tiến nhanh</span>
               </div>
             </div>
           </div>
@@ -98,8 +91,8 @@ export const Hero: React.FC = () => {
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-brand-400 font-semibold text-sm">Khóa học đang diễn ra</p>
-                    <h3 className="text-white font-bold text-lg">Data Science Masterclass</h3>
+                    <p className="text-brand-400 font-semibold text-sm">Khóa học đang học</p>
+                    <h3 className="text-white font-bold text-lg">Kỹ Năng Lãnh Đạo</h3>
                   </div>
                   <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg text-white">
                     <span className="font-bold">85%</span>
@@ -135,8 +128,8 @@ export const Hero: React.FC = () => {
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 font-medium">Học viên mới</p>
-                  <p className="text-lg font-bold text-slate-900">+12,500</p>
+                  <p className="text-xs text-slate-500 font-medium">Nhân viên đang học</p>
+                  <p className="text-lg font-bold text-slate-900">+2,500</p>
                 </div>
               </div>
             </div>

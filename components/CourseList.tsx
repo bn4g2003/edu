@@ -5,36 +5,36 @@ import { Button } from './Button';
 const courses = [
   {
     id: 1,
-    title: "Fullstack Web Development với React & Node.js",
-    instructor: "Nguyễn Văn A",
+    title: "Kỹ Năng Lãnh Đạo và Quản Lý Nhóm",
+    instructor: "Phòng Nhân Sự",
     rating: 4.9,
-    students: 12500,
-    duration: "6 tháng",
-    price: "2.499.000đ",
+    students: 450,
+    duration: "2 tháng",
+    price: "Nội bộ",
     image: "https://picsum.photos/400/250?random=1",
-    tag: "Bestseller"
+    tag: "Phổ biến"
   },
   {
     id: 2,
-    title: "Data Science & Machine Learning Masterclass",
-    instructor: "Trần Thị B",
+    title: "Kỹ Năng Giao Tiếp và Thuyết Trình",
+    instructor: "Phòng Đào Tạo",
     rating: 4.8,
-    students: 8300,
-    duration: "4 tháng",
-    price: "3.199.000đ",
+    students: 380,
+    duration: "1 tháng",
+    price: "Nội bộ",
     image: "https://picsum.photos/400/250?random=2",
-    tag: "Trending"
+    tag: "Mới"
   },
   {
     id: 3,
-    title: "UI/UX Design: Tư duy thiết kế hiện đại",
-    instructor: "Lê Văn C",
+    title: "Quản Lý Thời Gian và Năng Suất",
+    instructor: "Phòng Đào Tạo",
     rating: 4.9,
-    students: 9100,
-    duration: "3 tháng",
-    price: "1.899.000đ",
+    students: 520,
+    duration: "3 tuần",
+    price: "Nội bộ",
     image: "https://picsum.photos/400/250?random=3",
-    tag: "New"
+    tag: "Thiết yếu"
   }
 ];
 
@@ -44,8 +44,8 @@ export const CourseList: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
           <div>
-            <h2 className="text-3xl font-extrabold text-slate-900">Khóa Học Nổi Bật</h2>
-            <p className="mt-2 text-slate-600">Những khóa học được bình chọn tốt nhất tháng này.</p>
+            <h2 className="text-3xl font-extrabold text-slate-900">Khóa Học Đào Tạo</h2>
+            <p className="mt-2 text-slate-600">Các khóa học phát triển kỹ năng cho nhân viên trong tổ chức.</p>
           </div>
           <Button variant="outline">
             Xem tất cả khóa học <ChevronRight className="w-4 h-4 ml-1" />
@@ -80,7 +80,7 @@ export const CourseList: React.FC = () => {
                 <div className="flex items-center gap-1 mb-4">
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   <span className="font-bold text-slate-900">{course.rating}</span>
-                  <span className="text-slate-500 text-sm">({course.students.toLocaleString()} học viên)</span>
+                  <span className="text-slate-500 text-sm">({course.students.toLocaleString()} nhân viên)</span>
                 </div>
                 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">

@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
               <span className="text-xl font-bold">Kama</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Nền tảng học tập trực tuyến hàng đầu, kết nối người học với tri thức nhân loại thông qua công nghệ AI tiên tiến.
+              Nền tảng đào tạo nội bộ giúp nhân viên phát triển kỹ năng, nâng cao năng lực và thăng tiến trong sự nghiệp.
             </p>
             <div className="flex gap-4 pt-2">
               <a href="#" className="hover:text-white transition-colors"><Facebook size={20} /></a>
@@ -28,9 +28,9 @@ export const Footer: React.FC = () => {
             <h4 className="text-white font-bold mb-4">Khám Phá</h4>
             <ul className="space-y-2 text-sm">
               <li><a href="#" className="hover:text-brand-400 transition-colors">Về chúng tôi</a></li>
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Khóa học mới</a></li>
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Sự kiện & Webinar</a></li>
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Blog giáo dục</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Khóa học đào tạo</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Lộ trình phát triển</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Tin tức nội bộ</a></li>
             </ul>
           </div>
 
@@ -38,10 +38,10 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-bold mb-4">Hỗ Trợ</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Trung tâm trợ giúp</a></li>
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Điều khoản sử dụng</a></li>
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Chính sách bảo mật</a></li>
-              <li><a href="#" className="hover:text-brand-400 transition-colors">Trở thành giảng viên</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Hướng dẫn sử dụng</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Câu hỏi thường gặp</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Chính sách nội bộ</a></li>
+              <li><a href="#" className="hover:text-brand-400 transition-colors">Liên hệ IT Support</a></li>
             </ul>
           </div>
 
@@ -51,22 +51,22 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="flex-shrink-0 text-brand-500" />
-                <span>Tầng 12, Tòa nhà Bitexco, Q1, TP.HCM</span>
+                <span>Phòng Đào Tạo - Tầng 5</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={18} className="flex-shrink-0 text-brand-500" />
-                <span>+84 90 123 4567</span>
+                <span>Ext: 1234</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="flex-shrink-0 text-brand-500" />
-                <span>contact@kama.vn</span>
+                <span>training@company.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm text-slate-500">
-          © 2024 Kama Inc. All rights reserved. Designed for Excellence.
+          © 2024 Nền Tảng Đào Tạo Nội Bộ. Phát triển nhân viên - Thúc đẩy sự nghiệp.
         </div>
       </div>
     </footer>

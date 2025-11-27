@@ -36,8 +36,8 @@ export const Pricing: React.FC = () => {
     <section id="pricing" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-slate-900">Đầu Tư Cho Tương Lai</h2>
-          <p className="mt-4 text-slate-600">Chọn gói học tập phù hợp nhất với nhu cầu của bạn.</p>
+          <h2 className="text-3xl font-extrabold text-slate-900">Đầu Tư Vào Kỹ Năng Hôm Nay</h2>
+          <p className="mt-4 text-slate-600">Thăng tiến sự nghiệp ngày mai với các gói đào tạo phù hợp.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

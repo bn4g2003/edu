@@ -45,9 +45,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
 
   const navLinks = [
     { name: 'Về chúng tôi', href: '#about' },
-    { name: 'Khóa học', href: '#courses' },
+    { name: 'Khóa đào tạo', href: '#courses' },
     { name: 'Tính năng', href: '#features' },
-    { name: 'Bảng giá', href: '#pricing' },
+    { name: 'Gói đào tạo', href: '#pricing' },
   ];
 
   // Text color logic: White when at top (on dark hero), Dark when scrolled (on white bg)
