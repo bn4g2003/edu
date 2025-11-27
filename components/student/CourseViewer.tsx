@@ -7,7 +7,7 @@ import { Course } from '@/types/course';
 import { Lesson } from '@/types/lesson';
 import { LessonProgress } from '@/types/progress';
 import { useAuth } from '@/contexts/AuthContext';
-import { Play, Lock, CheckCircle, Clock, FileText, HelpCircle } from 'lucide-react';
+import { Play, Pause, Lock, CheckCircle, Clock, FileText, HelpCircle, Maximize, RotateCcw, Rewind } from 'lucide-react';
 import { QuizTaker } from './QuizTaker';
 
 interface CourseViewerProps {
@@ -25,11 +25,18 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   const [currentTime, setCurrentTime] = useState(0);
   const [viewMode, setViewMode] = useState<'video' | 'document' | 'quiz'>('video');
   const [takingQuiz, setTakingQuiz] = useState(false);
+  const [showAttentionCheck, setShowAttentionCheck] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const saveProgressTimer = useRef<NodeJS.Timeout | null>(null);
   const hlsRef = useRef<any>(null);
+  const attentionCheckTimer = useRef<NodeJS.Timeout | null>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   const CDN_HOSTNAME = process.env.NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME || 'vz-69258c0a-d89.b-cdn.net';
+  
+  // Check if user is staff (needs anti-cheat features)
+  const isStaff = userProfile?.role === 'staff';
 
   useEffect(() => {
     loadLessons();
@@ -47,8 +54,70 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      if (attentionCheckTimer.current) {
+        clearTimeout(attentionCheckTimer.current);
+      }
     };
   }, [selectedLesson?.id, progressLoaded]);
+
+  // Anti-cheat: Detect tab visibility change (staff only)
+  useEffect(() => {
+    if (!isStaff) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause();
+        console.log('⚠️ Video paused: Tab switched');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isStaff]);
+
+  // Anti-cheat: Attention check every 30 seconds (staff only)
+  useEffect(() => {
+    if (!isStaff || !videoRef.current) return;
+
+    const startAttentionCheck = () => {
+      if (attentionCheckTimer.current) {
+        clearTimeout(attentionCheckTimer.current);
+      }
+
+      attentionCheckTimer.current = setTimeout(() => {
+        if (videoRef.current && !videoRef.current.paused) {
+          videoRef.current.pause();
+          setShowAttentionCheck(true);
+          console.log('⚠️ Attention check triggered');
+        }
+      }, 30000); // 30 seconds
+    };
+
+    const video = videoRef.current;
+    
+    const handlePlay = () => {
+      setIsPlaying(true);
+      startAttentionCheck();
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+      if (attentionCheckTimer.current) {
+        clearTimeout(attentionCheckTimer.current);
+      }
+    };
+
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      if (attentionCheckTimer.current) {
+        clearTimeout(attentionCheckTimer.current);
+      }
+    };
+  }, [isStaff, selectedLesson?.id]);
 
   const initializeVideo = async () => {
     if (!selectedLesson || !videoRef.current) return;
@@ -200,6 +269,47 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     }, 3000);
   };
 
+  const handleAttentionCheckContinue = () => {
+    setShowAttentionCheck(false);
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (!videoRef.current) return;
+    
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleFullscreen = () => {
+    if (!videoContainerRef.current) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      videoContainerRef.current.requestFullscreen();
+    }
+  };
+
+  const handleRewind = () => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+  };
+
+  const handleRestart = () => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = 0;
+    videoRef.current.play();
+    setIsPlaying(true);
+  };
+
   const saveProgress = async (watchedSeconds: number, totalSeconds: number) => {
     if (!selectedLesson || !userProfile) return;
 
@@ -326,18 +436,77 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
             {/* Video View */}
             {viewMode === 'video' && selectedLesson && selectedLesson.videoId ? (
               <div>
-                <div className="bg-black rounded-xl overflow-hidden relative" style={{ paddingTop: '56.25%' }}>
+                <div 
+                  ref={videoContainerRef}
+                  className="bg-black rounded-xl overflow-hidden relative" 
+                  style={{ paddingTop: '56.25%' }}
+                >
                   <video
                     ref={videoRef}
                     className="absolute inset-0 w-full h-full"
-                    controls
+                    controls={!isStaff}
                     controlsList="nodownload"
                     onTimeUpdate={handleTimeUpdate}
                     playsInline
+                    onContextMenu={(e) => isStaff && e.preventDefault()}
+                    style={isStaff ? { pointerEvents: 'none' } : {}}
                   >
                     <source src={`https://${CDN_HOSTNAME}/${selectedLesson.videoId}/playlist.m3u8`} type="application/x-mpegURL" />
                     Trình duyệt của bạn không hỗ trợ video.
                   </video>
+                  
+                  {/* Custom Controls for Staff */}
+                  {isStaff && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4" style={{ pointerEvents: 'auto' }}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {/* Restart Button */}
+                          <button
+                            onClick={handleRestart}
+                            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+                            title="Xem lại từ đầu"
+                          >
+                            <RotateCcw size={18} />
+                          </button>
+                          
+                          {/* Rewind 10s */}
+                          <button
+                            onClick={handleRewind}
+                            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+                            title="Tua lùi 10s"
+                          >
+                            <Rewind size={18} />
+                          </button>
+                          
+                          {/* Play/Pause */}
+                          <button
+                            onClick={handlePlayPause}
+                            className="w-12 h-12 bg-white/30 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-colors"
+                          >
+                            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                          </button>
+                          
+                          <span className="text-white text-sm ml-2">
+                            {isPlaying ? 'Đang phát' : 'Đã dừng'}
+                          </span>
+                        </div>
+                        
+                        {/* Fullscreen */}
+                        <button
+                          onClick={handleFullscreen}
+                          className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+                          title="Toàn màn hình"
+                        >
+                          <Maximize size={20} />
+                        </button>
+                      </div>
+                      <div className="mt-2 text-center">
+                        <span className="text-white/70 text-xs">
+                          Sử dụng các nút điều khiển để xem video
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : viewMode === 'video' ? (
@@ -536,6 +705,32 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
           </div>
         </div>
       </div>
+
+      {/* Attention Check Popup (Staff only) */}
+      {showAttentionCheck && isStaff && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Bạn có đang xem video?</h3>
+            <p className="text-slate-600 mb-6">
+              Vui lòng xác nhận bạn đang theo dõi bài học để tiếp tục
+            </p>
+            <button
+              onClick={handleAttentionCheckContinue}
+              className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium text-lg transition-colors"
+            >
+              Tiếp tục xem
+            </button>
+            <p className="text-xs text-slate-500 mt-4">
+              Video sẽ tự động dừng nếu không có phản hồi
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
