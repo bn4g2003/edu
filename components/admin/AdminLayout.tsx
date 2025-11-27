@@ -91,11 +91,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
           {sidebarOpen ? (
             <>
               <div className="flex items-center gap-3">
-                <div className="bg-red-500 p-2 rounded-lg">
-                  <Shield className="w-5 h-5" />
-                </div>
+                <img src="/logo.png" alt="Kama Logo" className="h-10 w-10 object-contain" />
                 <div>
-                  <h1 className="font-bold text-lg">Admin Panel</h1>
+                  <h1 className="font-bold text-lg">Chào mừng bạn</h1>
                   <p className="text-xs text-slate-400">Kama System</p>
                 </div>
               </div>
