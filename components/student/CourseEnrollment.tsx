@@ -5,19 +5,19 @@ import { collection, getDocs, doc, updateDoc, arrayUnion, arrayRemove } from 'fi
 import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Search, BookOpen, Clock, Users, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/Button';
-import { CourseViewer } from './CourseViewer';
 
 export const CourseEnrollment: React.FC = () => {
   const { userProfile } = useAuth();
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
   const [enrolling, setEnrolling] = useState<string | null>(null);
-  const [viewingCourse, setViewingCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     loadCourses();
@@ -129,17 +129,12 @@ export const CourseEnrollment: React.FC = () => {
   const myPendingCourses = courses.filter(c => isPending(c));
   const availableCourses = filteredCourses.filter(c => !isEnrolled(c) && !isPending(c));
 
+  const handleViewCourse = (courseId: string) => {
+    router.push(`/student/courses/${courseId}`);
+  };
+
   if (loading) {
     return <div className="text-center py-8">Đang tải...</div>;
-  }
-
-  if (viewingCourse) {
-    return (
-      <CourseViewer
-        course={viewingCourse}
-        onBack={() => setViewingCourse(null)}
-      />
-    );
   }
 
   return (
@@ -184,7 +179,7 @@ export const CourseEnrollment: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      onClick={() => setViewingCourse(course)}
+                      onClick={() => handleViewCourse(course.id)}
                       className="flex-1 bg-green-500 hover:bg-green-600"
                     >
                       Học ngay
