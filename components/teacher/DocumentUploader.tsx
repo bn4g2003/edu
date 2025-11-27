@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
 import { Upload, File, X, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { Button } from '@/components/Button';
 
@@ -58,59 +56,51 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       setUploading(true);
       setUploadProgress(0);
 
-      // Create storage reference
+      // Create unique filename
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `documents/${lessonId}/${fileName}`);
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${timestamp}_${sanitizedFileName}`;
+      const filePath = `documents/${lessonId}/${fileName}`;
 
-      // Upload file
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Upload to Bunny Storage via API route
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('path', filePath);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const progress = (e.loaded / e.total) * 100;
           setUploadProgress(Math.round(progress));
-        },
-        (error) => {
-          console.error('Upload error:', error);
-          
-          // Provide helpful error messages
-          let errorMessage = 'Lỗi khi upload file: ';
-          if (error.code === 'storage/unauthorized') {
-            errorMessage = '❌ Lỗi quyền truy cập. Vui lòng kiểm tra Firebase Storage Rules.';
-          } else if (error.code === 'storage/canceled') {
-            errorMessage = 'Upload đã bị hủy.';
-          } else if (error.code === 'storage/unknown') {
-            errorMessage = '❌ Lỗi CORS hoặc Storage chưa được kích hoạt. Xem file FIX_STORAGE_CORS.md để biết cách fix.';
-          } else {
-            errorMessage += error.message;
-          }
-          
-          setError(errorMessage);
-          setUploading(false);
-        },
-        async () => {
-          // Upload completed successfully
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log('File uploaded successfully:', downloadURL);
-          
-          onUploadComplete(downloadURL, file.name);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          console.log('File uploaded successfully:', response.url);
+          onUploadComplete(response.url, file.name);
           setUploading(false);
           setUploadProgress(0);
+        } else {
+          const error = JSON.parse(xhr.responseText);
+          setError(error.error || 'Lỗi khi upload file');
+          setUploading(false);
         }
-      );
+      });
+
+      xhr.addEventListener('error', () => {
+        setError('Lỗi kết nối khi upload file');
+        setUploading(false);
+      });
+
+      xhr.open('POST', '/api/upload-document');
+      xhr.send(formData);
+
     } catch (error: any) {
       console.error('Error uploading file:', error);
-      
-      let errorMessage = 'Lỗi khi upload file';
-      if (error.code === 'storage/unauthorized') {
-        errorMessage = '❌ Firebase Storage chưa được kích hoạt hoặc chưa có quyền. Xem FIX_STORAGE_CORS.md';
-      } else if (error.message) {
-        errorMessage += ': ' + error.message;
-      }
-      
-      setError(errorMessage);
+      setError(error.message || 'Lỗi khi upload file');
       setUploading(false);
     }
   };
@@ -151,13 +141,21 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
     }
 
     try {
-      // Extract file path from URL
+      // Extract file path from Bunny CDN URL
       const url = new URL(currentDocumentUrl);
-      const pathMatch = url.pathname.match(/\/o\/(.+?)\?/);
-      if (pathMatch) {
-        const filePath = decodeURIComponent(pathMatch[1]);
-        const fileRef = ref(storage, filePath);
-        await deleteObject(fileRef);
+      const filePath = url.pathname.substring(1); // Remove leading slash
+
+      // Delete via API route
+      const response = await fetch('/api/delete-document', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path: filePath }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete file');
       }
       
       onRemove();

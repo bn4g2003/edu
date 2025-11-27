@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, query, where, deleteField } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
 import { Lesson } from '@/types/lesson';
@@ -22,6 +22,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [uploading, setUploading] = useState(false);
   const [managingQuiz, setManagingQuiz] = useState<Lesson | null>(null);
+  const [previewingLesson, setPreviewingLesson] = useState<Lesson | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -208,10 +209,9 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
   const handleDocumentRemove = async (lesson: Lesson) => {
     try {
       const lessonRef = doc(db, 'lessons', lesson.id);
-      await setDoc(lessonRef, {
-        ...lesson,
-        documentUrl: undefined,
-        documentName: undefined,
+      await updateDoc(lessonRef, {
+        documentUrl: deleteField(),
+        documentName: deleteField(),
         updatedAt: new Date()
       });
 
@@ -331,12 +331,21 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                               {formatDuration(lesson.duration)}
                             </p>
                           )}
-                          <button
-                            onClick={() => handleDelete(lesson)}
-                            className="text-sm text-red-600 hover:text-red-700 font-medium"
-                          >
-                            Xóa video
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setPreviewingLesson(lesson)}
+                              className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-medium flex items-center justify-center gap-1"
+                            >
+                              <Play size={14} />
+                              Xem video
+                            </button>
+                            <button
+                              onClick={() => handleDelete(lesson)}
+                              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <label className="cursor-pointer block">
@@ -486,6 +495,45 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
               <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-xl text-slate-900 font-bold mb-2">Đang upload...</p>
               <p className="text-sm text-slate-600">Vui lòng đợi, đừng đóng trang này</p>
+            </div>
+          </div>
+        )}
+
+        {/* Video Preview Modal */}
+        {previewingLesson && previewingLesson.videoId && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">{previewingLesson.title}</h3>
+                  <p className="text-sm text-slate-600">{previewingLesson.description}</p>
+                </div>
+                <button
+                  onClick={() => setPreviewingLesson(null)}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="bg-black rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                  <video
+                    className="w-full h-full"
+                    controls
+                    autoPlay
+                    controlsList="nodownload"
+                    src={`https://${CDN_HOSTNAME}/${previewingLesson.videoId}/play_720p.mp4`}
+                  >
+                    Trình duyệt của bạn không hỗ trợ video.
+                  </video>
+                </div>
+                {previewingLesson.duration && (
+                  <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                    <Clock size={16} />
+                    <span>Thời lượng: {formatDuration(previewingLesson.duration)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

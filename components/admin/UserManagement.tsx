@@ -158,18 +158,16 @@ export const UserManagement: React.FC = () => {
     const styles = {
       admin: 'bg-red-100 text-red-700',
       staff: 'bg-blue-100 text-blue-700',
-      teacher: 'bg-blue-100 text-blue-700',
       student: 'bg-green-100 text-green-700'
     };
     const labels = {
       admin: 'Admin',
       staff: 'Nhân viên',
-      teacher: 'Giáo viên',
       student: 'Học sinh'
     };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[role]}`}>
-        {labels[role]}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[role as keyof typeof styles] || 'bg-gray-100 text-gray-700'}`}>
+        {labels[role as keyof typeof labels] || role}
       </span>
     );
   };

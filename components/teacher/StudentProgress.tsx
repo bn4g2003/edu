@@ -30,7 +30,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
 
       // Load students
       const usersRef = collection(db, 'users');
-      const studentsQuery = query(usersRef, where('role', '==', 'student'));
+      const studentsQuery = query(usersRef, where('role', '==', 'staff'));
       const studentsSnapshot = await getDocs(studentsQuery);
       const allStudents = studentsSnapshot.docs.map(doc => doc.data()) as UserProfile[];
       const enrolledStudents = allStudents.filter(s => course.students?.includes(s.uid));

@@ -35,13 +35,13 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-slate-900 mb-1">{course.title}</h2>
-              <p className="text-slate-600">Giáo viên: {course.teacherName}</p>
+              <p className="text-slate-600">{course.description}</p>
               <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
                 <span>Danh mục: {course.category}</span>
                 <span>•</span>
                 <span>Thời lượng: {course.duration}h</span>
                 <span>•</span>
-                <span>Giáo viên: {course.students?.length || 0}</span>
+                <span>Học viên: {course.students?.length || 0}</span>
               </div>
             </div>
             {isAdmin && (
@@ -73,7 +73,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
             }`}
           >
             <Users size={20} />
-            Giáo viên & Thống kê
+            Học viên & Thống kê
           </button>
         </div>
       </div>
