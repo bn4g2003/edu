@@ -50,6 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data() as UserProfile;
       
+      // Kiểm tra tài khoản đã được duyệt chưa (trừ admin)
+      if (userData.role !== 'admin' && userData.approved === false) {
+        throw new Error('Tài khoản của bạn chưa được duyệt. Vui lòng liên hệ quản trị viên.');
+      }
+      
       // Lưu vào localStorage
       localStorage.setItem('currentUser', JSON.stringify(userData));
       setUserProfile(userData);
@@ -78,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: password,
         displayName: displayName,
         role: role,
+        approved: role === 'admin' ? true : false, // Admin tự động duyệt, còn lại cần duyệt
         createdAt: new Date(),
         updatedAt: new Date()
       };

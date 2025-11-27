@@ -1,25 +1,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserProfile, UserRole } from '@/types/user';
-import { Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Save, CheckCircle, XCircle, Shield } from 'lucide-react';
 import { Button } from '@/components/Button';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface Department {
+  id: string;
+  name: string;
+}
 
 export const UserManagement: React.FC = () => {
+  const { userProfile: currentUser } = useAuth(); // User hiện tại đang đăng nhập
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
+  const [filterDepartment, setFilterDepartment] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     displayName: '',
-    role: 'staff' as UserRole
+    role: 'staff' as UserRole,
+    departmentId: '',
+    monthlySalary: 0
   });
 
   useEffect(() => {
@@ -28,11 +39,13 @@ export const UserManagement: React.FC = () => {
 
   useEffect(() => {
     filterUsers();
-  }, [users, searchTerm, filterRole]);
+  }, [users, searchTerm, filterRole, filterDepartment]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
+      
+      // Load users
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
       const usersData = snapshot.docs.map(doc => ({
@@ -41,6 +54,14 @@ export const UserManagement: React.FC = () => {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as UserProfile[];
       setUsers(usersData);
+
+      // Load departments
+      const deptSnapshot = await getDocs(collection(db, 'departments'));
+      const depts = deptSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name
+      }));
+      setDepartments(depts);
     } catch (error) {
       console.error('Error loading users:', error);
       alert('Lỗi khi tải danh sách người dùng');
@@ -50,12 +71,24 @@ export const UserManagement: React.FC = () => {
   };
 
   const filterUsers = () => {
-    let filtered = users;
+    // Chỉ lấy user đã duyệt hoặc admin
+    let filtered = users.filter(user => user.role === 'admin' || user.approved);
 
+    // Role filter
     if (filterRole !== 'all') {
       filtered = filtered.filter(user => user.role === filterRole);
     }
 
+    // Department filter
+    if (filterDepartment !== 'all') {
+      if (filterDepartment === 'none') {
+        filtered = filtered.filter(user => !user.departmentId);
+      } else {
+        filtered = filtered.filter(user => user.departmentId === filterDepartment);
+      }
+    }
+
+    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(user =>
         user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,26 +99,45 @@ export const UserManagement: React.FC = () => {
     setFilteredUsers(filtered);
   };
 
+  // Lấy danh sách chờ duyệt
+  const pendingUsers = users.filter(user => user.role !== 'admin' && !user.approved);
+
   const handleAdd = () => {
     setEditingUser(null);
     setFormData({
       email: '',
       password: '',
       displayName: '',
-      role: 'staff'
+      role: 'staff',
+      departmentId: '',
+      monthlySalary: 0
     });
     setShowModal(true);
   };
 
   const handleEdit = (user: UserProfile) => {
+    // Không cho sửa admin
+    if (user.role === 'admin') {
+      alert('Không thể chỉnh sửa tài khoản Admin!');
+      return;
+    }
+    
     setEditingUser(user);
     setFormData({
       email: user.email,
       password: user.password,
       displayName: user.displayName,
-      role: user.role
+      role: user.role,
+      departmentId: user.departmentId || '',
+      monthlySalary: user.monthlySalary || 0
     });
     setShowModal(true);
+  };
+
+  const getDepartmentName = (deptId?: string) => {
+    if (!deptId) return '-';
+    const dept = departments.find(d => d.id === deptId);
+    return dept?.name || '-';
   };
 
   const handleSave = async () => {
@@ -96,15 +148,36 @@ export const UserManagement: React.FC = () => {
       }
 
       if (editingUser) {
-        // Update existing user
-        const userRef = doc(db, 'users', editingUser.uid);
-        await updateDoc(userRef, {
+        // Update existing user - Find document by uid field
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('uid', '==', editingUser.uid));
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+          alert('Không tìm thấy người dùng!');
+          return;
+        }
+
+        const userDocId = snapshot.docs[0].id;
+        const userRef = doc(db, 'users', userDocId);
+        
+        const updateData: any = {
           email: formData.email,
           password: formData.password,
           displayName: formData.displayName,
           role: formData.role,
           updatedAt: new Date()
-        });
+        };
+
+        // Only add departmentId and monthlySalary if they have values
+        if (formData.departmentId) {
+          updateData.departmentId = formData.departmentId;
+        }
+        if (formData.monthlySalary && formData.monthlySalary > 0) {
+          updateData.monthlySalary = formData.monthlySalary;
+        }
+
+        await updateDoc(userRef, updateData);
         alert('Cập nhật người dùng thành công!');
       } else {
         // Check if email exists
@@ -117,17 +190,29 @@ export const UserManagement: React.FC = () => {
           return;
         }
 
-        // Add new user
-        const newUser = {
-          uid: `user_${Date.now()}`,
+        // Add new user with uid as custom field
+        const newUserId = `user_${Date.now()}`;
+        const newUser: any = {
+          uid: newUserId,
           email: formData.email,
           password: formData.password,
           displayName: formData.displayName,
           role: formData.role,
+          approved: formData.role === 'admin' ? true : false, // Admin tự động duyệt
           createdAt: new Date(),
           updatedAt: new Date()
         };
-        await addDoc(collection(db, 'users'), newUser);
+
+        // Only add departmentId and monthlySalary if they have values
+        if (formData.departmentId) {
+          newUser.departmentId = formData.departmentId;
+        }
+        if (formData.monthlySalary && formData.monthlySalary > 0) {
+          newUser.monthlySalary = formData.monthlySalary;
+        }
+
+        // Use setDoc with custom ID instead of addDoc
+        await setDoc(doc(db, 'users', newUserId), newUser);
         alert('Thêm người dùng thành công!');
       }
 
@@ -140,12 +225,35 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleDelete = async (user: UserProfile) => {
+    // Không cho xóa admin
+    if (user.role === 'admin') {
+      alert('Không thể xóa tài khoản Admin!');
+      return;
+    }
+
+    // Không cho tự xóa chính mình
+    if (user.uid === currentUser?.uid) {
+      alert('Không thể xóa chính tài khoản của bạn!');
+      return;
+    }
+
     if (!confirm(`Bạn có chắc muốn xóa người dùng "${user.displayName}"?`)) {
       return;
     }
 
     try {
-      await deleteDoc(doc(db, 'users', user.uid));
+      // Find document by uid field
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('uid', '==', user.uid));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        alert('Không tìm thấy người dùng!');
+        return;
+      }
+
+      const userDocId = snapshot.docs[0].id;
+      await deleteDoc(doc(db, 'users', userDocId));
       alert('Xóa người dùng thành công!');
       loadUsers();
     } catch (error) {
@@ -172,12 +280,39 @@ export const UserManagement: React.FC = () => {
     );
   };
 
+  const handleApprove = async (user: UserProfile, approve: boolean) => {
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('uid', '==', user.uid));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        alert('Không tìm thấy người dùng!');
+        return;
+      }
+
+      const userDocId = snapshot.docs[0].id;
+      const userRef = doc(db, 'users', userDocId);
+      
+      await updateDoc(userRef, {
+        approved: approve,
+        updatedAt: new Date()
+      });
+
+      alert(approve ? 'Đã duyệt tài khoản!' : 'Đã từ chối tài khoản!');
+      loadUsers();
+    } catch (error) {
+      console.error('Error approving user:', error);
+      alert('Lỗi khi duyệt tài khoản');
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Đang tải...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-900">Quản lý người dùng</h2>
@@ -207,14 +342,31 @@ export const UserManagement: React.FC = () => {
           <option value="all">Tất cả vai trò</option>
           <option value="admin">Admin</option>
           <option value="staff">Nhân viên</option>
+          <option value="teacher">Giáo viên</option>
+          <option value="student">Học viên</option>
+        </select>
+        <select
+          value={filterDepartment}
+          onChange={(e) => setFilterDepartment(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+        >
+          <option value="all">Tất cả phòng ban</option>
+          <option value="none">Chưa có phòng ban</option>
+          {departments.map(dept => (
+            <option key={dept.id} value={dept.id}>{dept.name}</option>
+          ))}
         </select>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-600">Tổng số</p>
-          <p className="text-2xl font-bold text-slate-900">{users.length}</p>
+          <p className="text-2xl font-bold text-slate-900">{users.filter(u => u.role === 'admin' || u.approved).length}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200">
+          <p className="text-sm text-slate-600">Chờ duyệt</p>
+          <p className="text-2xl font-bold text-orange-600">{pendingUsers.length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-600">Admin</p>
@@ -222,51 +374,141 @@ export const UserManagement: React.FC = () => {
         </div>
         <div className="bg-white p-4 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-600">Nhân viên</p>
-          <p className="text-2xl font-bold text-blue-600">{users.filter(u => u.role === 'staff').length}</p>
+          <p className="text-2xl font-bold text-blue-600">{users.filter(u => u.role === 'staff' && u.approved).length}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200">
+          <p className="text-sm text-slate-600">Giáo viên</p>
+          <p className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'teacher' && u.approved).length}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200">
+          <p className="text-sm text-slate-600">Học viên</p>
+          <p className="text-2xl font-bold text-green-600">{users.filter(u => u.role === 'student' && u.approved).length}</p>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Tên</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Vai trò</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Ngày tạo</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {filteredUsers.map((user) => (
-              <tr key={user.uid} className="hover:bg-slate-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="font-medium text-slate-900">{user.displayName}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-slate-600">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                  {user.createdAt?.toLocaleDateString('vi-VN')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="text-blue-600 hover:text-blue-800 mr-3"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
+      {/* Pending Users Section */}
+      {pendingUsers.length > 0 && (
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <XCircle className="text-orange-600" size={24} />
+              <h3 className="text-lg font-bold text-orange-900">
+                Tài khoản chờ duyệt ({pendingUsers.length})
+              </h3>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-orange-100 border-b border-orange-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Tên</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Vai trò</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Ngày đăng ký</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-orange-900 uppercase">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-orange-100">
+                {pendingUsers.map((user) => (
+                  <tr key={user.uid} className="hover:bg-orange-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-slate-900">{user.displayName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                      {user.createdAt?.toLocaleDateString('vi-VN')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        onClick={() => handleApprove(user, true)}
+                        className="text-green-600 hover:text-green-800 mr-3 inline-flex items-center gap-1 px-3 py-1 bg-green-100 rounded-lg font-medium"
+                        title="Duyệt tài khoản"
+                      >
+                        <CheckCircle size={16} />
+                        Duyệt
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user)}
+                        className="text-red-600 hover:text-red-800 inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-lg font-medium"
+                        title="Từ chối"
+                      >
+                        <Trash2 size={16} />
+                        Từ chối
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Approved Users Table */}
+      <div>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">Danh sách người dùng</h3>
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Tên</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Vai trò</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Phòng ban</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Lương tháng</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Ngày tạo</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Thao tác</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredUsers.map((user) => (
+                <tr key={user.uid} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium text-slate-900">{user.displayName}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">{user.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                    {getDepartmentName(user.departmentId)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-slate-900 font-medium">
+                    {user.monthlySalary ? `${user.monthlySalary.toLocaleString('vi-VN')}đ` : '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                    {user.createdAt?.toLocaleDateString('vi-VN')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    {user.role === 'admin' ? (
+                      <div className="inline-flex items-center gap-1 px-3 py-1 bg-red-50 text-red-600 rounded-lg text-sm">
+                        <Shield size={14} />
+                        <span className="font-medium">Được bảo vệ</span>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="text-blue-600 hover:text-blue-800 mr-3"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Xóa"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -321,9 +563,39 @@ export const UserManagement: React.FC = () => {
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="staff">Nhân viên</option>
-                  <option value="admin">Admin</option>
+                  <option value="teacher">Giáo viên</option>
+                  <option value="student">Học viên</option>
                 </select>
               </div>
+
+              {formData.role === 'staff' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Phòng ban</label>
+                    <select
+                      value={formData.departmentId}
+                      onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                      <option value="">-- Chọn phòng ban --</option>
+                      {departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Lương tháng (VNĐ)</label>
+                    <input
+                      type="number"
+                      value={formData.monthlySalary}
+                      onChange={(e) => setFormData({ ...formData, monthlySalary: Number(e.target.value) })}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      placeholder="Ví dụ: 10000000"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex gap-3 mt-6">

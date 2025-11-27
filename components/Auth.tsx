@@ -18,7 +18,7 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<UserRole>('student');
+  const [role, setRole] = useState<UserRole>('staff'); // Mặc định là nhân viên
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,10 +33,9 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
   const redirectByRole = (userRole: UserRole) => {
     switch (userRole) {
       case 'admin':
-        router.push('/admin');
-        break;
       case 'staff':
-        router.push('/student');
+        // Admin và Staff đều vào trang admin, menu sẽ hiển thị theo quyền
+        router.push('/admin');
         break;
       case 'teacher':
         router.push('/teacher');
@@ -67,7 +66,19 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
           return;
         }
         const profile = await signUp(email, password, displayName, role);
-        redirectByRole(profile.role);
+        
+        // Hiển thị thông báo khác nhau tùy role
+        if (profile.role === 'admin') {
+          alert('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
+          redirectByRole(profile.role);
+        } else {
+          alert('Đăng ký thành công! Tài khoản của bạn đang chờ quản trị viên duyệt. Vui lòng đợi email xác nhận.');
+          // Quay về trang login
+          setMode('login');
+          setEmail('');
+          setPassword('');
+          setDisplayName('');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Đã xảy ra lỗi. Vui lòng thử lại.');
@@ -149,31 +160,17 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
             )}
 
             {mode === 'register' && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Họ và tên</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ví dụ: Nguyễn Văn A"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Vai trò</label>
-                  <select 
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as UserRole)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
-                  >
-                    <option value="student">Giáo viên</option>
-                    <option value="teacher">Giáo viên</option>
-                    <option value="admin">Quản trị viên</option>
-                  </select>
-                </div>
-              </>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Họ và tên</label>
+                <input 
+                  type="text" 
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  required
+                />
+              </div>
             )}
 
             <div className="space-y-2">

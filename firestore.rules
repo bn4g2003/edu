@@ -35,5 +35,15 @@ service cloud.firestore {
     match /enrollments/{enrollmentId} {
       allow read, write: if true;
     }
+    
+    // Collection departments - Quản lý phòng ban
+    match /departments/{departmentId} {
+      allow read, write: if true;
+    }
+    
+    // Collection salaryRecords - Quản lý lương
+    match /salaryRecords/{recordId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -6,6 +6,9 @@ export interface UserProfile {
   password: string;
   displayName: string;
   role: UserRole;
+  departmentId?: string; // ID phòng ban
+  monthlySalary?: number; // Lương tháng cơ bản
+  approved: boolean; // Trạng thái duyệt tài khoản (mặc định false)
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,74 +1,147 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
-import { ArrowLeft, Users, Search } from 'lucide-react';
-import { CourseStudents } from './CourseStudents';
+import { UserProfile } from '@/types/user';
+import { ArrowLeft, CheckCircle, XCircle, Search } from 'lucide-react';
+import { Button } from '@/components/Button';
+
+interface PendingRequest {
+  courseId: string;
+  courseTitle: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+}
 
 interface StudentApprovalPageProps {
   onBack: () => void;
 }
 
 export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack }) => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [requests, setRequests] = useState<PendingRequest[]>([]);
+  const [filteredRequests, setFilteredRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [managingCourse, setManagingCourse] = useState<Course | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCourses();
+    loadRequests();
   }, []);
 
   useEffect(() => {
-    filterCourses();
-  }, [courses, searchTerm]);
+    filterRequests();
+  }, [requests, searchTerm]);
 
-  const loadCourses = async () => {
+  const loadRequests = async () => {
     try {
       setLoading(true);
-      const coursesRef = collection(db, 'courses');
-      const coursesSnapshot = await getDocs(coursesRef);
-      const coursesData = coursesSnapshot.docs.map(doc => ({
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
-      })) as Course[];
       
-      // Only show courses with pending students
-      const coursesWithPending = coursesData.filter(c => 
-        c.pendingStudents && c.pendingStudents.length > 0
-      );
-      setCourses(coursesWithPending);
+      // Load all courses
+      const coursesSnapshot = await getDocs(collection(db, 'courses'));
+      const courses = coursesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Course[];
+
+      // Load all users
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const users = usersSnapshot.docs.map(doc => ({
+        uid: doc.id,
+        ...doc.data()
+      })) as UserProfile[];
+
+      // Build pending requests list
+      const pendingRequests: PendingRequest[] = [];
+      
+      courses.forEach(course => {
+        if (course.pendingStudents && course.pendingStudents.length > 0) {
+          course.pendingStudents.forEach(userId => {
+            const user = users.find(u => u.uid === userId);
+            if (user) {
+              pendingRequests.push({
+                courseId: course.id,
+                courseTitle: course.title,
+                userId: user.uid,
+                userName: user.displayName || user.email,
+                userEmail: user.email,
+              });
+            }
+          });
+        }
+      });
+
+      setRequests(pendingRequests);
     } catch (error) {
-      console.error('Error loading courses:', error);
+      console.error('Error loading requests:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterCourses = () => {
-    let filtered = courses;
+  const filterRequests = () => {
+    let filtered = requests;
     if (searchTerm) {
-      filtered = filtered.filter(course =>
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.teacherName.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(req =>
+        req.courseTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.userEmail.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    setFilteredCourses(filtered);
+    setFilteredRequests(filtered);
+  };
+
+  const handleApprove = async (request: PendingRequest) => {
+    try {
+      setProcessing(request.userId + request.courseId);
+      const courseRef = doc(db, 'courses', request.courseId);
+      
+      await updateDoc(courseRef, {
+        students: arrayUnion(request.userId),
+        pendingStudents: arrayRemove(request.userId)
+      });
+
+      alert('Đã duyệt yêu cầu!');
+      loadRequests();
+    } catch (error) {
+      console.error('Error approving:', error);
+      alert('Lỗi khi duyệt yêu cầu');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleReject = async (request: PendingRequest) => {
+    if (!confirm(`Từ chối yêu cầu của ${request.userName}?`)) return;
+
+    try {
+      setProcessing(request.userId + request.courseId);
+      const courseRef = doc(db, 'courses', request.courseId);
+      
+      await updateDoc(courseRef, {
+        pendingStudents: arrayRemove(request.userId)
+      });
+
+      alert('Đã từ chối yêu cầu!');
+      loadRequests();
+    } catch (error) {
+      console.error('Error rejecting:', error);
+      alert('Lỗi khi từ chối yêu cầu');
+    } finally {
+      setProcessing(null);
+    }
   };
 
   if (loading) {
-    return <div className="text-center py-8">Đang tải...</div>;
+    return <div className="p-8 text-center">Đang tải...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div>
         <button 
           onClick={onBack} 
           className="text-blue-600 hover:text-blue-700 flex items-center gap-2 font-medium mb-4"
@@ -79,107 +152,83 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
         
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-1">Duyệt nhân viên</h2>
-            <p className="text-slate-600">Quản lý yêu cầu đăng ký khóa học từ nhân viên</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-1">Duyệt yêu cầu đăng ký</h2>
+            <p className="text-slate-600">Phê duyệt hoặc từ chối yêu cầu đăng ký khóa học</p>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-600">{courses.length}</div>
-            <div className="text-sm text-slate-600">Khóa học có yêu cầu</div>
+          <div className="text-center bg-yellow-100 px-6 py-3 rounded-xl">
+            <div className="text-3xl font-bold text-yellow-700">{requests.length}</div>
+            <div className="text-sm text-yellow-700">Yêu cầu chờ duyệt</div>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input
-            type="text"
-            placeholder="Tìm kiếm khóa học..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tên khóa học, nhân viên..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
-      {/* Course List */}
-      {filteredCourses.length === 0 ? (
+      {/* Requests Table */}
+      {filteredRequests.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
-            {searchTerm ? 'Không tìm thấy khóa học' : 'Không có yêu cầu nào'}
-          </h3>
-          <p className="text-slate-600">
-            {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Tất cả yêu cầu đã được xử lý'}
-          </p>
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <p className="text-slate-600 text-lg">Không có yêu cầu nào đang chờ duyệt</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Khóa học
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Danh mục
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Nhân viên hiện tại
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Yêu cầu chờ duyệt
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredCourses.map((course) => (
-                  <tr key={course.id} className="hover:bg-slate-50 transition-colors">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Nhân viên</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Email</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Khóa học</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredRequests.map((request) => {
+                const isProcessing = processing === request.userId + request.courseId;
+                return (
+                  <tr key={request.userId + request.courseId} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-slate-900">{course.title}</div>
-                        <div className="text-sm text-slate-500 line-clamp-1">{course.description}</div>
+                      <div className="font-medium text-slate-900">{request.userName}</div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">{request.userEmail}</td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-slate-900">{request.courseTitle}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleApprove(request)}
+                          disabled={isProcessing}
+                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
+                        >
+                          <CheckCircle size={16} />
+                          {isProcessing ? 'Đang xử lý...' : 'Duyệt'}
+                        </button>
+                        <button
+                          onClick={() => handleReject(request)}
+                          disabled={isProcessing}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
+                        >
+                          <XCircle size={16} />
+                          Từ chối
+                        </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-900">
-                      {course.category}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="font-medium text-slate-900">{course.students?.length || 0}</span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
-                        {course.pendingStudents?.length || 0} yêu cầu
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => setManagingCourse(course)}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-                      >
-                        Xử lý
-                      </button>
-                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {/* Course Students Management Modal */}
-      {managingCourse && (
-        <CourseStudents
-          course={managingCourse}
-          onClose={() => setManagingCourse(null)}
-          onUpdate={loadCourses}
-        />
       )}
     </div>
   );

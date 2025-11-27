@@ -4,9 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course } from '@/types/course';
-import { Search, Plus, Edit2, Trash2, X, Save, BookOpen, Users } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Save, BookOpen, Users, UserPlus } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { CourseDetailPage } from './CourseDetailPage';
+import { CourseStudentManagement } from './CourseStudentManagement';
+import { BunnyImageUpload } from '@/components/shared/BunnyImageUpload';
+import { BunnyVideoUpload } from '@/components/shared/BunnyVideoUpload';
 
 interface CourseManagementProps {
   onNavigateToApproval?: () => void;
@@ -17,9 +20,12 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterLevel, setFilterLevel] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [detailCourse, setDetailCourse] = useState<Course | null>(null);
+  const [managingStudentsCourse, setManagingStudentsCourse] = useState<Course | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -27,7 +33,8 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
     level: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
     duration: 0,
     price: 0,
-    thumbnail: ''
+    thumbnail: '',
+    demoVideoId: ''
   });
 
   useEffect(() => {
@@ -36,7 +43,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
 
   useEffect(() => {
     filterCourses();
-  }, [courses, searchTerm]);
+  }, [courses, searchTerm, filterLevel, filterCategory]);
 
   const loadData = async () => {
     try {
@@ -59,14 +66,35 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
 
   const filterCourses = () => {
     let filtered = courses;
+    
+    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(course =>
         course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.category.toLowerCase().includes(searchTerm.toLowerCase())
+        course.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Level filter
+    if (filterLevel !== 'all') {
+      filtered = filtered.filter(course => course.level === filterLevel);
+    }
+
+    // Category filter
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(course => course.category === filterCategory);
+    }
+
     setFilteredCourses(filtered);
   };
+
+  const getCategories = () => {
+    const cats = new Set(courses.map(c => c.category));
+    return Array.from(cats).sort();
+  };
+
+  const categories = getCategories();
 
   const handleAdd = () => {
     setEditingCourse(null);
@@ -77,7 +105,8 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
       level: 'beginner',
       duration: 0,
       price: 0,
-      thumbnail: ''
+      thumbnail: '',
+      demoVideoId: ''
     });
     setShowModal(true);
   };
@@ -91,7 +120,8 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
       level: course.level,
       duration: course.duration,
       price: course.price,
-      thumbnail: course.thumbnail
+      thumbnail: course.thumbnail,
+      demoVideoId: course.demoVideoId || ''
     });
     setShowModal(true);
   };
@@ -113,6 +143,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
           duration: formData.duration,
           price: formData.price,
           thumbnail: formData.thumbnail,
+          demoVideoId: formData.demoVideoId,
           updatedAt: new Date()
         });
         alert('Cập nhật khóa học thành công!');
@@ -126,6 +157,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
           duration: formData.duration,
           price: formData.price,
           thumbnail: formData.thumbnail,
+          demoVideoId: formData.demoVideoId,
           teacherId: 'admin',
           teacherName: 'Admin',
           students: [],
@@ -193,8 +225,33 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
     );
   }
 
+  // Show student management page
+  if (managingStudentsCourse) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => {
+            setManagingStudentsCourse(null);
+            loadData();
+          }}
+          className="text-blue-600 hover:text-blue-700 flex items-center gap-2 font-medium"
+        >
+          ← Quay lại danh sách khóa học
+        </button>
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">{managingStudentsCourse.title}</h2>
+          <p className="text-slate-600">{managingStudentsCourse.description}</p>
+        </div>
+        <CourseStudentManagement 
+          course={managingStudentsCourse} 
+          onUpdate={loadData}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-900">Quản lý khóa học</h2>
         <div className="flex gap-3">
@@ -204,7 +261,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
               className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
             >
               <Users size={18} />
-              Duyệt nhân viên
+              Duyệt khóa học
               {courses.filter(c => c.pendingStudents && c.pendingStudents.length > 0).length > 0 && (
                 <span className="ml-1 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-xs font-bold">
                   {courses.filter(c => c.pendingStudents && c.pendingStudents.length > 0).length}
@@ -230,6 +287,26 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
+        <select
+          value={filterLevel}
+          onChange={(e) => setFilterLevel(e.target.value as any)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+        >
+          <option value="all">Tất cả cấp độ</option>
+          <option value="beginner">Cơ bản</option>
+          <option value="intermediate">Trung cấp</option>
+          <option value="advanced">Nâng cao</option>
+        </select>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+        >
+          <option value="all">Tất cả danh mục</option>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
@@ -267,7 +344,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                   Cấp độ
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Giáo viên
+                  Học viên
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Thời lượng
@@ -320,6 +397,14 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                       >
                         <BookOpen size={16} />
                         Chi tiết
+                      </button>
+                      <button
+                        onClick={() => setManagingStudentsCourse(course)}
+                        className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+                        title="Thêm học viên"
+                      >
+                        <UserPlus size={16} />
+                        Thêm HV
                       </button>
                       <button
                         onClick={() => handleEdit(course)}
@@ -430,16 +515,18 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ onNavigateTo
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">URL Thumbnail</label>
-                <input
-                  type="text"
-                  value={formData.thumbnail}
-                  onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
+              <BunnyImageUpload
+                label="Thumbnail (Ảnh đại diện)"
+                currentImage={formData.thumbnail}
+                onUploadComplete={(url) => setFormData({ ...formData, thumbnail: url })}
+                folder="courses/thumbnails"
+              />
+
+              <BunnyVideoUpload
+                label="Video Demo (Video giới thiệu khóa học)"
+                currentVideoId={formData.demoVideoId}
+                onUploadComplete={(videoId) => setFormData({ ...formData, demoVideoId: videoId })}
+              />
             </div>
 
             <div className="flex gap-3 mt-6">

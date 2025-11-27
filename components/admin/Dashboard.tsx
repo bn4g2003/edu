@@ -1,0 +1,123 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Users, BookOpen, Building2, DollarSign, TrendingUp, Activity } from 'lucide-react';
+
+export const Dashboard: React.FC = () => {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalCourses: 0,
+    totalDepartments: 0,
+    totalStaff: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const coursesSnapshot = await getDocs(collection(db, 'courses'));
+      const departmentsSnapshot = await getDocs(collection(db, 'departments'));
+      
+      const users = usersSnapshot.docs.map(doc => doc.data());
+      const staffCount = users.filter(u => u.role === 'staff').length;
+
+      setStats({
+        totalUsers: usersSnapshot.size,
+        totalCourses: coursesSnapshot.size,
+        totalDepartments: departmentsSnapshot.size,
+        totalStaff: staffCount,
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statCards = [
+    { label: 'Tổng người dùng', value: stats.totalUsers, icon: Users, color: 'blue' },
+    { label: 'Khóa học', value: stats.totalCourses, icon: BookOpen, color: 'green' },
+    { label: 'Phòng ban', value: stats.totalDepartments, icon: Building2, color: 'purple' },
+    { label: 'Nhân viên', value: stats.totalStaff, icon: DollarSign, color: 'orange' },
+  ];
+
+  const colorClasses = {
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-green-100 text-green-600',
+    purple: 'bg-purple-100 text-purple-600',
+    orange: 'bg-orange-100 text-orange-600',
+  };
+
+  return (
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Tổng quan hệ thống</h1>
+        <p className="text-slate-600">Thống kê và báo cáo tổng quan</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-lg ${colorClasses[stat.color as keyof typeof colorClasses]}`}>
+                  <Icon size={24} />
+                </div>
+                {loading ? (
+                  <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-400 rounded-full animate-spin"></div>
+                ) : (
+                  <span className="text-3xl font-bold text-slate-900">{stat.value}</span>
+                )}
+              </div>
+              <h3 className="text-slate-600 font-medium">{stat.label}</h3>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Activity Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl p-6 border border-slate-200">
+          <div className="flex items-center gap-3 mb-4">
+            <Activity className="text-blue-600" size={24} />
+            <h2 className="text-xl font-bold text-slate-900">Hoạt động gần đây</h2>
+          </div>
+          <div className="text-center py-12 text-slate-500">
+            <p>Chưa có hoạt động nào</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 border border-slate-200">
+          <div className="flex items-center gap-3 mb-4">
+            <TrendingUp className="text-green-600" size={24} />
+            <h2 className="text-xl font-bold text-slate-900">Thống kê tuần này</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Người dùng mới</span>
+              <span className="font-bold text-slate-900">0</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Khóa học mới</span>
+              <span className="font-bold text-slate-900">0</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Hoàn thành</span>
+              <span className="font-bold text-slate-900">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
