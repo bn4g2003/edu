@@ -35,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
         case 'teacher':
           router.push('/teacher');
           break;
+        case 'staff':
         case 'student':
           router.push('/student');
           break;

@@ -53,8 +53,8 @@ export default function CourseDetailPage() {
         updatedAt: courseSnap.data().updatedAt?.toDate()
       } as Course;
       
-      // Check if user is enrolled
-      if (!courseData.students?.includes(userProfile?.uid || '')) {
+      // Check if user is enrolled (staff can access all courses)
+      if (userProfile?.role !== 'staff' && !courseData.students?.includes(userProfile?.uid || '')) {
         setError('Bạn chưa đăng ký khóa học này');
         return;
       }
@@ -69,7 +69,8 @@ export default function CourseDetailPage() {
   };
 
   const handleBack = () => {
-    router.push('/student');
+    // Use router.back() to go back in history, which works better with browser back button
+    router.back();
   };
 
   if (authLoading || loading) {
