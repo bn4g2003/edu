@@ -14,7 +14,7 @@ interface PermissionContextType {
   loading: boolean;
 }
 
-const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
+export const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
 
 export const PermissionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { userProfile } = useAuth();

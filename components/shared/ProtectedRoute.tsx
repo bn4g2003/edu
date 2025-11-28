@@ -1,12 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { usePermissions } from '@/contexts/PermissionContext';
+import React, { useContext } from 'react';
+import { PermissionContext } from '@/contexts/PermissionContext';
 import { PermissionAction } from '@/types/permission';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/user';
 import { Lock } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: UserRole[];
   requiredPermission?: PermissionAction;
   requiredPermissions?: PermissionAction[];
   requireAll?: boolean; // true = cần tất cả quyền, false = chỉ cần 1 quyền
@@ -15,12 +18,20 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
+  allowedRoles,
   requiredPermission,
   requiredPermissions,
   requireAll = false,
   fallback
 }) => {
-  const { hasPermission, hasAnyPermission, hasAllPermissions, loading } = usePermissions();
+  const permCtx = useContext(PermissionContext);
+  const hasPermission = permCtx?.hasPermission ?? (() => false);
+  const hasAnyPermission = permCtx?.hasAnyPermission ?? (() => false);
+  const hasAllPermissions = permCtx?.hasAllPermissions ?? (() => false);
+  const permLoading = permCtx?.loading ?? false;
+  const { userProfile, loading: authLoading } = useAuth();
+
+  const loading = permLoading || authLoading;
 
   if (loading) {
     return (
@@ -31,6 +42,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </div>
       </div>
     );
+  }
+
+  // Check allowed roles first (if provided)
+  if (allowedRoles && (!userProfile || !allowedRoles.includes(userProfile.role))) {
+    return fallback || <NoPermissionFallback />;
   }
 
   // Check single permission
