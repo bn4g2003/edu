@@ -3,13 +3,12 @@ export interface SalaryRecord {
   userId: string;
   userName: string;
   departmentId?: string;
-  departmentName?: string;
-  month: string; // Format: YYYY-MM
-  baseSalary: number; // Lương cơ bản
-  workingDays: number; // Số ngày làm việc (mặc định 26)
+  month: string; // YYYY-MM format
+  baseSalary: number;
+  workingDays: number; // Số ngày công chuẩn (26)
   absentDays: number; // Số ngày nghỉ
   lateDays: number; // Số ngày đi muộn
-  deduction: number; // Số tiền trừ
+  deduction: number; // Tổng trừ lương
   finalSalary: number; // Lương thực nhận
   note?: string;
   createdAt: Date;

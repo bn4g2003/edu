@@ -45,5 +45,20 @@ service cloud.firestore {
     match /salaryRecords/{recordId} {
       allow read, write: if true;
     }
+    
+    // Collection companySettings - Cài đặt công ty
+    match /companySettings/{settingId} {
+      allow read, write: if true;
+    }
+    
+    // Collection attendanceRecords - Chấm công
+    match /attendanceRecords/{recordId} {
+      allow read, write: if true;
+    }
+    
+    // Collection monthlySalaries - Lương tháng
+    match /monthlySalaries/{salaryId} {
+      allow read, write: if true;
+    }
   }
 }

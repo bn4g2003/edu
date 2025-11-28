@@ -11,13 +11,12 @@ import {
   Users, 
   BookOpen, 
   Building2, 
-  DollarSign, 
   LogOut,
   Menu,
   X,
-  Shield,
-  UserCog,
-  GraduationCap
+  GraduationCap,
+  Clock,
+  Fingerprint
 } from 'lucide-react';
 import { PermissionAction } from '@/types/permission';
 
@@ -51,20 +50,28 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
 
   const menuItems = [
     { 
+      id: 'checkin', 
+      label: 'Chấm công', 
+      icon: Fingerprint,
+      permission: null, // Không cần quyền
+      hideForStaff: false, // Staff luôn thấy
+      hideForAdmin: true // Admin KHÔNG thấy
+    },
+    { 
       id: 'dashboard', 
       label: 'Tổng quan', 
       icon: LayoutDashboard,
       permission: 'view_dashboard' as const,
-      hideForStaff: false, // Staff có thể thấy nếu có quyền
+      hideForStaff: false,
       hideForManager: true // Trưởng phòng KHÔNG thấy
     },
     { 
       id: 'learning', 
       label: 'Học bài', 
       icon: GraduationCap,
-      permission: null, // Không cần quyền
-      hideForStaff: false, // Staff luôn thấy
-      hideForAdmin: true // Admin KHÔNG thấy
+      permission: null,
+      hideForStaff: false,
+      hideForAdmin: true
     },
     { 
       id: 'users', 
@@ -88,9 +95,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
       hideForStaff: false
     },
     { 
-      id: 'salary', 
-      label: 'Quản lý lương', 
-      icon: DollarSign,
+      id: 'attendance', 
+      label: 'Quản lý chấm công', 
+      icon: Clock,
       permission: 'view_salary' as const,
       hideForStaff: false
     },

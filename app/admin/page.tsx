@@ -8,9 +8,10 @@ import { DashboardSimple } from '@/components/admin/DashboardSimple';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { CourseManagement } from '@/components/admin/CourseManagement';
 import { DepartmentManagement } from '@/components/admin/DepartmentManagement';
-import { SalaryManagementNew } from '@/components/admin/SalaryManagementNew';
+import { AttendanceManagement } from '@/components/admin/AttendanceManagement';
 import { StudentApprovalPage } from '@/components/admin/StudentApprovalPage';
 import { CourseEnrollment } from '@/components/student/CourseEnrollment';
+import { StaffCheckIn } from '@/components/staff/StaffCheckIn';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { PermissionProvider } from '@/contexts/PermissionContext';
 
@@ -23,8 +24,8 @@ export default function AdminPage() {
   // Set default menu based on role
   useEffect(() => {
     if (userProfile) {
-      // Staff mặc định vào tab "Học bài", Admin vào Dashboard
-      const defaultMenu = userProfile.role === 'staff' ? 'learning' : 'dashboard';
+      // Staff mặc định vào tab "Chấm công", Admin vào Dashboard
+      const defaultMenu = userProfile.role === 'staff' ? 'checkin' : 'dashboard';
       
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
@@ -76,6 +77,9 @@ export default function AdminPage() {
     }
 
     switch (activeMenu) {
+      case 'checkin':
+        // Chấm công - Không cần quyền, luôn hiển thị cho staff
+        return <StaffCheckIn />;
       case 'dashboard':
         return (
           <ProtectedRoute requiredPermission="view_dashboard">
@@ -108,10 +112,10 @@ export default function AdminPage() {
             <DepartmentManagement />
           </ProtectedRoute>
         );
-      case 'salary':
+      case 'attendance':
         return (
           <ProtectedRoute requiredPermission="view_salary">
-            <SalaryManagementNew />
+            <AttendanceManagement />
           </ProtectedRoute>
         );
       default:
