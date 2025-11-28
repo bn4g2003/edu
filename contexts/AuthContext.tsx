@@ -9,7 +9,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<UserProfile | null>;
-  signUp: (email: string, password: string, displayName: string, role: UserRole) => Promise<UserProfile>;
+  signUp: (email: string, password: string, displayName: string, role: UserRole, additionalInfo?: Partial<UserProfile>) => Promise<UserProfile>;
   signOut: () => Promise<void>;
 }
 
@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, displayName: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, displayName: string, role: UserRole, additionalInfo?: Partial<UserProfile>) => {
     try {
       // Kiểm tra email đã tồn tại chưa
       const usersRef = collection(db, 'users');
@@ -84,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         displayName: displayName,
         role: role,
         approved: role === 'admin' ? true : false, // Admin tự động duyệt, còn lại cần duyệt
+        ...additionalInfo, // Thêm các thông tin bổ sung
         createdAt: new Date(),
         updatedAt: new Date()
       };

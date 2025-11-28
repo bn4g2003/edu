@@ -106,31 +106,33 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <aside className={`bg-slate-900 text-white transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} flex flex-col fixed h-screen z-50`}>
+      <aside className={`bg-white transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} flex flex-col fixed h-screen z-50 shadow-xl border-r border-slate-200`}>
         {/* Logo */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           {sidebarOpen ? (
             <>
               <div className="flex items-center gap-3">
-                <img src="/logo.png" alt="Kama Logo" className="h-10 w-10 object-contain" />
+                <div className="h-10 w-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-xl">K</span>
+                </div>
                 <div>
-                  <h1 className="font-bold text-lg">Chào mừng bạn</h1>
-                  <p className="text-xs text-slate-400">Kama System</p>
+                  <h1 className="font-bold text-lg text-slate-900">Kama System</h1>
+                  <p className="text-xs text-slate-500">Quản lý & Đào tạo</p>
                 </div>
               </div>
-              <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-slate-800 rounded">
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-600">
                 <X size={20} />
               </button>
             </>
           ) : (
-            <button onClick={() => setSidebarOpen(true)} className="p-2 hover:bg-slate-800 rounded mx-auto">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 hover:bg-slate-100 rounded-lg mx-auto transition-colors text-slate-600">
               <Menu size={20} />
             </button>
           )}
         </div>
 
         {/* Menu Items */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const isAdmin = userProfile?.role === 'admin';
             const isStaff = userProfile?.role === 'staff';
@@ -158,35 +160,56 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
               <button
                 key={item.id}
                 onClick={() => onMenuChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                   isActive 
-                    ? 'bg-red-500 text-white' 
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/20' 
+                    : 'text-slate-600 hover:text-brand-600 hover:bg-brand-50'
                 }`}
                 title={!sidebarOpen ? item.label : ''}
               >
-                <Icon size={20} className="flex-shrink-0" />
-                {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                <Icon size={20} className={`flex-shrink-0 transition-transform ${isActive ? '' : 'group-hover:scale-110'}`} />
+                {sidebarOpen && <span className="font-medium text-sm">{item.label}</span>}
+                {isActive && sidebarOpen && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                )}
               </button>
             );
           })}
         </nav>
 
         {/* User Info */}
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-3 border-t border-slate-200 bg-slate-50">
           {sidebarOpen ? (
-            <div className="mb-3">
-              <p className="text-sm font-medium text-white truncate">{userProfile?.displayName}</p>
-              <p className="text-xs text-slate-400 truncate">{userProfile?.email}</p>
+            <div className="mb-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                  {userProfile?.displayName?.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{userProfile?.displayName}</p>
+                  <p className="text-xs text-slate-500 truncate">{userProfile?.email}</p>
+                </div>
+              </div>
+              {userProfile?.position && (
+                <div className="px-2 py-1 bg-brand-50 border border-brand-200 rounded-lg">
+                  <p className="text-xs text-brand-700 text-center font-medium">{userProfile.position}</p>
+                </div>
+              )}
             </div>
-          ) : null}
+          ) : (
+            <div className="mb-3 flex justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                {userProfile?.displayName?.charAt(0).toUpperCase()}
+              </div>
+            </div>
+          )}
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all group"
             title={!sidebarOpen ? 'Đăng xuất' : ''}
           >
-            <LogOut size={20} className="flex-shrink-0" />
-            {sidebarOpen && <span className="font-medium">Đăng xuất</span>}
+            <LogOut size={20} className="flex-shrink-0 group-hover:scale-110 transition-transform" />
+            {sidebarOpen && <span className="font-medium text-sm">Đăng xuất</span>}
           </button>
         </div>
       </aside>

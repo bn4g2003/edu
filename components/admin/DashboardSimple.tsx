@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Users, BookOpen, Building2, Clock, Award, CheckCircle, Trophy } from 'lucide-react';
+import { Users, BookOpen, Building2, Clock, Award, CheckCircle, Trophy, Calendar, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface Stats {
@@ -16,6 +16,15 @@ interface Stats {
   departmentComparison: { name: string; 'Giờ học': number; 'Bài hoàn thành': number; 'Điểm TB': number; 'Số người': number }[];
   topLearners: { name: string; hours: number; department: string }[];
   topQuizScorers: { name: string; score: number; quizCount: number }[];
+  // Attendance stats
+  totalWorkDays: number;
+  totalWorkHours: number;
+  totalLateMinutes: number;
+  todayAttendance: number;
+  attendanceRate: number;
+  attendanceByDepartment: { name: string; 'Ngày làm': number; 'Giờ làm': number; 'Phút muộn': number }[];
+  topAttendance: { name: string; workDays: number; workHours: number; department: string }[];
+  topPunctual: { name: string; lateMinutes: number; workDays: number; department: string }[];
 }
 
 const POSITION_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -30,7 +39,15 @@ export const DashboardSimple: React.FC = () => {
     learningByDepartment: [],
     departmentComparison: [],
     topLearners: [],
-    topQuizScorers: []
+    topQuizScorers: [],
+    totalWorkDays: 0,
+    totalWorkHours: 0,
+    totalLateMinutes: 0,
+    todayAttendance: 0,
+    attendanceRate: 0,
+    attendanceByDepartment: [],
+    topAttendance: [],
+    topPunctual: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +75,77 @@ export const DashboardSimple: React.FC = () => {
       // Load quiz results
       const quizSnapshot = await getDocs(collection(db, 'quizResults'));
       const quizResults = quizSnapshot.docs.map(doc => doc.data());
+
+      // Load attendance records
+      const attendanceSnapshot = await getDocs(collection(db, 'attendanceRecords'));
+      const attendanceRecords = attendanceSnapshot.docs.map(doc => doc.data());
+      
+      // Calculate attendance stats
+      const totalWorkDays = attendanceRecords.filter(r => r.status === 'present' || r.status === 'late').length;
+      const totalWorkHours = attendanceRecords.reduce((sum, r) => sum + (r.workHours || 0), 0);
+      const totalLateMinutes = attendanceRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
+      
+      const today = new Date().toISOString().split('T')[0];
+      const todayAttendance = attendanceRecords.filter(r => r.date === today).length;
+      
+      // Calculate attendance rate for current month
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthRecords = attendanceRecords.filter(r => r.date.startsWith(currentMonth));
+      const workingDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const staffCount = approvedUsers.filter(u => u.role === 'staff').length;
+      const expectedAttendance = workingDays * staffCount;
+      const actualAttendance = monthRecords.filter(r => r.status === 'present' || r.status === 'late').length;
+      const attendanceRate = expectedAttendance > 0 ? (actualAttendance / expectedAttendance) * 100 : 0;
+
+      // Attendance by department
+      const deptAttendance: Record<string, { workDays: number; workHours: number; lateMinutes: number }> = {};
+      departments.forEach(dept => {
+        const deptUsers = approvedUsers.filter(u => u.departmentId === dept.id);
+        const deptUserIds = deptUsers.map(u => u.uid);
+        const deptRecords = attendanceRecords.filter(r => deptUserIds.includes(r.userId));
+        
+        deptAttendance[dept.name] = {
+          workDays: deptRecords.filter(r => r.status === 'present' || r.status === 'late').length,
+          workHours: parseFloat(deptRecords.reduce((sum, r) => sum + (r.workHours || 0), 0).toFixed(1)),
+          lateMinutes: deptRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0)
+        };
+      });
+      
+      const attendanceByDepartment = Object.entries(deptAttendance).map(([name, stats]) => ({
+        name,
+        'Ngày làm': stats.workDays,
+        'Giờ làm': stats.workHours,
+        'Phút muộn': stats.lateMinutes
+      }));
+
+      // Top attendance (most work days)
+      const userAttendance = approvedUsers.filter(u => u.role === 'staff').map(u => {
+        const userRecords = attendanceRecords.filter(r => r.userId === u.uid);
+        const workDays = userRecords.filter(r => r.status === 'present' || r.status === 'late').length;
+        const workHours = parseFloat(userRecords.reduce((sum, r) => sum + (r.workHours || 0), 0).toFixed(1));
+        const dept = departments.find(d => d.id === u.departmentId);
+        return {
+          name: u.displayName,
+          workDays,
+          workHours,
+          department: dept?.name || 'Chưa có'
+        };
+      }).sort((a, b) => b.workDays - a.workDays).slice(0, 10);
+
+      // Top punctual (least late minutes among those with work days)
+      const userPunctuality = approvedUsers.filter(u => u.role === 'staff').map(u => {
+        const userRecords = attendanceRecords.filter(r => r.userId === u.uid);
+        const workDays = userRecords.filter(r => r.status === 'present' || r.status === 'late').length;
+        const lateMinutes = userRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
+        const dept = departments.find(d => d.id === u.departmentId);
+        return {
+          name: u.displayName,
+          lateMinutes,
+          workDays,
+          department: dept?.name || 'Chưa có'
+        };
+      }).filter(u => u.workDays > 0).sort((a, b) => a.lateMinutes - b.lateMinutes).slice(0, 10);
 
       // Calculate stats
       const totalLessonsCompleted = progressData.filter(p => p.completed).length;
@@ -157,7 +245,15 @@ export const DashboardSimple: React.FC = () => {
         learningByDepartment,
         departmentComparison,
         topLearners: userLearning,
-        topQuizScorers
+        topQuizScorers,
+        totalWorkDays,
+        totalWorkHours: parseFloat(totalWorkHours.toFixed(1)),
+        totalLateMinutes,
+        todayAttendance,
+        attendanceRate: parseFloat(attendanceRate.toFixed(1)),
+        attendanceByDepartment,
+        topAttendance: userAttendance,
+        topPunctual: userPunctuality
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -214,6 +310,96 @@ export const DashboardSimple: React.FC = () => {
           </div>
           <p className="text-orange-100">Tổng giờ học</p>
         </div>
+      </div>
+
+      {/* Attendance Stats Section */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <Calendar className="text-brand-600" size={24} />
+          Thống kê chấm công
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="text-white" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-green-700 font-medium">Tổng ngày làm</p>
+                <p className="text-2xl font-bold text-green-900">{stats.totalWorkDays}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                <Clock className="text-white" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-blue-700 font-medium">Tổng giờ làm</p>
+                <p className="text-2xl font-bold text-blue-900">{stats.totalWorkHours}h</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 border border-yellow-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
+                <AlertCircle className="text-white" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-yellow-700 font-medium">Tổng phút muộn</p>
+                <p className="text-2xl font-bold text-yellow-900">{stats.totalLateMinutes}p</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                <Users className="text-white" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-purple-700 font-medium">Hôm nay</p>
+                <p className="text-2xl font-bold text-purple-900">{stats.todayAttendance}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 border border-teal-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center">
+                <Trophy className="text-white" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-teal-700 font-medium">Tỷ lệ đi làm</p>
+                <p className="text-2xl font-bold text-teal-900">{stats.attendanceRate}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Attendance Charts */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <Calendar className="text-brand-600" size={20} />
+          Chấm công theo phòng ban
+        </h3>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={stats.attendanceByDepartment}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis yAxisId="left" label={{ value: 'Ngày làm / Giờ làm', angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="right" orientation="right" label={{ value: 'Phút muộn', angle: 90, position: 'insideRight' }} />
+            <Tooltip />
+            <Legend />
+            <Bar yAxisId="left" dataKey="Ngày làm" fill="#10b981" />
+            <Bar yAxisId="left" dataKey="Giờ làm" fill="#3b82f6" />
+            <Bar yAxisId="right" dataKey="Phút muộn" fill="#f59e0b" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Department Comparison Chart - Grouped Bar Chart tối ưu hơn cho so sánh categorical */}
@@ -273,6 +459,63 @@ export const DashboardSimple: React.FC = () => {
               <Bar dataKey="hours" fill="#3b82f6" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Attendance Top Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Attendance */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy className="text-green-500" size={24} />
+            <h3 className="text-lg font-bold text-slate-900">Top 10 Chuyên cần nhất</h3>
+          </div>
+          <div className="space-y-2">
+            {stats.topAttendance.map((user, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                    index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-300'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="font-medium text-slate-900">{user.name}</p>
+                    <p className="text-xs text-slate-500">{user.department} • {user.workHours}h</p>
+                  </div>
+                </div>
+                <span className="font-bold text-green-600">{user.workDays} ngày</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top Punctual */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Award className="text-blue-500" size={24} />
+            <h3 className="text-lg font-bold text-slate-900">Top 10 Đúng giờ nhất</h3>
+          </div>
+          <div className="space-y-2">
+            {stats.topPunctual.map((user, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                    index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-300'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="font-medium text-slate-900">{user.name}</p>
+                    <p className="text-xs text-slate-500">{user.department} • {user.workDays} ngày làm</p>
+                  </div>
+                </div>
+                <span className={`font-bold ${user.lateMinutes === 0 ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {user.lateMinutes === 0 ? '0 phút' : `${user.lateMinutes}p`}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

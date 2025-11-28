@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Question, QuizResult, Lesson } from '@/types/lesson';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckCircle, XCircle, Award, Save, Clock, FileText, Download } from 'lucide-react';
+import { CheckCircle, XCircle, Award, Save, Clock, FileText, Download, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/Button';
 
 interface QuizTakerProps {
@@ -189,7 +189,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
           <Award className={`w-20 h-20 mx-auto mb-4 ${
             existingResult.score >= 80 ? 'text-green-500' : existingResult.score >= 50 ? 'text-yellow-500' : 'text-red-500'
           }`} />
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">Bạn đã hoàn thành bài kiểm tra này</h2>
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">Kết quả bài kiểm tra</h2>
           <div className="text-5xl font-bold mb-2" style={{
             color: existingResult.score >= 80 ? '#10b981' : existingResult.score >= 50 ? '#f59e0b' : '#ef4444'
           }}>
@@ -203,71 +203,71 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
           </p>
         </div>
 
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-6">
-          <div className="flex gap-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-blue-900 mb-1">Lưu ý</p>
-              <p className="text-xs text-blue-800">
-                Mỗi học viên chỉ được làm bài kiểm tra <strong>1 lần duy nhất</strong>. Kết quả trên là kết quả cuối cùng của bạn.
-              </p>
+        {existingResult.score < 70 ? (
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-6">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-orange-900 mb-1">Chưa đạt yêu cầu</p>
+                <p className="text-xs text-orange-800">
+                  Bạn cần đạt tối thiểu <strong>70 điểm</strong> để được học bài tiếp theo. Hãy làm lại để cải thiện kết quả!
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="space-y-4 mb-8">
-          {questions.map((question, index) => {
-            const userAnswer = existingResult.answers[index];
-            const isCorrect = userAnswer === question.correctAnswer;
-
-            return (
-              <div key={question.id} className="border border-slate-200 rounded-xl p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {isCorrect ? <CheckCircle size={20} /> : <XCircle size={20} />}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 mb-2">
-                      Câu {index + 1}: {question.question || `Câu hỏi ${index + 1}`}
-                    </h3>
-                    <div className="space-y-2">
-                      {question.options.map((option, optIndex) => {
-                        const isUserAnswer = userAnswer === optIndex;
-                        const isCorrectAnswer = question.correctAnswer === optIndex;
-                        const displayText = option || `Đáp án ${String.fromCharCode(65 + optIndex)}`;
-
-                        return (
-                          <div
-                            key={optIndex}
-                            className={`px-4 py-2 rounded-lg text-sm ${
-                              isCorrectAnswer
-                                ? 'bg-green-50 border-2 border-green-500 text-green-700 font-medium'
-                                : isUserAnswer
-                                ? 'bg-red-50 border-2 border-red-500 text-red-700'
-                                : 'bg-slate-50 text-slate-600'
-                            }`}
-                          >
-                            {String.fromCharCode(65 + optIndex)}. {displayText}
-                            {isCorrectAnswer && ' ✓ (Đáp án đúng)'}
-                            {isUserAnswer && !isCorrectAnswer && ' ✗ (Bạn đã chọn)'}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+        ) : (
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-white" />
               </div>
-            );
-          })}
-        </div>
+              <div>
+                <p className="text-sm font-bold text-green-900 mb-1">Xuất sắc!</p>
+                <p className="text-xs text-green-800">
+                  Bạn đã đạt yêu cầu. Bạn có thể tiếp tục học bài tiếp theo hoặc làm lại để cải thiện điểm số.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-        <Button onClick={onComplete} className="w-full">
-          Quay lại bài học
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={onComplete} className="flex-1">
+            Quay lại bài học
+          </Button>
+          <Button 
+            onClick={async () => {
+              if (!confirm('Bạn có chắc muốn làm lại? Kết quả cũ sẽ bị xóa.')) return;
+              
+              try {
+                // Delete old result from Firestore
+                if (existingResult && userProfile) {
+                  const resultRef = doc(db, 'quizResults', existingResult.id);
+                  await deleteDoc(resultRef);
+                  console.log('Deleted old quiz result:', existingResult.id);
+                }
+                
+                // Reset state
+                setExistingResult(null);
+                setAnswers(new Array(questions.length).fill(-1));
+                setShowResult(false);
+                setResult(null);
+                setStartTime(Date.now());
+                if (quizDuration) {
+                  setTimeLeft(quizDuration * 60);
+                }
+              } catch (error) {
+                console.error('Error deleting old result:', error);
+                alert('Lỗi khi xóa kết quả cũ. Vui lòng thử lại.');
+              }
+            }} 
+            className="flex-1 bg-orange-500 hover:bg-orange-600"
+          >
+            Làm lại bài kiểm tra
+          </Button>
+        </div>
       </div>
     );
   }
@@ -290,71 +290,70 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ lessonId, courseId, quizDu
           </p>
         </div>
 
-        <div className="space-y-4 mb-8">
-          {questions.map((question, index) => {
-            const userAnswer = answers[index];
-            const isCorrect = userAnswer === question.correctAnswer;
-
-            return (
-              <div key={question.id} className="border border-slate-200 rounded-xl p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {isCorrect ? <CheckCircle size={20} /> : <XCircle size={20} />}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 mb-2">
-                      Câu {index + 1}: {question.question}
-                    </h3>
-                    <div className="space-y-2">
-                      {question.options.map((option, optIndex) => {
-                        const isUserAnswer = userAnswer === optIndex;
-                        const isCorrectAnswer = question.correctAnswer === optIndex;
-                        const displayText = option || `Đáp án ${String.fromCharCode(65 + optIndex)}`;
-
-                        return (
-                          <div
-                            key={optIndex}
-                            className={`px-4 py-2 rounded-lg text-sm ${
-                              isCorrectAnswer
-                                ? 'bg-green-50 border-2 border-green-500 text-green-700 font-medium'
-                                : isUserAnswer
-                                ? 'bg-red-50 border-2 border-red-500 text-red-700'
-                                : 'bg-slate-50 text-slate-600'
-                            }`}
-                          >
-                            {String.fromCharCode(65 + optIndex)}. {displayText}
-                            {isCorrectAnswer && ' ✓ (Đáp án đúng)'}
-                            {isUserAnswer && !isCorrectAnswer && ' ✗ (Bạn chọn)'}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+        {result.score < 70 ? (
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-6">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-white" />
               </div>
-            );
-          })}
-        </div>
-
-        <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-6">
-          <div className="flex gap-3">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-orange-900 mb-1">Lưu ý quan trọng</p>
-              <p className="text-xs text-orange-800">
-                Kết quả này đã được lưu vào hệ thống. Mỗi học viên chỉ được làm bài kiểm tra <strong>1 lần duy nhất</strong>.
-              </p>
+              <div>
+                <p className="text-sm font-bold text-orange-900 mb-1">Chưa đạt yêu cầu</p>
+                <p className="text-xs text-orange-800">
+                  Bạn cần đạt tối thiểu <strong>70 điểm</strong> để được học bài tiếp theo. Bạn có thể làm lại để cải thiện kết quả!
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-green-900 mb-1">Xuất sắc!</p>
+                <p className="text-xs text-green-800">
+                  Bạn đã đạt yêu cầu. Bạn có thể tiếp tục học bài tiếp theo hoặc làm lại để cải thiện điểm số.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-        <Button onClick={onComplete} className="w-full">
-          Quay lại bài học
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={onComplete} className="flex-1">
+            {result.score >= 70 ? 'Tiếp tục học' : 'Quay lại'}
+          </Button>
+          <Button 
+            onClick={async () => {
+              if (!confirm('Bạn có chắc muốn làm lại? Kết quả này sẽ bị xóa.')) return;
+              
+              try {
+                // Delete the result we just saved
+                if (result && userProfile) {
+                  const resultRef = doc(db, 'quizResults', result.id);
+                  await deleteDoc(resultRef);
+                  console.log('Deleted quiz result:', result.id);
+                }
+                
+                // Reset state
+                setShowResult(false);
+                setResult(null);
+                setAnswers(new Array(questions.length).fill(-1));
+                setStartTime(Date.now());
+                if (quizDuration) {
+                  setTimeLeft(quizDuration * 60);
+                }
+              } catch (error) {
+                console.error('Error deleting result:', error);
+                alert('Lỗi khi xóa kết quả. Vui lòng thử lại.');
+              }
+            }} 
+            className="flex-1 bg-orange-500 hover:bg-orange-600"
+          >
+            Làm lại
+          </Button>
+        </div>
       </div>
     );
   }

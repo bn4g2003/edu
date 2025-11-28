@@ -28,6 +28,9 @@ export const AttendanceManagement: React.FC = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [photoModal, setPhotoModal] = useState<{ url: string; type: string; time: string; userName: string } | null>(null);
+  const [filterDepartment, setFilterDepartment] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'workDays' | 'workHours' | 'lateMinutes'>('name');
 
   function getCurrentMonth() {
     const now = new Date();
@@ -97,6 +100,11 @@ export const AttendanceManagement: React.FC = () => {
       filtered = users.filter(u => u.departmentId === managedDepartment.id);
     }
     
+    // Apply department filter
+    if (filterDepartment !== 'all') {
+      filtered = filtered.filter(u => u.departmentId === filterDepartment);
+    }
+    
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(user =>
@@ -105,7 +113,51 @@ export const AttendanceManagement: React.FC = () => {
       );
     }
     
-    return filtered;
+    // Apply status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(user => {
+        const today = new Date().toISOString().split('T')[0];
+        const todayRecord = attendanceRecords.find(r => r.userId === user.uid && r.date === today);
+        
+        if (filterStatus === 'checked-in') return !!todayRecord;
+        if (filterStatus === 'not-checked-in') return !todayRecord;
+        if (filterStatus === 'late') return todayRecord?.status === 'late';
+        if (filterStatus === 'on-time') return todayRecord?.status === 'present';
+        return true;
+      });
+    }
+    
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.displayName.localeCompare(b.displayName);
+      }
+      
+      const aRecords = attendanceRecords.filter(r => r.userId === a.uid);
+      const bRecords = attendanceRecords.filter(r => r.userId === b.uid);
+      
+      if (sortBy === 'workDays') {
+        const aWorkDays = aRecords.filter(r => r.status === 'present' || r.status === 'late').length;
+        const bWorkDays = bRecords.filter(r => r.status === 'present' || r.status === 'late').length;
+        return bWorkDays - aWorkDays;
+      }
+      
+      if (sortBy === 'workHours') {
+        const aWorkHours = aRecords.reduce((sum, r) => sum + (r.workHours || 0), 0);
+        const bWorkHours = bRecords.reduce((sum, r) => sum + (r.workHours || 0), 0);
+        return bWorkHours - aWorkHours;
+      }
+      
+      if (sortBy === 'lateMinutes') {
+        const aLateMinutes = aRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
+        const bLateMinutes = bRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
+        return bLateMinutes - aLateMinutes;
+      }
+      
+      return 0;
+    });
+    
+    return sorted;
   };
 
   const filteredUsers = getFilteredUsers();
@@ -166,11 +218,32 @@ export const AttendanceManagement: React.FC = () => {
         {salary && (
           <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-2xl p-6 text-white">
             <h3 className="text-lg font-semibold mb-4">Tổng kết tháng {selectedMonth}</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/20 rounded-lg p-3"><p className="text-sm opacity-80">Ngày đi làm</p><p className="text-2xl font-bold">{salary.presentDays + salary.lateDays}</p></div>
-              <div className="bg-white/20 rounded-lg p-3"><p className="text-sm opacity-80">Ngày nghỉ</p><p className="text-2xl font-bold">{salary.absentDays}</p></div>
-              <div className="bg-white/20 rounded-lg p-3"><p className="text-sm opacity-80">Đi muộn</p><p className="text-2xl font-bold">{salary.lateDays}</p></div>
-              <div className="bg-white/20 rounded-lg p-3"><p className="text-sm opacity-80">Lương thực nhận</p><p className="text-2xl font-bold">{salary.finalSalary.toLocaleString('vi-VN')}đ</p></div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="bg-white/20 rounded-lg p-3">
+                <p className="text-sm opacity-80">Ngày đi làm</p>
+                <p className="text-2xl font-bold">{salary.presentDays + salary.lateDays}</p>
+                <p className="text-xs opacity-70 mt-1">ngày</p>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3">
+                <p className="text-sm opacity-80">Tổng phút muộn</p>
+                <p className="text-2xl font-bold">{userRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0)}</p>
+                <p className="text-xs opacity-70 mt-1">phút</p>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3">
+                <p className="text-sm opacity-80">Nửa ngày</p>
+                <p className="text-2xl font-bold">{userRecords.filter(r => r.status === 'half-day').length}</p>
+                <p className="text-xs opacity-70 mt-1">ngày</p>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3">
+                <p className="text-sm opacity-80">Ngày nghỉ</p>
+                <p className="text-2xl font-bold">{salary.absentDays}</p>
+                <p className="text-xs opacity-70 mt-1">ngày</p>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3">
+                <p className="text-sm opacity-80">Lương thực nhận</p>
+                <p className="text-2xl font-bold">{salary.finalSalary.toLocaleString('vi-VN')}</p>
+                <p className="text-xs opacity-70 mt-1">VNĐ</p>
+              </div>
             </div>
           </div>
         )}
@@ -314,16 +387,78 @@ export const AttendanceManagement: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input type="text" placeholder="Tìm kiếm nhân viên..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500" />
+      {/* Filters and Search */}
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input type="text" placeholder="Tìm kiếm nhân viên..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar size={20} className="text-slate-400" />
+            <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar size={20} className="text-slate-400" />
-          <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500" />
+
+        {/* Additional Filters */}
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700">Phòng ban:</label>
+            <select 
+              value={filterDepartment} 
+              onChange={(e) => setFilterDepartment(e.target.value)}
+              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+            >
+              <option value="all">Tất cả</option>
+              {departments.map(dept => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700">Trạng thái:</label>
+            <select 
+              value={filterStatus} 
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+            >
+              <option value="all">Tất cả</option>
+              <option value="checked-in">Đã chấm công hôm nay</option>
+              <option value="not-checked-in">Chưa chấm công hôm nay</option>
+              <option value="on-time">Đúng giờ hôm nay</option>
+              <option value="late">Đi muộn hôm nay</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700">Sắp xếp:</label>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+            >
+              <option value="name">Tên A-Z</option>
+              <option value="workDays">Ngày làm nhiều nhất</option>
+              <option value="workHours">Giờ làm nhiều nhất</option>
+              <option value="lateMinutes">Đi muộn nhiều nhất</option>
+            </select>
+          </div>
+
+          {(filterDepartment !== 'all' || filterStatus !== 'all' || sortBy !== 'name') && (
+            <button
+              onClick={() => {
+                setFilterDepartment('all');
+                setFilterStatus('all');
+                setSortBy('name');
+              }}
+              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
       </div>
 
@@ -354,9 +489,9 @@ export const AttendanceManagement: React.FC = () => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Nhân viên</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Hôm nay</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Đi làm</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Đi muộn</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Nửa ngày</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Ngày đi làm</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Tổng giờ làm</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Tổng phút muộn</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Lương cơ bản</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Thực nhận</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Thao tác</th>
@@ -413,9 +548,21 @@ export const AttendanceManagement: React.FC = () => {
                       <div className="text-center text-xs text-slate-400">Chưa chấm công</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center"><span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">{stats.present} ngày</span></td>
-                  <td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${stats.late > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'}`}>{stats.late} ngày</span></td>
-                  <td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${stats.halfDay > 0 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600'}`}>{stats.halfDay} ngày</span></td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      {stats.present + stats.late} ngày
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      {attendanceRecords.filter(r => r.userId === user.uid).reduce((sum, r) => sum + (r.workHours || 0), 0).toFixed(1)} giờ
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${stats.late > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {attendanceRecords.filter(r => r.userId === user.uid).reduce((sum, r) => sum + (r.lateMinutes || 0), 0)} phút
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-right font-medium text-slate-900">{(user.monthlySalary || 0).toLocaleString('vi-VN')}đ</td>
                   <td className="px-6 py-4 text-right text-green-600 font-bold">{(savedSalary?.finalSalary || salary?.finalSalary || 0).toLocaleString('vi-VN')}đ</td>
                   <td className="px-6 py-4 text-right space-x-2">

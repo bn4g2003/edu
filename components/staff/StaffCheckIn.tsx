@@ -5,7 +5,7 @@ import { collection, getDocs, doc, setDoc, query, where } from 'firebase/firesto
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { AttendanceRecord, CompanySettings } from '@/types/attendance';
-import { Clock, CheckCircle, XCircle, Wifi, AlertCircle, Calendar, LogIn, LogOut, History, Camera, X } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Wifi, AlertCircle, Calendar, LogIn, LogOut, History, Camera, X, Phone, MapPin, Globe, Briefcase } from 'lucide-react';
 
 export const StaffCheckIn: React.FC = () => {
   const { userProfile: user } = useAuth();
@@ -14,6 +14,7 @@ export const StaffCheckIn: React.FC = () => {
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
   const [recentRecords, setRecentRecords] = useState<AttendanceRecord[]>([]);
+  const [allRecords, setAllRecords] = useState<AttendanceRecord[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [processing, setProcessing] = useState(false);
   
@@ -54,6 +55,16 @@ export const StaffCheckIn: React.FC = () => {
         setTodayRecord({ ...data, checkInTime: data.checkInTime?.toDate(), checkOutTime: data.checkOutTime?.toDate() } as AttendanceRecord);
       }
 
+      // Load all records for statistics
+      const allQuery = query(attendanceRef, where('userId', '==', user.uid));
+      const allSnapshot = await getDocs(allQuery);
+      const allRecs = allSnapshot.docs.map(doc => {
+        const d = doc.data();
+        return { ...d, checkInTime: d.checkInTime?.toDate(), checkOutTime: d.checkOutTime?.toDate() } as AttendanceRecord;
+      }).sort((a, b) => b.date.localeCompare(a.date));
+      setAllRecords(allRecs);
+
+      // Load recent 7 days for display
       const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
       const recentQuery = query(attendanceRef, where('userId', '==', user.uid), where('date', '>=', weekAgo.toISOString().split('T')[0]));
       const recentSnapshot = await getDocs(recentQuery);
@@ -309,31 +320,212 @@ export const StaffCheckIn: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-900 to-slate-900">
-      <div className="max-w-4xl mx-auto p-4 md:p-8">
-        {/* Header */}
-        <div className="text-center mb-8 pt-8">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-full mb-4">
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        {/* Status Badge */}
+        <div className="text-center mb-6 pt-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-full">
             <div className={`w-2 h-2 rounded-full ${ipAllowed ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
             <span className="text-white/80 text-sm">{ipAllowed ? 'Đã kết nối mạng công ty' : 'Chưa kết nối mạng công ty'}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Xin chào, {user?.displayName}</h1>
-          <p className="text-white/60">Hệ thống chấm công tự động</p>
         </div>
 
-        {/* Main Clock Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 mb-6 border border-white/20">
-          <div className="text-center">
-            <div className="text-7xl md:text-8xl font-bold text-white mb-2 font-mono tracking-wider">
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-            </div>
-            <div className="text-white/60 text-lg">
-              {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        {/* Profile and Info Section */}
+        <div className="grid md:grid-cols-3 gap-6 mb-6">
+          {/* Left: Profile Photo and Basic Info */}
+          <div className="md:col-span-1">
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 h-full">
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative mb-4">
+                  <img 
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'User')}&size=160&background=random`}
+                    alt={user?.displayName || 'User'} 
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white/30 shadow-xl"
+                  />
+                  <div className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-slate-900 ${ipAllowed ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                </div>
+                <h2 className="text-xl font-bold text-white text-center mb-1">{user?.displayName}</h2>
+                <p className="text-white/60 text-xs text-center mb-3">{user?.email}</p>
+                {user?.position && (
+                  <div className="px-4 py-1 bg-white/10 rounded-full">
+                    <p className="text-white/80 text-sm">{user.position}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Basic Info */}
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <h3 className="text-white/80 font-semibold text-sm mb-3">Thông tin cơ bản</h3>
+                
+                {user?.phoneNumber && (
+                  <div className="flex items-start gap-3">
+                    <Phone className="text-brand-400 flex-shrink-0 mt-0.5" size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/50 text-xs">Số điện thoại</p>
+                      <p className="text-white text-sm break-all">{user.phoneNumber}</p>
+                    </div>
+                  </div>
+                )}
+
+                {user?.dateOfBirth && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="text-brand-400 flex-shrink-0 mt-0.5" size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/50 text-xs">Ngày sinh</p>
+                      <p className="text-white text-sm">{new Date(user.dateOfBirth).toLocaleDateString('vi-VN')}</p>
+                    </div>
+                  </div>
+                )}
+
+                {user?.address && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="text-brand-400 flex-shrink-0 mt-0.5" size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/50 text-xs">Địa chỉ</p>
+                      <p className="text-white text-sm break-words">{user.address}</p>
+                    </div>
+                  </div>
+                )}
+
+                {user?.workLocation && (
+                  <div className="flex items-start gap-3">
+                    <Briefcase className="text-brand-400 flex-shrink-0 mt-0.5" size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/50 text-xs">Vị trí làm việc</p>
+                      <p className="text-white text-sm break-words">{user.workLocation}</p>
+                    </div>
+                  </div>
+                )}
+
+                {user?.country && (
+                  <div className="flex items-start gap-3">
+                    <Globe className="text-brand-400 flex-shrink-0 mt-0.5" size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/50 text-xs">Quốc gia</p>
+                      <p className="text-white text-sm">{user.country}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex justify-center gap-8 mt-8 pt-6 border-t border-white/10">
-            <div className="text-center"><p className="text-white/50 text-sm">Giờ vào</p><p className="text-2xl font-bold text-white">{companySettings.workStartTime}</p></div>
-            <div className="w-px bg-white/20"></div>
-            <div className="text-center"><p className="text-white/50 text-sm">Giờ ra</p><p className="text-2xl font-bold text-white">{companySettings.workEndTime}</p></div>
+
+          {/* Right: Basic Info and Attendance Info */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Clock Card */}
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20">
+              <div className="text-center">
+                <div className="text-5xl md:text-6xl font-bold text-white mb-2 font-mono tracking-wider">
+                  {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </div>
+                <div className="text-white/60 text-base">
+                  {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              </div>
+              <div className="flex justify-center gap-8 mt-6 pt-4 border-t border-white/10">
+                <div className="text-center">
+                  <p className="text-white/50 text-sm">Giờ vào</p>
+                  <p className="text-xl font-bold text-white">{companySettings.workStartTime}</p>
+                </div>
+                <div className="w-px bg-white/20"></div>
+                <div className="text-center">
+                  <p className="text-white/50 text-sm">Giờ ra</p>
+                  <p className="text-xl font-bold text-white">{companySettings.workEndTime}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Attendance Status */}
+            {todayRecord && (
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                  <Calendar size={20} /> Chấm công hôm nay
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                    {todayRecord.checkInPhoto ? (
+                      <img src={todayRecord.checkInPhoto} alt="Check-in" className="w-12 h-12 rounded-full mx-auto mb-2 object-cover border-2 border-green-400" />
+                    ) : (
+                      <LogIn className="text-green-400 mx-auto mb-2" size={24} />
+                    )}
+                    <p className="text-white/50 text-xs">Check-in</p>
+                    <p className="text-white font-bold">{todayRecord.checkInTime?.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                    {todayRecord.checkOutPhoto ? (
+                      <img src={todayRecord.checkOutPhoto} alt="Check-out" className="w-12 h-12 rounded-full mx-auto mb-2 object-cover border-2 border-orange-400" />
+                    ) : (
+                      <LogOut className="text-orange-400 mx-auto mb-2" size={24} />
+                    )}
+                    <p className="text-white/50 text-xs">Check-out</p>
+                    <p className="text-white font-bold">{todayRecord.checkOutTime?.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) || '--:--'}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                    <Clock className="text-blue-400 mx-auto mb-2" size={24} />
+                    <p className="text-white/50 text-xs">Số giờ</p>
+                    <p className="text-white font-bold">{todayRecord.workHours ? `${todayRecord.workHours}h` : '--'}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                    <CheckCircle className={`mx-auto mb-2 ${todayRecord.status === 'present' ? 'text-green-400' : todayRecord.status === 'late' ? 'text-yellow-400' : 'text-orange-400'}`} size={24} />
+                    <p className="text-white/50 text-xs">Trạng thái</p>
+                    <p className={`font-bold ${todayRecord.status === 'present' ? 'text-green-400' : todayRecord.status === 'late' ? 'text-yellow-400' : 'text-orange-400'}`}>
+                      {todayRecord.status === 'present' ? 'Đúng giờ' : todayRecord.status === 'late' ? 'Đi muộn' : 'Nửa ngày'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Statistics */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
+          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+            <History size={20} /> Thống kê chấm công
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/5 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="text-green-400" size={24} />
+              </div>
+              <p className="text-white/50 text-xs mb-1">Ngày làm việc</p>
+              <p className="text-3xl font-bold text-white mb-1">
+                {allRecords.filter(r => r.status === 'present' || r.status === 'late').length}
+              </p>
+              <p className="text-white/40 text-xs">ngày</p>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Clock className="text-blue-400" size={24} />
+              </div>
+              <p className="text-white/50 text-xs mb-1">Tổng giờ làm</p>
+              <p className="text-3xl font-bold text-white mb-1">
+                {allRecords.reduce((sum, r) => sum + (r.workHours || 0), 0).toFixed(1)}
+              </p>
+              <p className="text-white/40 text-xs">giờ</p>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <AlertCircle className="text-yellow-400" size={24} />
+              </div>
+              <p className="text-white/50 text-xs mb-1">Tổng phút muộn</p>
+              <p className="text-3xl font-bold text-white mb-1">
+                {allRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0)}
+              </p>
+              <p className="text-white/40 text-xs">phút</p>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="text-orange-400" size={24} />
+              </div>
+              <p className="text-white/50 text-xs mb-1">Nửa ngày</p>
+              <p className="text-3xl font-bold text-white mb-1">
+                {allRecords.filter(r => r.status === 'half-day').length}
+              </p>
+              <p className="text-white/40 text-xs">ngày</p>
+            </div>
           </div>
         </div>
 
@@ -350,45 +542,6 @@ export const StaffCheckIn: React.FC = () => {
             {ipAllowed ? <CheckCircle className="text-green-400" size={28} /> : <XCircle className="text-red-400" size={28} />}
           </div>
         </div>
-
-        {/* Today's Status with Photos */}
-        {todayRecord && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-            <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><Calendar size={20} /> Hôm nay</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                {todayRecord.checkInPhoto ? (
-                  <img src={todayRecord.checkInPhoto} alt="Check-in" className="w-12 h-12 rounded-full mx-auto mb-2 object-cover border-2 border-green-400" />
-                ) : (
-                  <LogIn className="text-green-400 mx-auto mb-2" size={24} />
-                )}
-                <p className="text-white/50 text-xs">Check-in</p>
-                <p className="text-white font-bold">{todayRecord.checkInTime?.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                {todayRecord.checkOutPhoto ? (
-                  <img src={todayRecord.checkOutPhoto} alt="Check-out" className="w-12 h-12 rounded-full mx-auto mb-2 object-cover border-2 border-orange-400" />
-                ) : (
-                  <LogOut className="text-orange-400 mx-auto mb-2" size={24} />
-                )}
-                <p className="text-white/50 text-xs">Check-out</p>
-                <p className="text-white font-bold">{todayRecord.checkOutTime?.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) || '--:--'}</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <Clock className="text-blue-400 mx-auto mb-2" size={24} />
-                <p className="text-white/50 text-xs">Số giờ</p>
-                <p className="text-white font-bold">{todayRecord.workHours ? `${todayRecord.workHours}h` : '--'}</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <CheckCircle className={`mx-auto mb-2 ${todayRecord.status === 'present' ? 'text-green-400' : todayRecord.status === 'late' ? 'text-yellow-400' : 'text-orange-400'}`} size={24} />
-                <p className="text-white/50 text-xs">Trạng thái</p>
-                <p className={`font-bold ${todayRecord.status === 'present' ? 'text-green-400' : todayRecord.status === 'late' ? 'text-yellow-400' : 'text-orange-400'}`}>
-                  {todayRecord.status === 'present' ? 'Đúng giờ' : todayRecord.status === 'late' ? 'Đi muộn' : 'Nửa ngày'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Action Buttons - Now opens camera */}
         <div className="space-y-4 mb-8">

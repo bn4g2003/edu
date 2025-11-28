@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowLeft, BookOpen } from 'lucide-react';
 import { Button } from './Button';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole } from '@/types/user';
+import { UserRole, UserProfile } from '@/types/user';
 
 interface AuthProps {
   initialMode?: 'login' | 'register';
@@ -19,6 +19,11 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<UserRole>('staff'); // Mặc định là nhân viên
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [address, setAddress] = useState('');
+  const [country, setCountry] = useState('Việt Nam');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [workLocation, setWorkLocation] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -65,7 +70,16 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
           setLoading(false);
           return;
         }
-        const profile = await signUp(email, password, displayName, role);
+        
+        // Prepare additional info
+        const additionalInfo: Partial<UserProfile> = {};
+        if (dateOfBirth) additionalInfo.dateOfBirth = dateOfBirth;
+        if (address) additionalInfo.address = address;
+        if (country) additionalInfo.country = country;
+        if (phoneNumber) additionalInfo.phoneNumber = phoneNumber;
+        if (workLocation) additionalInfo.workLocation = workLocation;
+        
+        const profile = await signUp(email, password, displayName, role, additionalInfo);
         
         // Hiển thị thông báo khác nhau tùy role
         if (profile.role === 'admin') {
@@ -160,17 +174,82 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
             )}
 
             {mode === 'register' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Họ và tên</label>
-                <input 
-                  type="text" 
-                  placeholder="Ví dụ: Nguyễn Văn A"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
-                  required
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Họ và tên *</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ví dụ: Nguyễn Văn A"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Ngày sinh</label>
+                    <input 
+                      type="date" 
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Số điện thoại</label>
+                    <input 
+                      type="tel" 
+                      placeholder="0912345678"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Địa chỉ</label>
+                  <input 
+                    type="text" 
+                    placeholder="Số nhà, đường, phường/xã, quận/huyện"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Quốc gia</label>
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    >
+                      <option value="Việt Nam">Việt Nam</option>
+                      <option value="Hoa Kỳ">Hoa Kỳ</option>
+                      <option value="Nhật Bản">Nhật Bản</option>
+                      <option value="Hàn Quốc">Hàn Quốc</option>
+                      <option value="Singapore">Singapore</option>
+                      <option value="Khác">Khác</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Vị trí học việc</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ví dụ: Intern, Junior Dev"
+                      value={workLocation}
+                      onChange={(e) => setWorkLocation(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">

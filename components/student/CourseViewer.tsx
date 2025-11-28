@@ -31,6 +31,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [selectedCourseId, setSelectedCourseId] = useState<string>(course.id);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [quizResults, setQuizResults] = useState<Record<string, any>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
   const saveProgressTimer = useRef<NodeJS.Timeout | null>(null);
   const hlsRef = useRef<any>(null);
@@ -56,6 +57,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     if (selectedCourseId) {
       loadLessons();
       loadProgress();
+      loadQuizResults();
     }
   }, [selectedCourseId]);
 
@@ -296,7 +298,48 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     }
   };
 
+  const loadQuizResults = async () => {
+    if (!userProfile) return;
+    
+    try {
+      const resultsRef = collection(db, 'quizResults');
+      const q = query(
+        resultsRef,
+        where('userId', '==', userProfile.uid),
+        where('courseId', '==', course.id)
+      );
+      const snapshot = await getDocs(q);
+      const resultsMap: Record<string, any> = {};
+      
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        resultsMap[data.lessonId] = data;
+      });
+      
+      setQuizResults(resultsMap);
+    } catch (error) {
+      console.error('Error loading quiz results:', error);
+    }
+  };
 
+  const isLessonLocked = (lesson: Lesson, index: number): boolean => {
+    // First lesson is never locked
+    if (index === 0) return false;
+    
+    // Get previous lesson
+    const previousLesson = filteredLessons[index - 1];
+    if (!previousLesson) return false;
+    
+    // If previous lesson has quiz, check if passed with 70%
+    if (previousLesson.hasQuiz) {
+      const quizResult = quizResults[previousLesson.id];
+      if (!quizResult || quizResult.score < 70) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
 
   const handleTimeUpdate = () => {
     if (!videoRef.current || !selectedLesson) return;
@@ -737,12 +780,20 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-200">
-                    {filteredLessons.map((lesson) => {
+                    {filteredLessons.map((lesson, index) => {
                       const hasContent = lesson.videoId || lesson.documentUrl || lesson.hasQuiz;
+                      const locked = isLessonLocked(lesson, index);
+                      const previousLesson = index > 0 ? filteredLessons[index - 1] : null;
+                      const previousQuizResult = previousLesson ? quizResults[previousLesson.id] : null;
+                      
                       return (
                         <button
                           key={lesson.id}
                           onClick={() => {
+                            if (locked) {
+                              alert(`Bạn cần hoàn thành bài kiểm tra của "${previousLesson?.title}" với điểm số tối thiểu 70 để mở khóa bài này.`);
+                              return;
+                            }
                             if (hasContent) {
                               setSelectedLesson(lesson);
                               // Auto select view mode
@@ -751,21 +802,30 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                               else if (lesson.hasQuiz) setViewMode('quiz');
                             }
                           }}
-                          disabled={!hasContent}
-                          className={`w-full p-4 text-left hover:bg-slate-50 transition-colors ${
+                          disabled={!hasContent || locked}
+                          className={`w-full p-4 text-left transition-colors ${
                             selectedLesson?.id === lesson.id ? 'bg-brand-50 border-l-4 border-brand-500' : ''
-                          } ${!hasContent ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${locked ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-slate-50'} ${!hasContent && !locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-slate-600 relative">
-                              {lesson.order}
-                              {progress[lesson.id]?.completed && (
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold relative ${
+                              locked ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {locked ? <Lock size={16} /> : lesson.order}
+                              {!locked && progress[lesson.id]?.completed && (
                                 <CheckCircle size={12} className="absolute -top-1 -right-1 text-green-500 bg-white rounded-full" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-slate-900 mb-1 line-clamp-2">{lesson.title}</h4>
-                              {progress[lesson.id] && (
+                              <h4 className={`font-medium mb-1 line-clamp-2 ${locked ? 'text-slate-500' : 'text-slate-900'}`}>
+                                {lesson.title}
+                                {locked && (
+                                  <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                                    Cần đạt 70% bài trước
+                                  </span>
+                                )}
+                              </h4>
+                              {!locked && progress[lesson.id] && (
                                 <div className="mb-1">
                                   <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
                                     <div 

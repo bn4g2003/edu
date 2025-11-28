@@ -35,7 +35,12 @@ export const UserManagement: React.FC = () => {
     role: 'staff' as UserRole,
     position: '' as Position | '',
     departmentId: '',
-    monthlySalary: 0
+    monthlySalary: 0,
+    dateOfBirth: '',
+    address: '',
+    country: '',
+    phoneNumber: '',
+    workLocation: ''
   });
 
   const POSITIONS: Position[] = [
@@ -181,7 +186,12 @@ export const UserManagement: React.FC = () => {
       role: 'staff',
       position: '',
       departmentId: '',
-      monthlySalary: 0
+      monthlySalary: 0,
+      dateOfBirth: '',
+      address: '',
+      country: '',
+      phoneNumber: '',
+      workLocation: ''
     });
     setShowModal(true);
   };
@@ -201,7 +211,12 @@ export const UserManagement: React.FC = () => {
       role: user.role,
       position: user.position || '',
       departmentId: user.departmentId || '',
-      monthlySalary: user.monthlySalary || 0
+      monthlySalary: user.monthlySalary || 0,
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || '',
+      country: user.country || '',
+      phoneNumber: user.phoneNumber || '',
+      workLocation: user.workLocation || ''
     });
     setShowModal(true);
   };
@@ -251,6 +266,21 @@ export const UserManagement: React.FC = () => {
         if (formData.monthlySalary && formData.monthlySalary > 0) {
           updateData.monthlySalary = formData.monthlySalary;
         }
+        if (formData.dateOfBirth) {
+          updateData.dateOfBirth = formData.dateOfBirth;
+        }
+        if (formData.address) {
+          updateData.address = formData.address;
+        }
+        if (formData.country) {
+          updateData.country = formData.country;
+        }
+        if (formData.phoneNumber) {
+          updateData.phoneNumber = formData.phoneNumber;
+        }
+        if (formData.workLocation) {
+          updateData.workLocation = formData.workLocation;
+        }
 
         await updateDoc(userRef, updateData);
         alert('Cập nhật người dùng thành công!');
@@ -288,6 +318,21 @@ export const UserManagement: React.FC = () => {
         }
         if (formData.monthlySalary && formData.monthlySalary > 0) {
           newUser.monthlySalary = formData.monthlySalary;
+        }
+        if (formData.dateOfBirth) {
+          newUser.dateOfBirth = formData.dateOfBirth;
+        }
+        if (formData.address) {
+          newUser.address = formData.address;
+        }
+        if (formData.country) {
+          newUser.country = formData.country;
+        }
+        if (formData.phoneNumber) {
+          newUser.phoneNumber = formData.phoneNumber;
+        }
+        if (formData.workLocation) {
+          newUser.workLocation = formData.workLocation;
         }
 
         // Use setDoc with custom ID instead of addDoc
@@ -452,6 +497,63 @@ export const UserManagement: React.FC = () => {
           ))}
         </select>
       </div>
+
+      {/* Birthday Section */}
+      {(() => {
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const birthdayUsers = users.filter(u => {
+          if (!u.dateOfBirth) return false;
+          const birthDate = new Date(u.dateOfBirth);
+          return birthDate.getMonth() + 1 === currentMonth;
+        }).sort((a, b) => {
+          const aDay = new Date(a.dateOfBirth!).getDate();
+          const bDay = new Date(b.dateOfBirth!).getDate();
+          return aDay - bDay;
+        });
+
+        if (birthdayUsers.length === 0) return null;
+
+        return (
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">🎂</span>
+              <h3 className="text-lg font-bold text-pink-900">
+                Sinh nhật tháng {currentMonth} ({birthdayUsers.length} người)
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {birthdayUsers.map(user => {
+                const birthDate = new Date(user.dateOfBirth!);
+                const day = birthDate.getDate();
+                const isToday = day === now.getDate();
+                const dept = departments.find(d => d.id === user.departmentId);
+                
+                return (
+                  <div 
+                    key={user.uid} 
+                    className={`bg-white rounded-lg p-4 border-2 ${isToday ? 'border-pink-400 shadow-lg' : 'border-pink-200'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white ${isToday ? 'bg-pink-500 animate-pulse' : 'bg-pink-400'}`}>
+                        {day}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-900 flex items-center gap-2">
+                          {user.displayName}
+                          {isToday && <span className="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full">Hôm nay!</span>}
+                        </p>
+                        <p className="text-xs text-slate-500">{dept?.name || 'Chưa có phòng ban'}</p>
+                        <p className="text-xs text-slate-400">{user.position || 'Chưa có chức vụ'}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Stats */}
       <div className="grid grid-cols-6 gap-4">
@@ -646,8 +748,8 @@ export const UserManagement: React.FC = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl my-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-slate-900">
                 {editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
@@ -657,38 +759,41 @@ export const UserManagement: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Họ và tên</label>
-                <input
-                  type="text"
-                  value={formData.displayName}
-                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-700 border-b pb-2">Thông tin tài khoản</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Họ và tên *</label>
+                  <input
+                    type="text"
+                    value={formData.displayName}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
-                <input
-                  type="text"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu *</label>
+                  <input
+                    type="text"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Vai trò</label>
                   <select
@@ -715,36 +820,95 @@ export const UserManagement: React.FC = () => {
                     ))}
                   </select>
                 </div>
+
+                {formData.role === 'staff' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Phòng ban</label>
+                      <select
+                        value={formData.departmentId}
+                        onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      >
+                        <option value="">-- Chọn phòng ban --</option>
+                        {departments.map(dept => (
+                          <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Lương tháng (VNĐ)</label>
+                      <input
+                        type="number"
+                        value={formData.monthlySalary}
+                        onChange={(e) => setFormData({ ...formData, monthlySalary: Number(e.target.value) })}
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        placeholder="Ví dụ: 10000000"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
-              {formData.role === 'staff' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Phòng ban</label>
-                    <select
-                      value={formData.departmentId}
-                      onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    >
-                      <option value="">-- Chọn phòng ban --</option>
-                      {departments.map(dept => (
-                        <option key={dept.id} value={dept.id}>{dept.name}</option>
-                      ))}
-                    </select>
-                  </div>
+              {/* Right Column */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-700 border-b pb-2">Thông tin cá nhân</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Ngày sinh</label>
+                  <input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Lương tháng (VNĐ)</label>
-                    <input
-                      type="number"
-                      value={formData.monthlySalary}
-                      onChange={(e) => setFormData({ ...formData, monthlySalary: Number(e.target.value) })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                      placeholder="Ví dụ: 10000000"
-                    />
-                  </div>
-                </>
-              )}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Số điện thoại</label>
+                  <input
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="0123456789"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Địa chỉ</label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="123 Đường ABC, Quận 1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Quốc gia</label>
+                  <input
+                    type="text"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="Việt Nam"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Vị trí làm việc</label>
+                  <input
+                    type="text"
+                    value={formData.workLocation}
+                    onChange={(e) => setFormData({ ...formData, workLocation: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="Văn phòng HN"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
