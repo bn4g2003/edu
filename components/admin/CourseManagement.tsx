@@ -39,6 +39,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
     departmentId: ''
   });
   const [departments, setDepartments] = useState<Array<{id: string, name: string, managerId?: string, managerName?: string}>>([]);
+  const [users, setUsers] = useState<Array<{uid: string, departmentId?: string}>>([]);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
 
@@ -48,7 +49,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
 
   useEffect(() => {
     filterCourses();
-  }, [courses, searchTerm, filterLevel, filterCategory]);
+  }, [courses, searchTerm, filterLevel, filterCategory, users]);
 
   const loadData = async () => {
     try {
@@ -70,6 +71,14 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
         name: doc.data().name
       }));
       setDepartments(depts);
+
+      // Load users (chỉ cần uid và departmentId)
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const usersData = usersSnapshot.docs.map(doc => ({
+        uid: doc.data().uid,
+        departmentId: doc.data().departmentId
+      }));
+      setUsers(usersData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -80,11 +89,18 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
   const filterCourses = () => {
     let filtered = courses;
     
-    // Nếu là trưởng phòng (không phải admin), chỉ thấy khóa học của phòng mình
+    // Nếu là trưởng phòng (không phải admin), chỉ thấy khóa học có nhân viên phòng mình được add vào
     if (currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && currentUser?.departmentId) {
-      filtered = filtered.filter(course => 
-        course.departmentId === currentUser.departmentId || course.departmentId === 'all'
-      );
+      filtered = filtered.filter(course => {
+        // Kiểm tra xem có nhân viên nào trong phòng được add vào khóa học này không
+        if (course.students && course.students.length > 0) {
+          return course.students.some(studentId => {
+            const user = users.find(u => u.uid === studentId);
+            return user && user.departmentId === currentUser.departmentId;
+          });
+        }
+        return false;
+      });
     }
     
     // Search filter
@@ -355,10 +371,13 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
             <Users size={18} />
             Cập nhật học viên
           </Button>
-          <Button onClick={handleAdd} className="flex items-center gap-2">
-            <Plus size={18} />
-            Thêm khóa học
-          </Button>
+          {/* Chỉ admin mới được thêm khóa học */}
+          {currentUser?.role === 'admin' && (
+            <Button onClick={handleAdd} className="flex items-center gap-2">
+              <Plus size={18} />
+              Thêm khóa học
+            </Button>
+          )}
         </div>
       </div>
 
@@ -499,20 +518,25 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                         Chi tiết
                       </button>
 
-                      <button
-                        onClick={() => handleEdit(course)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(course)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {/* Chỉ admin mới thấy các nút chỉnh sửa và xóa */}
+                      {currentUser?.role === 'admin' && (
+                        <>
+                          <button
+                            onClick={() => handleEdit(course)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Chỉnh sửa"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(course)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Xóa"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

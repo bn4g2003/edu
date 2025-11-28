@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function StaffPage() {
   const [activeTab, setActiveTab] = useState<'checkin' | 'profile'>('checkin');
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <ProtectedRoute allowedRoles={['staff']}>
@@ -43,7 +43,7 @@ export default function StaffPage() {
                 </button>
               </div>
               <button
-                onClick={logout}
+                onClick={signOut}
                 className="flex items-center gap-2 px-4 py-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
               >
                 <LogOut size={20} />

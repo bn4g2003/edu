@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { Course } from '@/types/course';
-import { ArrowLeft, PlayCircle, Users } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Users, UserPlus } from 'lucide-react';
 import { LessonManagement } from '@/components/teacher/LessonManagement';
 import { CourseDetail } from '@/components/teacher/CourseDetail';
+import { CourseStudents } from '@/components/admin/CourseStudents';
 
 interface CourseDetailPageProps {
   course: Course;
@@ -18,6 +19,8 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
   isAdmin = false 
 }) => {
   const [activeTab, setActiveTab] = useState<'lessons' | 'students'>('lessons');
+  const [showStudentManagement, setShowStudentManagement] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
     <div className="space-y-6">
@@ -78,14 +81,39 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         </div>
       </div>
 
+      {/* Student Management Button */}
+      {activeTab === 'students' && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowStudentManagement(true)}
+            className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+          >
+            <UserPlus size={18} />
+            Quản lý học viên
+          </button>
+        </div>
+      )}
+
       {/* Content */}
       <div>
         {activeTab === 'lessons' ? (
           <LessonManagement course={course} onBack={() => {}} />
         ) : (
-          <CourseDetail course={course} onBack={() => {}} />
+          <CourseDetail key={refreshKey} course={course} onBack={() => {}} />
         )}
       </div>
+
+      {/* Student Management Modal */}
+      {showStudentManagement && (
+        <CourseStudents
+          course={course}
+          onClose={() => setShowStudentManagement(false)}
+          onUpdate={() => {
+            setRefreshKey(prev => prev + 1);
+            setShowStudentManagement(false);
+          }}
+        />
+      )}
     </div>
   );
 };

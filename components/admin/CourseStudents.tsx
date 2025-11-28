@@ -7,6 +7,7 @@ import { Course } from '@/types/course';
 import { UserProfile } from '@/types/user';
 import { Search, UserPlus, UserCheck, UserX, X } from 'lucide-react';
 import { Button } from '@/components/Button';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CourseStudentsProps {
   course: Course;
@@ -15,6 +16,7 @@ interface CourseStudentsProps {
 }
 
 export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose, onUpdate }) => {
+  const { userProfile: currentUser } = useAuth();
   const [allStudents, setAllStudents] = useState<UserProfile[]>([]);
   const [pendingStudents, setPendingStudents] = useState<UserProfile[]>([]);
   const [enrolledStudents, setEnrolledStudents] = useState<UserProfile[]>([]);
@@ -34,7 +36,12 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
       const allUsersData = snapshot.docs.map(doc => doc.data()) as UserProfile[];
       
       // Filter for staff and student roles only
-      const studentsData = allUsersData.filter(u => u.role === 'staff' || u.role === 'student');
+      let studentsData = allUsersData.filter(u => u.role === 'staff' || u.role === 'student');
+      
+      // Nếu không phải admin, chỉ hiển thị nhân viên trong phòng của trưởng phòng
+      if (currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && currentUser?.departmentId) {
+        studentsData = studentsData.filter(u => u.departmentId === currentUser.departmentId);
+      }
       
       setAllStudents(studentsData);
       
@@ -146,6 +153,11 @@ export const CourseStudents: React.FC<CourseStudentsProps> = ({ course, onClose,
           <div>
             <h3 className="text-2xl font-bold text-slate-900">{course.title}</h3>
             <p className="text-slate-600">Quản lý nhân viên</p>
+            {currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && (
+              <p className="text-sm text-blue-600 mt-1">
+                🏢 Chỉ hiển thị nhân viên trong phòng ban của bạn
+              </p>
+            )}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X size={24} />
