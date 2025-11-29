@@ -12,6 +12,7 @@ import { BunnyDocumentUpload } from '@/components/shared/BunnyDocumentUpload';
 interface QuizManagementProps {
   lesson: Lesson;
   onBack: () => void;
+  isReadOnly?: boolean;
 }
 
 interface BulkForm {
@@ -20,7 +21,7 @@ interface BulkForm {
   correctAnswer: number;
 }
 
-export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }) => {
+export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, isReadOnly = false }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -253,12 +254,19 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
           </button>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-1">Quản lý bài kiểm tra</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-1">
+                {isReadOnly ? 'Xem bài kiểm tra' : 'Quản lý bài kiểm tra'}
+              </h3>
               <p className="text-slate-600">Bài học: <span className="font-medium">{lesson.title}</span></p>
               {questions.length > 0 && (
                 <p className="text-sm text-slate-500 mt-1">
                   Tổng số câu: <span className="font-bold text-purple-600">{questions.length}</span>
                   {lesson.quizDuration && <span> | Thời gian: <span className="font-bold text-purple-600">{lesson.quizDuration} phút</span></span>}
+                </p>
+              )}
+              {isReadOnly && (
+                <p className="text-sm text-blue-600 mt-2">
+                  🔒 Chế độ chỉ xem - Không thể chỉnh sửa
                 </p>
               )}
             </div>
@@ -272,19 +280,23 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
                     <BarChart3 size={18} />
                     Xem kết quả
                   </Button>
-                  <button
-                    onClick={handleDeleteQuiz}
-                    className="px-4 py-2 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors flex items-center gap-2"
-                  >
-                    <Trash2 size={18} />
-                    Xóa bài kiểm tra
-                  </button>
+                  {!isReadOnly && (
+                    <button
+                      onClick={handleDeleteQuiz}
+                      className="px-4 py-2 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 size={18} />
+                      Xóa bài kiểm tra
+                    </button>
+                  )}
                 </>
               )}
-              <Button onClick={handleCreateQuiz} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 shadow-lg">
-                <Plus size={18} />
-                {questions.length > 0 ? 'Tạo lại' : 'Tạo bài kiểm tra'}
-              </Button>
+              {!isReadOnly && (
+                <Button onClick={handleCreateQuiz} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 shadow-lg">
+                  <Plus size={18} />
+                  {questions.length > 0 ? 'Tạo lại' : 'Tạo bài kiểm tra'}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -736,7 +748,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
               </div>
 
               <div className="flex gap-3 mt-8 sticky bottom-0 bg-white pt-4 border-t border-slate-200">
-                {!editingQuestion && (
+                {!editingQuestion && !isReadOnly && (
                   <button
                     onClick={handleAddMoreInModal}
                     className="px-6 py-3 border-2 border-purple-500 text-purple-600 rounded-lg hover:bg-purple-50 font-medium transition-colors flex items-center gap-2"
@@ -746,25 +758,41 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack }
                   </button>
                 )}
                 <div className="flex-1" />
-                <button
-                  onClick={() => {
-                    if (confirm('Hủy bỏ tất cả câu hỏi đang nhập?')) {
+                {!isReadOnly && (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (confirm('Hủy bỏ tất cả câu hỏi đang nhập?')) {
+                          setShowBulkFormModal(false);
+                          setBulkForms([]);
+                          setEditingQuestion(null);
+                        }
+                      }}
+                      className="px-6 py-3 border-2 border-slate-200 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <Button 
+                      onClick={handleSaveBulkForms} 
+                      className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-3 shadow-lg"
+                    >
+                      <Save size={18} />
+                      {editingQuestion ? 'Cập nhật' : `Lưu ${bulkForms.length} câu hỏi`}
+                    </Button>
+                  </>
+                )}
+                {isReadOnly && (
+                  <button
+                    onClick={() => {
                       setShowBulkFormModal(false);
                       setBulkForms([]);
                       setEditingQuestion(null);
-                    }
-                  }}
-                  className="px-6 py-3 border-2 border-slate-200 rounded-lg hover:bg-slate-50 font-medium transition-colors"
-                >
-                  Hủy
-                </button>
-                <Button 
-                  onClick={handleSaveBulkForms} 
-                  className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-3 shadow-lg"
-                >
-                  <Save size={18} />
-                  {editingQuestion ? 'Cập nhật' : `Lưu ${bulkForms.length} câu hỏi`}
-                </Button>
+                    }}
+                    className="px-6 py-3 bg-slate-600 text-white rounded-lg hover:bg-slate-700 font-medium transition-colors"
+                  >
+                    Đóng
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ import { Plus, Edit2, Trash2, X, Save, Upload, Play, Clock, FileText, HelpCircle
 import { Button } from '@/components/Button';
 import { QuizManagement } from './QuizManagement';
 import { DocumentUploader } from './DocumentUploader';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LessonManagementProps {
   course: Course;
@@ -16,6 +17,7 @@ interface LessonManagementProps {
 }
 
 export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBack }) => {
+  const { userProfile: currentUser } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +32,9 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
     tags: [] as string[]
   });
   const [tagInput, setTagInput] = useState('');
+  
+  // Check if user is admin (can edit)
+  const isAdmin = currentUser?.role === 'admin';
 
   const CDN_HOSTNAME = process.env.NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME || 'vz-69258c0a-d89.b-cdn.net';
 
@@ -248,7 +253,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
   };
 
   if (managingQuiz) {
-    return <QuizManagement lesson={managingQuiz} onBack={() => setManagingQuiz(null)} />;
+    return <QuizManagement lesson={managingQuiz} onBack={() => setManagingQuiz(null)} isReadOnly={!isAdmin} />;
   }
 
   if (loading) {
@@ -266,10 +271,12 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
               <p className="text-slate-600">Khóa học: <span className="font-medium">{course.title}</span></p>
               <p className="text-sm text-slate-500 mt-1">Tổng số bài học: <span className="font-bold text-blue-600">{lessons.length}</span></p>
             </div>
-            <Button onClick={handleAdd} className="flex items-center gap-2 shadow-lg">
-              <Plus size={18} />
-              Thêm bài học
-            </Button>
+            {isAdmin && (
+              <Button onClick={handleAdd} className="flex items-center gap-2 shadow-lg">
+                <Plus size={18} />
+                Thêm bài học
+              </Button>
+            )}
           </div>
         </div>
 
@@ -281,11 +288,15 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                 <Play className="w-10 h-10 text-blue-600" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Chưa có bài học nào</h3>
-              <p className="text-slate-600 mb-6">Thêm bài học đầu tiên cho khóa học này</p>
-              <Button onClick={handleAdd} className="shadow-lg">
-                <Plus size={18} className="mr-2" />
-                Thêm bài học
-              </Button>
+              <p className="text-slate-600 mb-6">
+                {isAdmin ? 'Thêm bài học đầu tiên cho khóa học này' : 'Khóa học này chưa có bài học nào'}
+              </p>
+              {isAdmin && (
+                <Button onClick={handleAdd} className="shadow-lg">
+                  <Plus size={18} className="mr-2" />
+                  Thêm bài học
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -317,23 +328,25 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                       )}
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(lesson)}
-                        className="px-3 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 flex items-center gap-1 text-xs font-medium transition-colors"
-                      >
-                        <Edit2 size={14} />
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(lesson)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1 text-xs font-medium transition-colors"
-                      >
-                        <Trash2 size={14} />
-                        Xóa
-                      </button>
-                    </div>
+                    {/* Action Buttons - Only for Admin */}
+                    {isAdmin && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(lesson)}
+                          className="px-3 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 flex items-center gap-1 text-xs font-medium transition-colors"
+                        >
+                          <Edit2 size={14} />
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(lesson)}
+                          className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1 text-xs font-medium transition-colors"
+                        >
+                          <Trash2 size={14} />
+                          Xóa
+                        </button>
+                      </div>
+                    )}
 
                     {/* Divider */}
                     <div className="w-full border-t border-slate-200 my-2"></div>
@@ -367,15 +380,17 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                               <Play size={14} />
                               Xem video
                             </button>
-                            <button
-                              onClick={() => handleDelete(lesson)}
-                              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            {isAdmin && (
+                              <button
+                                onClick={() => handleDelete(lesson)}
+                                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         </div>
-                      ) : (
+                      ) : isAdmin ? (
                         <label className="cursor-pointer block">
                           <input
                             type="file"
@@ -392,6 +407,8 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                             Upload video
                           </div>
                         </label>
+                      ) : (
+                        <p className="text-sm text-slate-500 italic">Chưa có video</p>
                       )}
                     </div>
 
@@ -404,13 +421,33 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                         <h4 className="font-semibold text-slate-900 text-sm">Tài liệu</h4>
                       </div>
                       
-                      <DocumentUploader
-                        lessonId={lesson.id}
-                        currentDocumentUrl={lesson.documentUrl}
-                        currentDocumentName={lesson.documentName}
-                        onUploadComplete={(url, name) => handleDocumentUploadComplete(lesson, url, name)}
-                        onRemove={() => handleDocumentRemove(lesson)}
-                      />
+                      {isAdmin ? (
+                        <DocumentUploader
+                          lessonId={lesson.id}
+                          currentDocumentUrl={lesson.documentUrl}
+                          currentDocumentName={lesson.documentName}
+                          onUploadComplete={(url, name) => handleDocumentUploadComplete(lesson, url, name)}
+                          onRemove={() => handleDocumentRemove(lesson)}
+                        />
+                      ) : lesson.documentUrl ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
+                            <CheckCircle size={16} />
+                            Đã có tài liệu
+                          </div>
+                          <a
+                            href={lesson.documentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium text-center"
+                          >
+                            <FileText size={14} className="inline mr-1" />
+                            Xem tài liệu
+                          </a>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500 italic">Chưa có tài liệu</p>
+                      )}
                     </div>
 
                     {/* Quiz Section */}
@@ -434,7 +471,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                           className="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors shadow-sm"
                         >
                           <HelpCircle size={16} />
-                          Quản lý câu hỏi
+                          {isAdmin ? 'Quản lý câu hỏi' : 'Xem câu hỏi'}
                         </button>
                       </div>
                     </div>

@@ -472,46 +472,101 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Banner Image - Full width, trên cùng */}
-      {course.banner && (
-        <div className="w-full bg-slate-900 relative">
-          <img 
-            src={course.banner} 
-            alt={`Banner ${course.title}`}
-            className="w-full h-32 md:h-40 lg:h-48 object-cover"
-            onError={(e) => {
-              console.error('❌ Banner load error:', course.banner);
-              e.currentTarget.style.display = 'none';
-            }}
-            onLoad={() => console.log('✅ Banner loaded successfully')}
-          />
-          {/* Overlay gradient để text dễ đọc hơn */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60"></div>
-        </div>
-      )}
-
-      {/* Header - Overlay trên banner hoặc standalone */}
-      <div className={`w-full ${course.banner ? 'bg-gradient-to-r from-brand-600/95 to-brand-700/95 backdrop-blur-sm' : 'bg-gradient-to-r from-brand-600 to-brand-700'} text-white`}>
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <button onClick={onBack} className="text-white hover:text-slate-200 mb-4 flex items-center gap-2">
-            ← Quay lại khóa học
-          </button>
-          <h1 className="text-4xl font-bold mb-2">{course.title}</h1>
-          <p className="text-lg text-slate-100 mb-2">{course.description}</p>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1">
-              <Clock size={16} />
-              {course.duration} giờ
-            </span>
-            <span>•</span>
-            <span>Giảng viên: {course.teacherName}</span>
-            <span>•</span>
-            <span className="px-2 py-1 bg-white/20 rounded">
-              {course.level === 'beginner' ? 'Cơ bản' : 
-               course.level === 'intermediate' ? 'Trung cấp' : 'Nâng cao'}
-            </span>
+      {/* Banner Section - Modern Hero Design */}
+      <div className="w-full relative overflow-hidden">
+        {course.banner ? (
+          <>
+            {/* Banner Image with Parallax Effect */}
+            <div className="absolute inset-0">
+              <img 
+                src={course.banner} 
+                alt={`Banner ${course.title}`}
+                className="w-full h-full object-cover scale-105"
+                onError={(e) => {
+                  console.error('❌ Banner load error:', course.banner);
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => console.log('✅ Banner loaded successfully')}
+              />
+              {/* Multi-layer Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/70"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-900/60 via-transparent to-brand-900/40"></div>
+            </div>
+            
+            {/* Content Overlay */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 lg:py-20">
+              <button 
+                onClick={onBack} 
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-lg transition-all mb-6 border border-white/20"
+              >
+                ← Quay lại khóa học
+              </button>
+              
+              <div className="max-w-3xl">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white drop-shadow-lg">
+                  {course.title}
+                </h1>
+                <p className="text-base md:text-lg text-white/90 mb-6 drop-shadow-md leading-relaxed">
+                  {course.description}
+                </p>
+                
+                {/* Course Meta Info */}
+                <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
+                    <Clock size={18} className="text-white/80" />
+                    <span className="text-white font-medium">{course.duration} giờ</span>
+                  </div>
+                  
+                  <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
+                    <span className="text-white font-medium">👨‍🏫 {course.teacherName}</span>
+                  </div>
+                  
+                  <div className={`px-4 py-2 backdrop-blur-md rounded-lg border ${
+                    course.level === 'beginner' ? 'bg-green-500/20 border-green-400/30 text-green-100' :
+                    course.level === 'intermediate' ? 'bg-yellow-500/20 border-yellow-400/30 text-yellow-100' :
+                    'bg-red-500/20 border-red-400/30 text-red-100'
+                  }`}>
+                    <span className="font-medium">
+                      {course.level === 'beginner' ? '📚 Cơ bản' : 
+                       course.level === 'intermediate' ? '📖 Trung cấp' : '🎓 Nâng cao'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Fallback gradient background if no banner
+          <div className="bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 text-white">
+            <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
+              <button 
+                onClick={onBack} 
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all mb-6"
+              >
+                ← Quay lại khóa học
+              </button>
+              
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{course.title}</h1>
+              <p className="text-base md:text-lg text-white/90 mb-6 max-w-3xl">{course.description}</p>
+              
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg">
+                  <Clock size={18} />
+                  <span className="font-medium">{course.duration} giờ</span>
+                </div>
+                <div className="px-4 py-2 bg-white/10 rounded-lg">
+                  <span className="font-medium">👨‍🏫 {course.teacherName}</span>
+                </div>
+                <div className="px-4 py-2 bg-white/10 rounded-lg">
+                  <span className="font-medium">
+                    {course.level === 'beginner' ? '📚 Cơ bản' : 
+                     course.level === 'intermediate' ? '📖 Trung cấp' : '🎓 Nâng cao'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Demo Video */}
