@@ -195,70 +195,102 @@ export const DepartmentManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Departments Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDepartments.map((dept) => (
-          <div key={dept.id} className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <Building2 className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(dept)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Chỉnh sửa"
-                >
-                  <Edit2 size={18} />
-                </button>
-                <button
-                  onClick={() => handleDelete(dept)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Xóa"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">{dept.name}</h3>
-            <p className="text-slate-600 text-sm mb-2 line-clamp-2">{dept.description}</p>
-            {dept.managerName ? (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-slate-500">👤 Trưởng phòng:</span>
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                  <Users size={14} />
-                  {dept.managerName}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
-                  ⚠️ Chưa có trưởng phòng
-                </span>
-              </div>
-            )}
-            <div className="flex items-center justify-between text-sm mt-4">
-              <button
-                onClick={() => setViewStaffDept(dept)}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
-              >
-                <Users size={16} />
-                <span>{getStaffCount(dept.id)} nhân viên</span>
-              </button>
-
-            </div>
+      {/* Departments Table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {filteredDepartments.length === 0 ? (
+          <div className="text-center py-12">
+            <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600">
+              {searchTerm ? 'Không tìm thấy phòng ban nào' : 'Chưa có phòng ban nào'}
+            </p>
           </div>
-        ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Phòng ban
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Mô tả
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Trưởng phòng
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Số nhân viên
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredDepartments.map((dept) => (
+                  <tr key={dept.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-100 p-2 rounded-lg">
+                          <Building2 className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900">{dept.name}</p>
+                          <p className="text-xs text-slate-500">ID: {dept.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-600 max-w-md line-clamp-2">
+                        {dept.description || '-'}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {dept.managerName ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                          <Shield size={14} />
+                          {dept.managerName}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                          ⚠️ Chưa có
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => setViewStaffDept(dept)}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <Users size={16} />
+                        <span>{getStaffCount(dept.id)}</span>
+                      </button>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleEdit(dept)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(dept)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-
-      {filteredDepartments.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
-          <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600">
-            {searchTerm ? 'Không tìm thấy phòng ban nào' : 'Chưa có phòng ban nào'}
-          </p>
-        </div>
-      )}
 
       {/* Modal */}
       {showModal && (

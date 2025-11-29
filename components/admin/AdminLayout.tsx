@@ -57,7 +57,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
       icon: Fingerprint,
       permission: null, // Không cần quyền
       hideForStaff: false, // Staff luôn thấy
-      hideForAdmin: true // Admin KHÔNG thấy
+      hideForAdmin: true, // Admin KHÔNG thấy
+      hidden: true // TẠM THỜI ẨN
     },
     { 
       id: 'dashboard', 
@@ -101,7 +102,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
       label: 'Quản lý chấm công', 
       icon: Clock,
       permission: 'view_salary' as const,
-      hideForStaff: false
+      hideForStaff: false,
+      hidden: true // TẠM THỜI ẨN
     },
   ];
 
@@ -139,6 +141,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
             const isAdmin = userProfile?.role === 'admin';
             const isStaff = userProfile?.role === 'staff';
             const isManager = userProfile?.position === 'Trưởng phòng';
+            
+            // Ẩn menu nếu có flag hidden
+            if (item.hidden) {
+              return null;
+            }
             
             // Ẩn menu nếu role không phù hợp
             if (isAdmin && item.hideForAdmin) {

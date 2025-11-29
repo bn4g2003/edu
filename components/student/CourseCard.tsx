@@ -150,12 +150,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           )}
         </div>
         
-        <div className="flex items-center justify-between text-sm mb-3">
+        <div className="flex items-center text-sm mb-3">
           <span className="text-slate-600 flex items-center gap-1">
             <Clock size={14} />
             {course.duration}h
           </span>
-          <span className="font-bold text-brand-600">{course.price.toLocaleString('vi-VN')}đ</span>
         </div>
 
         {/* Action Button */}

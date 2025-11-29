@@ -3,10 +3,6 @@
 import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { Features } from '@/components/Features';
-import { CourseList } from '@/components/CourseList';
-import { Pricing } from '@/components/Pricing';
-import { Footer } from '@/components/Footer';
 import { Auth } from '@/components/Auth';
 import { ChatbaseWidget } from '@/components/ChatbaseWidget';
 import { useAuth } from '@/contexts/AuthContext';
@@ -51,11 +47,7 @@ const App: React.FC = () => {
       />
       <main>
         <Hero />
-        <Features />
-        <CourseList />
-        <Pricing />
       </main>
-      <Footer />
       <ChatbaseWidget />
     </div>
   );

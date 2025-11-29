@@ -458,9 +458,6 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                   Thời lượng
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Giá
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Thao tác
                 </th>
               </tr>
@@ -503,9 +500,6 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-slate-900">
                     {course.duration}h
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium text-slate-900">
-                    {course.price.toLocaleString('vi-VN')}đ
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -624,7 +618,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Cấp độ</label>
                   <select
@@ -644,16 +638,6 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                     type="number"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Giá (VNĐ)</label>
-                  <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>

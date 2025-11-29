@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserProfile, UserRole, Position } from '@/types/user';
-import { Search, Plus, Edit2, Trash2, X, Save, CheckCircle, XCircle, Shield, Users } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Save, CheckCircle, XCircle, Shield, Users, BookOpen } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,6 +29,16 @@ export const UserManagement: React.FC = () => {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [showBirthdays, setShowBirthdays] = useState(false);
+  const [userLearningStats, setUserLearningStats] = useState<{
+    totalCourses: number;
+    completedCourses: number;
+    inProgressCourses: number;
+    averageProgress: number;
+    totalQuizzes: number;
+    averageQuizScore: number;
+    recentCourses: Array<{ title: string; progress: number; courseId: string }>;
+  } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -231,6 +241,120 @@ export const UserManagement: React.FC = () => {
     if (!deptId) return '-';
     const dept = departments.find(d => d.id === deptId);
     return dept?.name || '-';
+  };
+
+  const loadUserLearningStats = async (userId: string) => {
+    try {
+      setLoadingStats(true);
+      console.log('Loading stats for user:', userId);
+      
+      // Load progress (tiến độ học từng bài)
+      const progressRef = collection(db, 'progress');
+      const progressQuery = query(progressRef, where('userId', '==', userId));
+      const progressSnapshot = await getDocs(progressQuery);
+      const progressData = progressSnapshot.docs.map(doc => doc.data());
+      console.log('Progress data:', progressData);
+      
+      // Load enrollments (đăng ký khóa học)
+      const enrollmentsRef = collection(db, 'enrollments');
+      const enrollmentsQuery = query(enrollmentsRef, where('userId', '==', userId));
+      const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+      const enrollments = enrollmentsSnapshot.docs.map(doc => doc.data());
+      console.log('Enrollments data:', enrollments);
+      
+      // Load quiz results
+      const quizRef = collection(db, 'quizResults');
+      const quizQuery = query(quizRef, where('userId', '==', userId));
+      const quizSnapshot = await getDocs(quizQuery);
+      const quizResults = quizSnapshot.docs.map(doc => doc.data());
+      console.log('Quiz results:', quizResults);
+      
+      // Load courses for recent courses
+      const coursesRef = collection(db, 'courses');
+      const coursesSnapshot = await getDocs(coursesRef);
+      const courses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      // Sử dụng enrollments nếu có, nếu không thì dùng progress để tính
+      let totalCourses = 0;
+      let completedCourses = 0;
+      let inProgressCourses = 0;
+      let totalProgress = 0;
+      let recentCourses: Array<{ title: string; progress: number; courseId: string }> = [];
+      
+      if (enrollments.length > 0) {
+        // Có enrollments - dùng enrollments
+        totalCourses = enrollments.length;
+        completedCourses = enrollments.filter(e => e.progress >= 100).length;
+        inProgressCourses = enrollments.filter(e => e.progress > 0 && e.progress < 100).length;
+        totalProgress = enrollments.reduce((sum, e) => sum + (e.progress || 0), 0);
+        
+        recentCourses = enrollments
+          .map(e => {
+            const course = courses.find(c => c.id === e.courseId);
+            return {
+              title: course?.title || 'Khóa học không xác định',
+              progress: e.progress || 0,
+              courseId: e.courseId
+            };
+          })
+          .sort((a, b) => b.progress - a.progress)
+          .slice(0, 5);
+      } else if (progressData.length > 0) {
+        // Không có enrollments - tính từ progress
+        const courseIds = [...new Set(progressData.map(p => p.courseId))];
+        totalCourses = courseIds.length;
+        
+        courseIds.forEach(courseId => {
+          const courseLessons = progressData.filter(p => p.courseId === courseId);
+          const completedLessons = courseLessons.filter(p => p.completed).length;
+          const courseProgress = courseLessons.length > 0 ? (completedLessons / courseLessons.length) * 100 : 0;
+          
+          if (courseProgress >= 100) completedCourses++;
+          else if (courseProgress > 0) inProgressCourses++;
+          
+          totalProgress += courseProgress;
+          
+          const course = courses.find(c => c.id === courseId);
+          recentCourses.push({
+            title: course?.title || 'Khóa học không xác định',
+            progress: courseProgress,
+            courseId: courseId
+          });
+        });
+        
+        recentCourses = recentCourses.sort((a, b) => b.progress - a.progress).slice(0, 5);
+      }
+      
+      const averageProgress = totalCourses > 0 ? totalProgress / totalCourses : 0;
+      
+      const totalQuizzes = quizResults.length;
+      const totalQuizScore = quizResults.reduce((sum, q) => sum + q.score, 0);
+      const averageQuizScore = totalQuizzes > 0 ? totalQuizScore / totalQuizzes : 0;
+      
+      console.log('Final stats:', {
+        totalCourses,
+        completedCourses,
+        inProgressCourses,
+        averageProgress,
+        totalQuizzes,
+        averageQuizScore,
+        recentCourses
+      });
+      
+      setUserLearningStats({
+        totalCourses,
+        completedCourses,
+        inProgressCourses,
+        averageProgress,
+        totalQuizzes,
+        averageQuizScore,
+        recentCourses
+      });
+    } catch (error) {
+      console.error('Error loading user learning stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
   };
 
   const handleSave = async () => {
@@ -691,24 +815,12 @@ export const UserManagement: React.FC = () => {
                   onClick={() => {
                     setViewingUser(user);
                     setShowDetailModal(true);
+                    loadUserLearningStats(user.uid);
                   }}
                   className="hover:bg-slate-50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-4 whitespace-nowrap sticky left-0 bg-white">
-                    <div className="flex items-center gap-3">
-                      {user.photoURL ? (
-                        <img 
-                          src={user.photoURL}
-                          alt={user.displayName}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-slate-200"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {user.displayName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="font-medium text-blue-600">{user.displayName}</div>
-                    </div>
+                    <div className="font-medium text-blue-600">{user.displayName}</div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-slate-600 text-sm">{user.email}</td>
                   <td className="px-4 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
@@ -1056,50 +1168,110 @@ export const UserManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Learning & Salary */}
+              {/* Learning Stats */}
               <div>
-                <h4 className="text-lg font-bold text-slate-900 mb-4">Học tập & Lương</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
-                    <p className="text-sm text-blue-700 mb-2">Tổng thời gian đã học</p>
-                    {(() => {
-                      const totalHours = viewingUser.totalLearningHours || 0;
-                      const hours = Math.floor(totalHours);
-                      const minutes = Math.floor((totalHours % 1) * 60);
-                      const seconds = Math.round(((totalHours % 1) * 60 - minutes) * 60);
-                      
-                      return (
-                        <>
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            <div className="flex items-baseline gap-1">
-                              <p className="text-3xl font-bold text-blue-900">{hours}</p>
-                              <span className="text-base font-semibold text-blue-700">giờ</span>
+                <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-purple-600" />
+                  Thống kê học tập
+                </h4>
+                {loadingStats ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-slate-600 mt-2">Đang tải...</p>
+                  </div>
+                ) : userLearningStats ? (
+                  <div className="space-y-4">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                        <p className="text-xs text-blue-700 mb-1">Tổng khóa học</p>
+                        <p className="text-2xl font-bold text-blue-900">{userLearningStats.totalCourses}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                        <p className="text-xs text-green-700 mb-1">Hoàn thành</p>
+                        <p className="text-2xl font-bold text-green-900">{userLearningStats.completedCourses}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
+                        <p className="text-xs text-orange-700 mb-1">Đang học</p>
+                        <p className="text-2xl font-bold text-orange-900">{userLearningStats.inProgressCourses}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                        <p className="text-xs text-purple-700 mb-1">Tiến độ TB</p>
+                        <p className="text-2xl font-bold text-purple-900">{userLearningStats.averageProgress.toFixed(0)}%</p>
+                      </div>
+                    </div>
+
+                    {/* Learning Time & Salary */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-6 rounded-xl border border-cyan-200">
+                        <p className="text-sm text-cyan-700 mb-2">Tổng thời gian học</p>
+                        {(() => {
+                          const totalHours = viewingUser.totalLearningHours || 0;
+                          const hours = Math.floor(totalHours);
+                          const minutes = Math.floor((totalHours % 1) * 60);
+                          
+                          return (
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-cyan-900">{hours}</p>
+                              <span className="text-base font-semibold text-cyan-700">giờ</span>
+                              <p className="text-2xl font-bold text-cyan-900">{minutes}</p>
+                              <span className="text-base font-semibold text-cyan-700">phút</span>
                             </div>
-                            <div className="flex items-baseline gap-1">
-                              <p className="text-2xl font-bold text-blue-900">{minutes}</p>
-                              <span className="text-base font-semibold text-blue-700">phút</span>
-                            </div>
-                            {seconds > 0 && (
-                              <div className="flex items-baseline gap-1">
-                                <p className="text-xl font-bold text-blue-900">{seconds}</p>
-                                <span className="text-sm font-semibold text-blue-700">giây</span>
-                              </div>
-                            )}
+                          );
+                        })()}
+                      </div>
+                      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl border border-emerald-200">
+                        <p className="text-sm text-emerald-700 mb-2">Lương tháng</p>
+                        <p className="text-2xl font-bold text-emerald-900">
+                          {viewingUser.monthlySalary ? `${viewingUser.monthlySalary.toLocaleString('vi-VN')}đ` : 'Chưa có'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quiz Stats */}
+                    {userLearningStats.totalQuizzes > 0 && (
+                      <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 rounded-xl border border-pink-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-pink-700 mb-1">Bài kiểm tra</p>
+                            <p className="text-xl font-bold text-pink-900">{userLearningStats.totalQuizzes} bài</p>
                           </div>
-                          <p className="text-xs text-blue-600 mt-2">
-                            ≈ {totalHours.toFixed(2)} giờ
-                          </p>
-                        </>
-                      );
-                    })()}
+                          <div className="text-right">
+                            <p className="text-sm text-pink-700 mb-1">Điểm trung bình</p>
+                            <p className="text-xl font-bold text-pink-900">{userLearningStats.averageQuizScore.toFixed(1)}/100</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recent Courses */}
+                    {userLearningStats.recentCourses.length > 0 && (
+                      <div>
+                        <h5 className="text-sm font-bold text-slate-700 mb-3">Khóa học gần đây</h5>
+                        <div className="space-y-2">
+                          {userLearningStats.recentCourses.map((course, index) => (
+                            <div key={index} className="bg-slate-50 p-3 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-medium text-slate-900 line-clamp-1">{course.title}</p>
+                                <span className="text-sm font-bold text-purple-600">{course.progress.toFixed(0)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-200 rounded-full h-2">
+                                <div 
+                                  className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all"
+                                  style={{ width: `${course.progress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
-                    <p className="text-sm text-green-700 mb-2">Lương tháng</p>
-                    <p className="text-2xl font-bold text-green-900">
-                      {viewingUser.monthlySalary ? `${viewingUser.monthlySalary.toLocaleString('vi-VN')}đ` : 'Chưa có'}
-                    </p>
+                ) : (
+                  <div className="text-center py-8 bg-slate-50 rounded-xl">
+                    <p className="text-slate-600">Chưa có dữ liệu học tập</p>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Timeline */}

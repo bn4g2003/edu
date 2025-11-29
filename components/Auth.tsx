@@ -62,6 +62,11 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
       if (mode === 'login') {
         const profile = await signIn(email, password);
         if (profile) {
+          // Chỉ nhân viên (staff) mới mở cửa sổ checkin
+          if (profile.role === 'staff') {
+            window.open('https://checkin-ten-gamma.vercel.app/', '_blank');
+          }
+          // Chuyển hướng đến dashboard
           redirectByRole(profile.role);
         }
       } else {

@@ -24,8 +24,8 @@ export default function AdminPage() {
   // Set default menu based on role
   useEffect(() => {
     if (userProfile) {
-      // Staff mặc định vào tab "Chấm công", Admin vào Dashboard
-      const defaultMenu = userProfile.role === 'staff' ? 'checkin' : 'dashboard';
+      // Staff mặc định vào tab "Học bài", Admin vào Dashboard
+      const defaultMenu = userProfile.role === 'staff' ? 'learning' : 'dashboard';
       
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);

@@ -43,12 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
     }
   };
 
-  const navLinks = [
-    { name: 'Về chúng tôi', href: '#about' },
-    { name: 'Khóa đào tạo', href: '#courses' },
-    { name: 'Tính năng', href: '#features' },
-    { name: 'Gói đào tạo', href: '#pricing' },
-  ];
+
 
   // Text color logic: White when at top (on dark hero), Dark when scrolled (on white bg)
   const textColorClass = isScrolled ? 'text-slate-600 hover:text-brand-600' : 'text-slate-200 hover:text-white';
@@ -77,46 +72,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a 
-                key={link.name} 
-                href={link.href} 
-                className={`text-sm font-medium transition-colors ${textColorClass}`}
+          <div className="hidden md:flex items-center gap-4">
+            {userProfile ? (
+              <Button 
+                variant={buttonVariant} 
+                size="sm"
+                onClick={handleDashboardClick}
+                className={!isScrolled ? "shadow-none bg-brand-600 hover:bg-brand-500 text-white" : ""}
               >
-                {link.name}
-              </a>
-            ))}
-            
-            <div className="flex items-center gap-4 pl-4 border-l border-white/20">
-              {userProfile ? (
+                Quay lại Dashboard
+              </Button>
+            ) : (
+              <>
+                <button 
+                  onClick={onLogin}
+                  className={`text-sm font-medium transition-colors ${textColorClass}`}
+                >
+                  Đăng nhập
+                </button>
                 <Button 
                   variant={buttonVariant} 
-                  size="sm"
-                  onClick={handleDashboardClick}
+                  size="sm" 
+                  onClick={onRegister}
                   className={!isScrolled ? "shadow-none bg-brand-600 hover:bg-brand-500 text-white" : ""}
                 >
-                  Quay lại Dashboard
+                  Đăng Ký Ngay
                 </Button>
-              ) : (
-                <>
-                  <button 
-                    onClick={onLogin}
-                    className={`text-sm font-medium transition-colors ${textColorClass}`}
-                  >
-                    Đăng nhập
-                  </button>
-                  <Button 
-                    variant={buttonVariant} 
-                    size="sm" 
-                    onClick={onRegister}
-                    className={!isScrolled ? "shadow-none bg-brand-600 hover:bg-brand-500 text-white" : ""}
-                  >
-                    Đăng Ký Ngay
-                  </Button>
-                </>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -134,42 +117,31 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white border-t border-gray-100 shadow-lg p-4 flex flex-col gap-4 animate-in slide-in-from-top-5">
-           {navLinks.map((link) => (
-              <a 
-                key={link.name} 
-                href={link.href} 
-                className="text-base font-medium text-slate-600 hover:text-brand-600 block py-2 px-2 rounded-lg hover:bg-slate-50"
-                onClick={() => setMobileMenuOpen(false)}
+          {userProfile ? (
+            <Button 
+              variant="primary" 
+              className="w-full"
+              onClick={() => { handleDashboardClick(); setMobileMenuOpen(false); }}
+            >
+              Quay lại Dashboard
+            </Button>
+          ) : (
+            <>
+              <button 
+                onClick={() => { onLogin(); setMobileMenuOpen(false); }}
+                className="text-base font-medium text-slate-600 hover:text-brand-600 block py-2 px-2 text-left"
               >
-                {link.name}
-              </a>
-            ))}
-            <hr className="border-gray-100" />
-            {userProfile ? (
+                Đăng nhập
+              </button>
               <Button 
                 variant="primary" 
                 className="w-full"
-                onClick={() => { handleDashboardClick(); setMobileMenuOpen(false); }}
+                onClick={() => { onRegister(); setMobileMenuOpen(false); }}
               >
-                Quay lại Dashboard
+                Đăng Ký Ngay
               </Button>
-            ) : (
-              <>
-                <button 
-                  onClick={() => { onLogin(); setMobileMenuOpen(false); }}
-                  className="text-base font-medium text-slate-600 hover:text-brand-600 block py-2 px-2 text-left"
-                >
-                  Đăng nhập
-                </button>
-                <Button 
-                  variant="primary" 
-                  className="w-full"
-                  onClick={() => { onRegister(); setMobileMenuOpen(false); }}
-                >
-                  Đăng Ký Ngay
-                </Button>
-              </>
-            )}
+            </>
+          )}
         </div>
       )}
     </nav>

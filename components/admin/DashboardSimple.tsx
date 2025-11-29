@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Users, BookOpen, Building2, Clock, Award, CheckCircle, Trophy, Calendar, AlertCircle } from 'lucide-react';
+import { Users, BookOpen, Building2, Clock, Award, CheckCircle, Trophy, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface Stats {
@@ -11,20 +11,15 @@ interface Stats {
   totalUsers: number;
   totalLessonsCompleted: number;
   totalLearningHours: number;
+  totalCourses: number;
+  averageProgress: number;
   usersByPosition: { name: string; value: number; color: string }[];
   learningByDepartment: { name: string; hours: number }[];
   departmentComparison: { name: string; 'Giờ học': number; 'Bài hoàn thành': number; 'Điểm TB': number; 'Số người': number }[];
   topLearners: { name: string; hours: number; department: string }[];
   topQuizScorers: { name: string; score: number; quizCount: number }[];
-  // Attendance stats
-  totalWorkDays: number;
-  totalWorkHours: number;
-  totalLateMinutes: number;
-  todayAttendance: number;
-  attendanceRate: number;
-  attendanceByDepartment: { name: string; 'Ngày làm': number; 'Giờ làm': number; 'Phút muộn': number }[];
-  topAttendance: { name: string; workDays: number; workHours: number; department: string }[];
-  topPunctual: { name: string; lateMinutes: number; workDays: number; department: string }[];
+  learningTrend: { month: string; hours: number; lessons: number }[];
+  learningForecast: { month: string; actual?: number; predicted?: number }[];
 }
 
 const POSITION_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -35,19 +30,15 @@ export const DashboardSimple: React.FC = () => {
     totalUsers: 0,
     totalLessonsCompleted: 0,
     totalLearningHours: 0,
+    totalCourses: 0,
+    averageProgress: 0,
     usersByPosition: [],
     learningByDepartment: [],
     departmentComparison: [],
     topLearners: [],
     topQuizScorers: [],
-    totalWorkDays: 0,
-    totalWorkHours: 0,
-    totalLateMinutes: 0,
-    todayAttendance: 0,
-    attendanceRate: 0,
-    attendanceByDepartment: [],
-    topAttendance: [],
-    topPunctual: []
+    learningTrend: [],
+    learningForecast: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -76,76 +67,76 @@ export const DashboardSimple: React.FC = () => {
       const quizSnapshot = await getDocs(collection(db, 'quizResults'));
       const quizResults = quizSnapshot.docs.map(doc => doc.data());
 
-      // Load attendance records
-      const attendanceSnapshot = await getDocs(collection(db, 'attendanceRecords'));
-      const attendanceRecords = attendanceSnapshot.docs.map(doc => doc.data());
+      // Load courses
+      const coursesSnapshot = await getDocs(collection(db, 'courses'));
+      const totalCourses = coursesSnapshot.docs.length;
+
+      // Load enrollments
+      const enrollmentsSnapshot = await getDocs(collection(db, 'enrollments'));
+      const enrollments = enrollmentsSnapshot.docs.map(doc => doc.data());
       
-      // Calculate attendance stats
-      const totalWorkDays = attendanceRecords.filter(r => r.status === 'present' || r.status === 'late').length;
-      const totalWorkHours = attendanceRecords.reduce((sum, r) => sum + (r.workHours || 0), 0);
-      const totalLateMinutes = attendanceRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
-      
-      const today = new Date().toISOString().split('T')[0];
-      const todayAttendance = attendanceRecords.filter(r => r.date === today).length;
-      
-      // Calculate attendance rate for current month
+      // Calculate average progress
+      const totalProgress = enrollments.reduce((sum, e) => sum + (e.progress || 0), 0);
+      const averageProgress = enrollments.length > 0 ? totalProgress / enrollments.length : 0;
+
+      // Learning trend by month (last 6 months)
+      const learningTrend: { month: string; hours: number; lessons: number }[] = [];
       const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const monthRecords = attendanceRecords.filter(r => r.date.startsWith(currentMonth));
-      const workingDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      const staffCount = approvedUsers.filter(u => u.role === 'staff').length;
-      const expectedAttendance = workingDays * staffCount;
-      const actualAttendance = monthRecords.filter(r => r.status === 'present' || r.status === 'late').length;
-      const attendanceRate = expectedAttendance > 0 ? (actualAttendance / expectedAttendance) * 100 : 0;
-
-      // Attendance by department
-      const deptAttendance: Record<string, { workDays: number; workHours: number; lateMinutes: number }> = {};
-      departments.forEach(dept => {
-        const deptUsers = approvedUsers.filter(u => u.departmentId === dept.id);
-        const deptUserIds = deptUsers.map(u => u.uid);
-        const deptRecords = attendanceRecords.filter(r => deptUserIds.includes(r.userId));
-        
-        deptAttendance[dept.name] = {
-          workDays: deptRecords.filter(r => r.status === 'present' || r.status === 'late').length,
-          workHours: parseFloat(deptRecords.reduce((sum, r) => sum + (r.workHours || 0), 0).toFixed(1)),
-          lateMinutes: deptRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0)
-        };
-      });
+      const monthlyHours: number[] = [];
       
-      const attendanceByDepartment = Object.entries(deptAttendance).map(([name, stats]) => ({
-        name,
-        'Ngày làm': stats.workDays,
-        'Giờ làm': stats.workHours,
-        'Phút muộn': stats.lateMinutes
-      }));
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = date.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
+        
+        const monthProgress = progressData.filter(p => {
+          const progressDate = p.lastWatched?.toDate?.() || new Date();
+          const progressMonth = `${progressDate.getFullYear()}-${String(progressDate.getMonth() + 1).padStart(2, '0')}`;
+          return progressMonth === monthStr;
+        });
+        
+        const hours = monthProgress.reduce((sum, p) => sum + (p.watchedSeconds || 0), 0) / 3600;
+        const lessons = monthProgress.filter(p => p.completed).length;
+        
+        monthlyHours.push(hours);
+        learningTrend.push({
+          month: monthName,
+          hours: parseFloat(hours.toFixed(1)),
+          lessons
+        });
+      }
 
-      // Top attendance (most work days)
-      const userAttendance = approvedUsers.filter(u => u.role === 'staff').map(u => {
-        const userRecords = attendanceRecords.filter(r => r.userId === u.uid);
-        const workDays = userRecords.filter(r => r.status === 'present' || r.status === 'late').length;
-        const workHours = parseFloat(userRecords.reduce((sum, r) => sum + (r.workHours || 0), 0).toFixed(1));
-        const dept = departments.find(d => d.id === u.departmentId);
-        return {
-          name: u.displayName,
-          workDays,
-          workHours,
-          department: dept?.name || 'Chưa có'
-        };
-      }).sort((a, b) => b.workDays - a.workDays).slice(0, 10);
-
-      // Top punctual (least late minutes among those with work days)
-      const userPunctuality = approvedUsers.filter(u => u.role === 'staff').map(u => {
-        const userRecords = attendanceRecords.filter(r => r.userId === u.uid);
-        const workDays = userRecords.filter(r => r.status === 'present' || r.status === 'late').length;
-        const lateMinutes = userRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
-        const dept = departments.find(d => d.id === u.departmentId);
-        return {
-          name: u.displayName,
-          lateMinutes,
-          workDays,
-          department: dept?.name || 'Chưa có'
-        };
-      }).filter(u => u.workDays > 0).sort((a, b) => a.lateMinutes - b.lateMinutes).slice(0, 10);
+      // Simple linear regression for prediction
+      const learningForecast: { month: string; actual?: number; predicted?: number }[] = [];
+      
+      // Add historical data (last 3 months)
+      for (let i = 2; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
+        learningForecast.push({
+          month: monthName,
+          actual: monthlyHours[5 - i]
+        });
+      }
+      
+      // Calculate trend (simple average growth)
+      const recentHours = monthlyHours.slice(-3);
+      const avgGrowth = recentHours.length > 1 
+        ? (recentHours[recentHours.length - 1] - recentHours[0]) / (recentHours.length - 1)
+        : 0;
+      
+      // Predict next 3 months
+      let lastValue = monthlyHours[monthlyHours.length - 1];
+      for (let i = 1; i <= 3; i++) {
+        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const monthName = date.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
+        const predictedValue = Math.max(0, lastValue + avgGrowth);
+        learningForecast.push({
+          month: monthName,
+          predicted: parseFloat(predictedValue.toFixed(1))
+        });
+        lastValue = predictedValue;
+      }
 
       // Calculate stats
       const totalLessonsCompleted = progressData.filter(p => p.completed).length;
@@ -241,19 +232,15 @@ export const DashboardSimple: React.FC = () => {
         totalUsers: approvedUsers.length,
         totalLessonsCompleted,
         totalLearningHours: parseFloat(totalLearningHours.toFixed(1)),
+        totalCourses,
+        averageProgress: parseFloat(averageProgress.toFixed(1)),
         usersByPosition,
         learningByDepartment,
         departmentComparison,
         topLearners: userLearning,
         topQuizScorers,
-        totalWorkDays,
-        totalWorkHours: parseFloat(totalWorkHours.toFixed(1)),
-        totalLateMinutes,
-        todayAttendance,
-        attendanceRate: parseFloat(attendanceRate.toFixed(1)),
-        attendanceByDepartment,
-        topAttendance: userAttendance,
-        topPunctual: userPunctuality
+        learningTrend,
+        learningForecast
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -278,13 +265,13 @@ export const DashboardSimple: React.FC = () => {
       <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between mb-2">
             <Building2 size={32} />
             <span className="text-3xl font-bold">{stats.totalDepartments}</span>
           </div>
-          <p className="text-blue-100">Tổng phòng ban</p>
+          <p className="text-blue-100">Phòng ban</p>
         </div>
 
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
@@ -292,15 +279,15 @@ export const DashboardSimple: React.FC = () => {
             <Users size={32} />
             <span className="text-3xl font-bold">{stats.totalUsers}</span>
           </div>
-          <p className="text-green-100">Tổng nhân viên</p>
+          <p className="text-green-100">Nhân viên</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between mb-2">
-            <CheckCircle size={32} />
-            <span className="text-3xl font-bold">{stats.totalLessonsCompleted}</span>
+            <BookOpen size={32} />
+            <span className="text-3xl font-bold">{stats.totalCourses}</span>
           </div>
-          <p className="text-purple-100">Bài học hoàn thành</p>
+          <p className="text-purple-100">Khóa học</p>
         </div>
 
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white">
@@ -308,97 +295,43 @@ export const DashboardSimple: React.FC = () => {
             <Clock size={32} />
             <span className="text-3xl font-bold">{stats.totalLearningHours}h</span>
           </div>
-          <p className="text-orange-100">Tổng giờ học</p>
+          <p className="text-orange-100">Giờ học</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <CheckCircle size={32} />
+            <span className="text-3xl font-bold">{stats.totalLessonsCompleted}</span>
+          </div>
+          <p className="text-pink-100">Bài hoàn thành</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <TrendingUp size={32} />
+            <span className="text-3xl font-bold">{stats.averageProgress}%</span>
+          </div>
+          <p className="text-teal-100">Tiến độ TB</p>
         </div>
       </div>
 
-      {/* Attendance Stats Section */}
+      {/* Learning Trend Chart */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Calendar className="text-brand-600" size={24} />
-          Thống kê chấm công
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                <CheckCircle className="text-white" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-green-700 font-medium">Tổng ngày làm</p>
-                <p className="text-2xl font-bold text-green-900">{stats.totalWorkDays}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                <Clock className="text-white" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-blue-700 font-medium">Tổng giờ làm</p>
-                <p className="text-2xl font-bold text-blue-900">{stats.totalWorkHours}h</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 border border-yellow-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
-                <AlertCircle className="text-white" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-yellow-700 font-medium">Tổng phút muộn</p>
-                <p className="text-2xl font-bold text-yellow-900">{stats.totalLateMinutes}p</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-                <Users className="text-white" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-purple-700 font-medium">Hôm nay</p>
-                <p className="text-2xl font-bold text-purple-900">{stats.todayAttendance}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 border border-teal-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center">
-                <Trophy className="text-white" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-teal-700 font-medium">Tỷ lệ đi làm</p>
-                <p className="text-2xl font-bold text-teal-900">{stats.attendanceRate}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Attendance Charts */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Calendar className="text-brand-600" size={20} />
-          Chấm công theo phòng ban
+          <TrendingUp className="text-brand-600" size={20} />
+          Xu hướng học tập 6 tháng gần đây
         </h3>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={stats.attendanceByDepartment}>
+          <LineChart data={stats.learningTrend}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis yAxisId="left" label={{ value: 'Ngày làm / Giờ làm', angle: -90, position: 'insideLeft' }} />
-            <YAxis yAxisId="right" orientation="right" label={{ value: 'Phút muộn', angle: 90, position: 'insideRight' }} />
+            <XAxis dataKey="month" />
+            <YAxis yAxisId="left" label={{ value: 'Giờ học', angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="right" orientation="right" label={{ value: 'Bài hoàn thành', angle: 90, position: 'insideRight' }} />
             <Tooltip />
             <Legend />
-            <Bar yAxisId="left" dataKey="Ngày làm" fill="#10b981" />
-            <Bar yAxisId="left" dataKey="Giờ làm" fill="#3b82f6" />
-            <Bar yAxisId="right" dataKey="Phút muộn" fill="#f59e0b" />
-          </BarChart>
+            <Line yAxisId="left" type="monotone" dataKey="hours" stroke="#3b82f6" strokeWidth={3} name="Giờ học" />
+            <Line yAxisId="right" type="monotone" dataKey="lessons" stroke="#10b981" strokeWidth={3} name="Bài hoàn thành" />
+          </LineChart>
         </ResponsiveContainer>
       </div>
 
@@ -423,6 +356,61 @@ export const DashboardSimple: React.FC = () => {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Learning Forecast */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-900">Dự đoán xu hướng học tập</h3>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                <span className="text-slate-600">Thực tế</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                <span className="text-slate-600">Dự đoán</span>
+              </div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={stats.learningForecast}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis label={{ value: 'Giờ học', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="actual" 
+                stroke="#3b82f6" 
+                strokeWidth={3} 
+                name="Thực tế"
+                dot={{ fill: '#3b82f6', r: 5 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="predicted" 
+                stroke="#8b5cf6" 
+                strokeWidth={3} 
+                strokeDasharray="5 5"
+                name="Dự đoán"
+                dot={{ fill: '#8b5cf6', r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+            <p className="text-sm text-purple-900">
+              <span className="font-semibold">💡 Insight:</span> Dựa trên xu hướng 3 tháng gần đây, hệ thống dự đoán giờ học sẽ {
+                stats.learningForecast.length > 3 && 
+                stats.learningForecast[stats.learningForecast.length - 1]?.predicted && 
+                stats.learningForecast[2]?.actual && 
+                stats.learningForecast[stats.learningForecast.length - 1].predicted! > stats.learningForecast[2].actual 
+                  ? 'tăng' 
+                  : 'giảm'
+              } trong 3 tháng tới.
+            </p>
+          </div>
+        </div>
+
         {/* Users by Position */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-lg font-bold text-slate-900 mb-4">Nhân viên theo chức vụ</h3>
@@ -446,77 +434,21 @@ export const DashboardSimple: React.FC = () => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Learning by Department */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Giờ học theo phòng ban</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stats.learningByDepartment}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="hours" fill="#3b82f6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
       </div>
 
-      {/* Attendance Top Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Attendance */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Trophy className="text-green-500" size={24} />
-            <h3 className="text-lg font-bold text-slate-900">Top 10 Chuyên cần nhất</h3>
-          </div>
-          <div className="space-y-2">
-            {stats.topAttendance.map((user, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                    index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-300'
-                  }`}>
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="font-medium text-slate-900">{user.name}</p>
-                    <p className="text-xs text-slate-500">{user.department} • {user.workHours}h</p>
-                  </div>
-                </div>
-                <span className="font-bold text-green-600">{user.workDays} ngày</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top Punctual */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Award className="text-blue-500" size={24} />
-            <h3 className="text-lg font-bold text-slate-900">Top 10 Đúng giờ nhất</h3>
-          </div>
-          <div className="space-y-2">
-            {stats.topPunctual.map((user, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                    index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-300'
-                  }`}>
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="font-medium text-slate-900">{user.name}</p>
-                    <p className="text-xs text-slate-500">{user.department} • {user.workDays} ngày làm</p>
-                  </div>
-                </div>
-                <span className={`font-bold ${user.lateMinutes === 0 ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {user.lateMinutes === 0 ? '0 phút' : `${user.lateMinutes}p`}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Learning by Department */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-bold text-slate-900 mb-4">Giờ học theo phòng ban</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={stats.learningByDepartment}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis label={{ value: 'Giờ học', angle: -90, position: 'insideLeft' }} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="hours" fill="#3b82f6" name="Giờ học" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Top Lists */}

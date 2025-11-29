@@ -45,34 +45,7 @@ export const Hero: React.FC = () => {
               Các khóa học thực hành giúp bạn nâng cao kỹ năng nhanh chóng, tự tin hơn trong công việc và nắm bắt cơ hội thăng tiến sớm hơn.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <Button variant="primary" size="lg" className="group bg-brand-600 hover:bg-brand-500 border-0 shadow-brand-500/50 shadow-lg">
-                Bắt Đầu Miễn Phí
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              
-              <button className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white rounded-full border border-white/30 hover:bg-white/10 transition-all backdrop-blur-sm group">
-                <div className="w-8 h-8 rounded-full bg-white text-brand-900 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                   <Play className="w-3 h-3 fill-current translate-x-0.5" />
-                </div>
-                Video Giới Thiệu
-              </button>
-            </div>
 
-            <div className="flex items-center gap-6 text-sm text-slate-300 pt-6 border-t border-white/10">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-brand-400" />
-                <span>Học thực hành</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-brand-400" />
-                <span>Nâng cao kỹ năng</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-brand-400" />
-                <span>Thăng tiến nhanh</span>
-              </div>
-            </div>
           </div>
 
           {/* Visual Content */}

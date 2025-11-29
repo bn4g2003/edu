@@ -1,15 +1,26 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Trophy, Clock, TrendingUp, LogOut, Play } from 'lucide-react';
+import { BookOpen, Trophy, Clock, TrendingUp, LogOut, Play, Target, Award, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { CourseEnrollment } from '@/components/student/CourseEnrollment';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function StudentPage() {
   const { userProfile, loading, signOut } = useAuth();
   const router = useRouter();
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    completedCourses: 0,
+    inProgressCourses: 0,
+    totalLearningTime: 0,
+    averageProgress: 0,
+    certificatesEarned: 0
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!loading) {
@@ -17,9 +28,59 @@ export default function StudentPage() {
         router.push('/');
       } else if (userProfile.role !== 'student' && userProfile.role !== 'staff') {
         router.push('/');
+      } else {
+        loadLearningStats();
       }
     }
   }, [userProfile, loading, router]);
+
+  const loadLearningStats = async () => {
+    if (!userProfile?.uid) return;
+    
+    try {
+      setLoadingStats(true);
+      
+      // Lấy tất cả enrollment của user
+      const enrollmentsRef = collection(db, 'enrollments');
+      const q = query(enrollmentsRef, where('userId', '==', userProfile.uid));
+      const snapshot = await getDocs(q);
+      
+      let totalProgress = 0;
+      let completed = 0;
+      let inProgress = 0;
+      let totalTime = 0;
+      let certificates = 0;
+      
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const progress = data.progress || 0;
+        totalProgress += progress;
+        
+        if (progress >= 100) {
+          completed++;
+          certificates++; // Giả sử hoàn thành = có chứng chỉ
+        } else if (progress > 0) {
+          inProgress++;
+        }
+        
+        // Tính thời gian học (giả sử mỗi khóa học trung bình 10 giờ)
+        totalTime += (progress / 100) * 10;
+      });
+      
+      setStats({
+        totalCourses: snapshot.docs.length,
+        completedCourses: completed,
+        inProgressCourses: inProgress,
+        totalLearningTime: Math.round(totalTime),
+        averageProgress: snapshot.docs.length > 0 ? Math.round(totalProgress / snapshot.docs.length) : 0,
+        certificatesEarned: certificates
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   if (loading) {
     return (
