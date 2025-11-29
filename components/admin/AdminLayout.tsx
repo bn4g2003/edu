@@ -19,6 +19,7 @@ import {
   Fingerprint
 } from 'lucide-react';
 import { PermissionAction } from '@/types/permission';
+import { ProfileModal } from '@/components/ProfileModal';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [departments, setDepartments] = useState<Array<{id: string, managerId?: string}>>([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const loadDepartments = async () => {
@@ -180,28 +182,50 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
         {/* User Info */}
         <div className="p-3 border-t border-slate-200 bg-slate-50">
           {sidebarOpen ? (
-            <div className="mb-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="w-full mb-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer group"
+            >
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                  {userProfile?.displayName?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{userProfile?.displayName}</p>
+                {userProfile?.photoURL ? (
+                  <img 
+                    src={userProfile.photoURL}
+                    alt={userProfile.displayName}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-brand-500 shadow-md group-hover:border-brand-600 transition-all"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-bold shadow-md group-hover:scale-105 transition-transform">
+                    {userProfile?.displayName?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-brand-600 transition-colors">{userProfile?.displayName}</p>
                   <p className="text-xs text-slate-500 truncate">{userProfile?.email}</p>
                 </div>
               </div>
               {userProfile?.position && (
-                <div className="px-2 py-1 bg-brand-50 border border-brand-200 rounded-lg">
+                <div className="px-2 py-1 bg-brand-50 border border-brand-200 rounded-lg group-hover:bg-brand-100 transition-colors">
                   <p className="text-xs text-brand-700 text-center font-medium">{userProfile.position}</p>
                 </div>
               )}
-            </div>
+            </button>
           ) : (
-            <div className="mb-3 flex justify-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                {userProfile?.displayName?.charAt(0).toUpperCase()}
-              </div>
-            </div>
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="mb-3 flex justify-center w-full hover:scale-105 transition-transform"
+            >
+              {userProfile?.photoURL ? (
+                <img 
+                  src={userProfile.photoURL}
+                  alt={userProfile.displayName}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-brand-500 shadow-md"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                  {userProfile?.displayName?.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
           )}
           <button
             onClick={handleSignOut}
@@ -218,6 +242,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeMenu, 
       <main className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
         {children}
       </main>
+
+      {/* Profile Modal */}
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
 };

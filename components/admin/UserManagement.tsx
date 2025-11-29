@@ -28,6 +28,7 @@ export const UserManagement: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [showBirthdays, setShowBirthdays] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -61,7 +62,12 @@ export const UserManagement: React.FC = () => {
   }, [users, searchTerm, filterPosition, filterDepartment, departments, currentUser]);
 
   // Function to calculate total learning time from progress
-  const calculateLearningTime = async (userId: string): Promise<number> => {
+  const calculateLearningTime = async (userId: string | undefined): Promise<number> => {
+    // Return 0 if userId is undefined or empty
+    if (!userId) {
+      return 0;
+    }
+
     try {
       const progressRef = collection(db, 'progress');
       const q = query(progressRef, where('userId', '==', userId));
@@ -255,6 +261,11 @@ export const UserManagement: React.FC = () => {
           role: formData.role,
           updatedAt: new Date()
         };
+
+        // Preserve photoURL if exists
+        if (editingUser.photoURL) {
+          updateData.photoURL = editingUser.photoURL;
+        }
 
         // Only add optional fields if they have values
         if (formData.position) {
@@ -515,42 +526,60 @@ export const UserManagement: React.FC = () => {
         if (birthdayUsers.length === 0) return null;
 
         return (
-          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🎂</span>
-              <h3 className="text-lg font-bold text-pink-900">
-                Sinh nhật tháng {currentMonth} ({birthdayUsers.length} người)
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {birthdayUsers.map(user => {
-                const birthDate = new Date(user.dateOfBirth!);
-                const day = birthDate.getDate();
-                const isToday = day === now.getDate();
-                const dept = departments.find(d => d.id === user.departmentId);
-                
-                return (
-                  <div 
-                    key={user.uid} 
-                    className={`bg-white rounded-lg p-4 border-2 ${isToday ? 'border-pink-400 shadow-lg' : 'border-pink-200'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white ${isToday ? 'bg-pink-500 animate-pulse' : 'bg-pink-400'}`}>
-                        {day}
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setShowBirthdays(!showBirthdays)}
+              className="w-full p-4 flex items-center justify-between hover:bg-pink-100/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎂</span>
+                <h3 className="text-lg font-bold text-pink-900">
+                  Sinh nhật tháng {currentMonth} ({birthdayUsers.length} người)
+                </h3>
+              </div>
+              <svg
+                className={`w-5 h-5 text-pink-900 transition-transform ${showBirthdays ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {showBirthdays && (
+              <div className="p-6 pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {birthdayUsers.map(user => {
+                    const birthDate = new Date(user.dateOfBirth!);
+                    const day = birthDate.getDate();
+                    const isToday = day === now.getDate();
+                    const dept = departments.find(d => d.id === user.departmentId);
+                    
+                    return (
+                      <div 
+                        key={user.uid} 
+                        className={`bg-white rounded-lg p-4 border-2 ${isToday ? 'border-pink-400 shadow-lg' : 'border-pink-200'}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white ${isToday ? 'bg-pink-500 animate-pulse' : 'bg-pink-400'}`}>
+                            {day}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-900 flex items-center gap-2">
+                              {user.displayName}
+                              {isToday && <span className="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full">Hôm nay!</span>}
+                            </p>
+                            <p className="text-xs text-slate-500">{dept?.name || 'Chưa có phòng ban'}</p>
+                            <p className="text-xs text-slate-400">{user.position || 'Chưa có chức vụ'}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900 flex items-center gap-2">
-                          {user.displayName}
-                          {isToday && <span className="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full">Hôm nay!</span>}
-                        </p>
-                        <p className="text-xs text-slate-500">{dept?.name || 'Chưa có phòng ban'}</p>
-                        <p className="text-xs text-slate-400">{user.position || 'Chưa có chức vụ'}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
@@ -666,7 +695,20 @@ export const UserManagement: React.FC = () => {
                   className="hover:bg-slate-50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-4 whitespace-nowrap sticky left-0 bg-white">
-                    <div className="font-medium text-blue-600">{user.displayName}</div>
+                    <div className="flex items-center gap-3">
+                      {user.photoURL ? (
+                        <img 
+                          src={user.photoURL}
+                          alt={user.displayName}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {user.displayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="font-medium text-blue-600">{user.displayName}</div>
+                    </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-slate-600 text-sm">{user.email}</td>
                   <td className="px-4 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
@@ -935,9 +977,17 @@ export const UserManagement: React.FC = () => {
             <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-purple-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                    {viewingUser.displayName.charAt(0).toUpperCase()}
-                  </div>
+                  {viewingUser.photoURL ? (
+                    <img 
+                      src={viewingUser.photoURL}
+                      alt={viewingUser.displayName}
+                      className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                      {viewingUser.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div>
                     <h3 className="text-2xl font-bold text-slate-900">{viewingUser.displayName}</h3>
                     <p className="text-slate-600">{viewingUser.email}</p>

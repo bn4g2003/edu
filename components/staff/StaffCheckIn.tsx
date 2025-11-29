@@ -336,11 +336,17 @@ export const StaffCheckIn: React.FC = () => {
             <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 h-full">
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
-                  <img 
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'User')}&size=160&background=random`}
-                    alt={user?.displayName || 'User'} 
-                    className="w-32 h-32 rounded-full object-cover border-4 border-white/30 shadow-xl"
-                  />
+                  {user?.photoURL ? (
+                    <img 
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'} 
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white/30 shadow-xl"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-5xl font-bold border-4 border-white/30 shadow-xl">
+                      {user?.displayName?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-slate-900 ${ipAllowed ? 'bg-green-400' : 'bg-red-400'}`}></div>
                 </div>
                 <h2 className="text-xl font-bold text-white text-center mb-1">{user?.displayName}</h2>

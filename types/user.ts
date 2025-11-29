@@ -19,6 +19,7 @@ export interface UserProfile {
   monthlySalary?: number; // Lương tháng cơ bản
   totalLearningHours?: number; // Tổng số giờ đã học
   approved: boolean; // Trạng thái duyệt tài khoản (mặc định false)
+  photoURL?: string; // URL ảnh đại diện
   // Thông tin cá nhân
   dateOfBirth?: string; // Ngày sinh (YYYY-MM-DD)
   address?: string; // Địa chỉ

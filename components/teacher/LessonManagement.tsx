@@ -300,95 +300,75 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {lessons.map((lesson) => (
-              <div key={lesson.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all">
+              <div key={lesson.id} className="bg-white rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition-all">
                 <div className="p-4">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {/* Order Number */}
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg">
+                  {/* Header Row */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
                       {lesson.order}
                     </div>
-
-                    {/* Title & Tags */}
-                    <div className="flex-1 min-w-[200px]">
-                      <h3 className="text-lg font-bold text-slate-900 mb-1">{lesson.title}</h3>
-                      <p className="text-xs text-slate-600 mb-1 line-clamp-1">{lesson.description}</p>
-                      {lesson.tags && lesson.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {lesson.tags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-bold text-slate-900 truncate">{lesson.title}</h3>
+                      <p className="text-xs text-slate-500 line-clamp-1">{lesson.description}</p>
                     </div>
-
-                    {/* Action Buttons - Only for Admin */}
+                    {lesson.tags && lesson.tags.length > 0 && (
+                      <div className="flex gap-1">
+                        {lesson.tags.slice(0, 2).map((tag, index) => (
+                          <span key={index} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                        {lesson.tags.length > 2 && (
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">
+                            +{lesson.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {isAdmin && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEdit(lesson)}
-                          className="px-3 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 flex items-center gap-1 text-xs font-medium transition-colors"
-                        >
-                          <Edit2 size={14} />
-                          Sửa
+                      <div className="flex gap-1">
+                        <button onClick={() => handleEdit(lesson)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Sửa">
+                          <Edit2 size={16} />
                         </button>
-                        <button
-                          onClick={() => handleDelete(lesson)}
-                          className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1 text-xs font-medium transition-colors"
-                        >
-                          <Trash2 size={14} />
-                          Xóa
+                        <button onClick={() => handleDelete(lesson)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa">
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     )}
+                  </div>
 
-                    {/* Divider */}
-                    <div className="w-full border-t border-slate-200 my-2"></div>
-
+                  {/* Content Row - Horizontal Layout */}
+                  <div className="grid grid-cols-3 gap-3">
                     {/* Video Section */}
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
-                          <Play className="w-4 h-4 text-green-600" />
+                        <div className="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center">
+                          <Play className="w-3.5 h-3.5 text-white" />
                         </div>
-                        <h4 className="font-semibold text-slate-900 text-sm">Video</h4>
+                        <h4 className="font-semibold text-slate-900 text-xs">Video</h4>
                       </div>
                       
                       {lesson.videoId ? (
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
-                            <CheckCircle size={16} />
+                          <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+                            <CheckCircle size={14} />
                             Đã upload
                           </div>
                           {lesson.duration && (
-                            <p className="text-sm text-slate-600 flex items-center gap-1">
-                              <Clock size={14} />
+                            <p className="text-xs text-slate-600 flex items-center gap-1">
+                              <Clock size={12} />
                               {formatDuration(lesson.duration)}
                             </p>
                           )}
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setPreviewingLesson(lesson)}
-                              className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-medium flex items-center justify-center gap-1"
-                            >
-                              <Play size={14} />
-                              Xem video
-                            </button>
-                            {isAdmin && (
-                              <button
-                                onClick={() => handleDelete(lesson)}
-                                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => setPreviewingLesson(lesson)}
+                            className="w-full px-2 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 text-xs font-medium flex items-center justify-center gap-1"
+                          >
+                            <Play size={12} />
+                            Xem
+                          </button>
                         </div>
                       ) : isAdmin ? (
                         <label className="cursor-pointer block">
@@ -402,23 +382,23 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                             }}
                             disabled={uploading}
                           />
-                          <div className="px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors shadow-sm">
-                            <Upload size={16} />
-                            Upload video
+                          <div className="px-2 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center justify-center gap-1 text-xs font-medium transition-colors">
+                            <Upload size={12} />
+                            Upload
                           </div>
                         </label>
                       ) : (
-                        <p className="text-sm text-slate-500 italic">Chưa có video</p>
+                        <p className="text-xs text-slate-500 italic">Chưa có video</p>
                       )}
                     </div>
 
                     {/* Document Section */}
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-100">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-blue-600" />
+                        <div className="w-6 h-6 bg-blue-500 rounded-md flex items-center justify-center">
+                          <FileText className="w-3.5 h-3.5 text-white" />
                         </div>
-                        <h4 className="font-semibold text-slate-900 text-sm">Tài liệu</h4>
+                        <h4 className="font-semibold text-slate-900 text-xs">Tài liệu</h4>
                       </div>
                       
                       {isAdmin ? (
@@ -431,47 +411,47 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                         />
                       ) : lesson.documentUrl ? (
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
-                            <CheckCircle size={16} />
-                            Đã có tài liệu
+                          <div className="flex items-center gap-1.5 text-xs text-blue-600 font-medium">
+                            <CheckCircle size={14} />
+                            Có tài liệu
                           </div>
                           <a
                             href={lesson.documentUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium text-center"
+                            className="block px-2 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs font-medium text-center"
                           >
-                            <FileText size={14} className="inline mr-1" />
-                            Xem tài liệu
+                            <FileText size={12} className="inline mr-1" />
+                            Xem
                           </a>
                         </div>
                       ) : (
-                        <p className="text-sm text-slate-500 italic">Chưa có tài liệu</p>
+                        <p className="text-xs text-slate-500 italic">Chưa có tài liệu</p>
                       )}
                     </div>
 
                     {/* Quiz Section */}
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <HelpCircle className="w-4 h-4 text-purple-600" />
+                        <div className="w-6 h-6 bg-purple-500 rounded-md flex items-center justify-center">
+                          <HelpCircle className="w-3.5 h-3.5 text-white" />
                         </div>
-                        <h4 className="font-semibold text-slate-900 text-sm">Bài kiểm tra</h4>
+                        <h4 className="font-semibold text-slate-900 text-xs">Bài kiểm tra</h4>
                       </div>
                       
                       <div className="space-y-2">
                         {lesson.hasQuiz && (
-                          <div className="flex items-center gap-2 text-sm text-purple-600 font-medium mb-2">
-                            <CheckCircle size={16} />
+                          <div className="flex items-center gap-1.5 text-xs text-purple-600 font-medium">
+                            <CheckCircle size={14} />
                             Có câu hỏi
                           </div>
                         )}
                         <button
                           onClick={() => setManagingQuiz(lesson)}
-                          className="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors shadow-sm"
+                          className="w-full px-2 py-1.5 bg-purple-500 text-white rounded-md hover:bg-purple-600 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
                         >
-                          <HelpCircle size={16} />
-                          {isAdmin ? 'Quản lý câu hỏi' : 'Xem câu hỏi'}
+                          <HelpCircle size={12} />
+                          {isAdmin ? 'Quản lý' : 'Xem'}
                         </button>
                       </div>
                     </div>
