@@ -7,6 +7,7 @@ import { UserProfile, UserRole, Position } from '@/types/user';
 import { Search, Plus, Edit2, Trash2, X, Save, CheckCircle, XCircle, Shield, Users, BookOpen } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { syncEmploymentToUsers } from '@/lib/syncEmployment';
 
 interface Department {
   id: string;
@@ -24,6 +25,7 @@ export const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState<Position | 'all' | 'none'>('all');
   const [filterDepartment, setFilterDepartment] = useState('all');
+  const [filterBranch, setFilterBranch] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null);
@@ -39,6 +41,10 @@ export const UserManagement: React.FC = () => {
     recentCourses: Array<{ title: string; progress: number; courseId: string }>;
   } | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [syncingEmployment, setSyncingEmployment] = useState(false);
+  const [showPendingUsers, setShowPendingUsers] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -51,7 +57,15 @@ export const UserManagement: React.FC = () => {
     address: '',
     country: '',
     phoneNumber: '',
-    workLocation: ''
+    workLocation: '',
+    photoURL: '',
+    employmentStatus: '',
+    employmentStartDate: '',
+    employmentMaritalStatus: '',
+    employmentBranch: '',
+    employmentTeam: '',
+    employmentSalaryPercentage: 100,
+    employmentActive: true,
   });
 
   const POSITIONS: Position[] = [
@@ -69,7 +83,7 @@ export const UserManagement: React.FC = () => {
 
   useEffect(() => {
     filterUsers();
-  }, [users, searchTerm, filterPosition, filterDepartment, departments, currentUser]);
+  }, [users, searchTerm, filterPosition, filterDepartment, filterBranch, departments, currentUser]);
 
   // Function to calculate total learning time from progress
   const calculateLearningTime = async (userId: string | undefined): Promise<number> => {
@@ -149,6 +163,21 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  // Đồng bộ dữ liệu employment từ hệ thống chấm công/nhân sự
+  const handleSyncEmployment = async () => {
+    try {
+      setSyncingEmployment(true);
+      await syncEmploymentToUsers();
+      alert('Đồng bộ dữ liệu nhân sự thành công!');
+      await loadUsers();
+    } catch (error) {
+      console.error('Error syncing employment:', error);
+      alert('Lỗi khi đồng bộ dữ liệu nhân sự');
+    } finally {
+      setSyncingEmployment(false);
+    }
+  };
+
   const filterUsers = () => {
     // Chỉ lấy user đã duyệt hoặc admin
     let filtered = users.filter(user => user.role === 'admin' || user.approved);
@@ -179,6 +208,13 @@ export const UserManagement: React.FC = () => {
       }
     }
 
+    // Branch filter (chi nhánh lấy từ employmentBranch)
+    if (filterBranch !== 'all') {
+      filtered = filtered.filter(user => 
+        (user.employmentBranch || user.employment?.branch) === filterBranch
+      );
+    }
+
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(user =>
@@ -188,6 +224,7 @@ export const UserManagement: React.FC = () => {
     }
 
     setFilteredUsers(filtered);
+    setCurrentPage(1);
   };
 
   // Lấy danh sách chờ duyệt
@@ -207,7 +244,15 @@ export const UserManagement: React.FC = () => {
       address: '',
       country: '',
       phoneNumber: '',
-      workLocation: ''
+      workLocation: '',
+      photoURL: '',
+      employmentStatus: '',
+      employmentStartDate: '',
+      employmentMaritalStatus: '',
+      employmentBranch: '',
+      employmentTeam: '',
+      employmentSalaryPercentage: 100,
+      employmentActive: true,
     });
     setShowModal(true);
   };
@@ -232,7 +277,23 @@ export const UserManagement: React.FC = () => {
       address: user.address || '',
       country: user.country || '',
       phoneNumber: user.phoneNumber || '',
-      workLocation: user.workLocation || ''
+      workLocation: user.workLocation || '',
+      photoURL: user.photoURL || user.employment?.avatarURL || '',
+      employmentStatus: user.employmentStatus || user.employment?.employmentStatus || '',
+      employmentStartDate: user.employmentStartDate || user.employment?.startDate || '',
+      employmentMaritalStatus: user.employmentMaritalStatus || user.employment?.maritalStatus || '',
+      employmentBranch: user.employmentBranch || user.employment?.branch || '',
+      employmentTeam: user.employmentTeam || user.employment?.team || '',
+      employmentSalaryPercentage:
+        user.employmentSalaryPercentage ||
+        user.employment?.salaryPercentage ||
+        100,
+      employmentActive:
+        typeof user.employmentActive === 'boolean'
+          ? user.employmentActive
+          : typeof user.employment?.active === 'boolean'
+          ? user.employment.active
+          : true,
     });
     setShowModal(true);
   };
@@ -386,8 +447,10 @@ export const UserManagement: React.FC = () => {
           updatedAt: new Date()
         };
 
-        // Preserve photoURL if exists
-        if (editingUser.photoURL) {
+        // Preserve/ghi đè photoURL nếu có
+        if (formData.photoURL) {
+          updateData.photoURL = formData.photoURL;
+        } else if (editingUser.photoURL) {
           updateData.photoURL = editingUser.photoURL;
         }
 
@@ -415,6 +478,27 @@ export const UserManagement: React.FC = () => {
         }
         if (formData.workLocation) {
           updateData.workLocation = formData.workLocation;
+        }
+        if (formData.employmentStatus) {
+          updateData.employmentStatus = formData.employmentStatus;
+        }
+        if (formData.employmentStartDate) {
+          updateData.employmentStartDate = formData.employmentStartDate;
+        }
+        if (formData.employmentMaritalStatus) {
+          updateData.employmentMaritalStatus = formData.employmentMaritalStatus;
+        }
+        if (formData.employmentBranch) {
+          updateData.employmentBranch = formData.employmentBranch;
+        }
+        if (formData.employmentTeam) {
+          updateData.employmentTeam = formData.employmentTeam;
+        }
+        if (formData.employmentSalaryPercentage) {
+          updateData.employmentSalaryPercentage = formData.employmentSalaryPercentage;
+        }
+        if (typeof formData.employmentActive === 'boolean') {
+          updateData.employmentActive = formData.employmentActive;
         }
 
         await updateDoc(userRef, updateData);
@@ -468,6 +552,30 @@ export const UserManagement: React.FC = () => {
         }
         if (formData.workLocation) {
           newUser.workLocation = formData.workLocation;
+        }
+        if (formData.photoURL) {
+          newUser.photoURL = formData.photoURL;
+        }
+        if (formData.employmentStatus) {
+          newUser.employmentStatus = formData.employmentStatus;
+        }
+        if (formData.employmentStartDate) {
+          newUser.employmentStartDate = formData.employmentStartDate;
+        }
+        if (formData.employmentMaritalStatus) {
+          newUser.employmentMaritalStatus = formData.employmentMaritalStatus;
+        }
+        if (formData.employmentBranch) {
+          newUser.employmentBranch = formData.employmentBranch;
+        }
+        if (formData.employmentTeam) {
+          newUser.employmentTeam = formData.employmentTeam;
+        }
+        if (formData.employmentSalaryPercentage) {
+          newUser.employmentSalaryPercentage = formData.employmentSalaryPercentage;
+        }
+        if (typeof formData.employmentActive === 'boolean') {
+          newUser.employmentActive = formData.employmentActive;
         }
 
         // Use setDoc with custom ID instead of addDoc
@@ -587,18 +695,28 @@ export const UserManagement: React.FC = () => {
           )}
         </div>
         <div className="flex gap-3">
-          {/* Chỉ admin mới được thêm người dùng */}
+          {/* Chỉ admin mới được đồng bộ & thêm người dùng */}
           {currentUser?.role === 'admin' && (
-            <Button onClick={handleAdd} className="flex items-center gap-2">
-              <Plus size={18} />
-              Thêm người dùng
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={handleSyncEmployment}
+                disabled={syncingEmployment}
+                className="flex items-center gap-2"
+              >
+                {syncingEmployment ? 'Đang đồng bộ...' : 'Đồng bộ nhân sự'}
+              </Button>
+              <Button onClick={handleAdd} className="flex items-center gap-2">
+                <Plus size={18} />
+                Thêm người dùng
+              </Button>
+            </>
           )}
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input
@@ -629,6 +747,22 @@ export const UserManagement: React.FC = () => {
           <option value="none">Chưa có phòng ban</option>
           {departments.map(dept => (
             <option key={dept.id} value={dept.id}>{dept.name}</option>
+          ))}
+        </select>
+        <select
+          value={filterBranch}
+          onChange={(e) => setFilterBranch(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+        >
+          <option value="all">Tất cả chi nhánh</option>
+          {Array.from(
+            new Set(
+              users
+                .map(u => u.employmentBranch || u.employment?.branch)
+                .filter((b): b is string => !!b)
+            )
+          ).map(branch => (
+            <option key={branch} value={branch}>{branch}</option>
           ))}
         </select>
       </div>
@@ -731,61 +865,76 @@ export const UserManagement: React.FC = () => {
 
       {/* Pending Users Section */}
       {pendingUsers.length > 0 && (
-        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowPendingUsers(!showPendingUsers)}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-100 transition-colors"
+          >
             <div className="flex items-center gap-2">
               <XCircle className="text-orange-600" size={24} />
               <h3 className="text-lg font-bold text-orange-900">
                 Tài khoản chờ duyệt ({pendingUsers.length})
               </h3>
             </div>
-          </div>
+            <svg
+              className={`w-5 h-5 text-orange-600 transition-transform ${showPendingUsers ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
           
-          <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-orange-100 border-b border-orange-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Tên</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Vai trò</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Ngày đăng ký</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-orange-900 uppercase">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-orange-100">
-                {pendingUsers.map((user) => (
-                  <tr key={user.uid} className="hover:bg-orange-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-slate-900">{user.displayName}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">{user.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {user.createdAt?.toLocaleDateString('vi-VN')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => handleApprove(user, true)}
-                        className="text-green-600 hover:text-green-800 mr-3 inline-flex items-center gap-1 px-3 py-1 bg-green-100 rounded-lg font-medium"
-                        title="Duyệt tài khoản"
-                      >
-                        <CheckCircle size={16} />
-                        Duyệt
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user)}
-                        className="text-red-600 hover:text-red-800 inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-lg font-medium"
-                        title="Từ chối"
-                      >
-                        <Trash2 size={16} />
-                        Từ chối
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {showPendingUsers && (
+            <div className="p-4 pt-0">
+              <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-orange-100 border-b border-orange-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Tên</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Vai trò</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase">Ngày đăng ký</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-orange-900 uppercase">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-orange-100">
+                    {pendingUsers.map((user) => (
+                      <tr key={user.uid} className="hover:bg-orange-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-slate-900">{user.displayName}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                          {user.createdAt?.toLocaleDateString('vi-VN')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            onClick={() => handleApprove(user, true)}
+                            className="text-green-600 hover:text-green-800 mr-3 inline-flex items-center gap-1 px-3 py-1 bg-green-100 rounded-lg font-medium"
+                            title="Duyệt tài khoản"
+                          >
+                            <CheckCircle size={16} />
+                            Duyệt
+                          </button>
+                          <button
+                            onClick={() => handleDelete(user)}
+                            className="text-red-600 hover:text-red-800 inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-lg font-medium"
+                            title="Từ chối"
+                          >
+                            <Trash2 size={16} />
+                            Từ chối
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -809,7 +958,9 @@ export const UserManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-              {filteredUsers.map((user) => (
+              {filteredUsers
+                .slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+                .map((user) => (
                 <tr 
                   key={user.uid} 
                   onClick={() => {
@@ -898,22 +1049,87 @@ export const UserManagement: React.FC = () => {
           </table>
           </div>
         </div>
+        {/* Pagination */}
+        {filteredUsers.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between mt-4 text-sm text-slate-600">
+            <div>
+              Hiển thị{' '}
+              <span className="font-semibold">
+                {(currentPage - 1) * PAGE_SIZE + 1}-
+                {Math.min(currentPage * PAGE_SIZE, filteredUsers.length)}
+              </span>{' '}
+              trong tổng số <span className="font-semibold">{filteredUsers.length}</span> người dùng
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-lg border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
+              >
+                Trước
+              </button>
+              {Array.from({ length: Math.ceil(filteredUsers.length / PAGE_SIZE) }).map((_, idx) => {
+                const page = idx + 1;
+                // Chỉ hiển thị vài trang quanh currentPage cho gọn
+                if (
+                  page === 1 ||
+                  page === Math.ceil(filteredUsers.length / PAGE_SIZE) ||
+                  Math.abs(page - currentPage) <= 1
+                ) {
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-lg border text-sm ${
+                        page === currentPage
+                          ? 'bg-brand-500 text-white border-brand-500'
+                          : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                }
+                if (page === currentPage - 2 || page === currentPage + 2) {
+                  return (
+                    <span key={page} className="px-1">
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+              <button
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(Math.ceil(filteredUsers.length / PAGE_SIZE), p + 1)
+                  )
+                }
+                disabled={currentPage === Math.ceil(filteredUsers.length / PAGE_SIZE)}
+                className="px-3 py-1 rounded-lg border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl my-8">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-8 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-purple-50">
               <h3 className="text-xl font-bold text-slate-900">
                 {editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white rounded-lg transition-colors">
                 <X size={24} />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Left Column */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-slate-700 border-b pb-2">Thông tin tài khoản</h4>
@@ -1005,10 +1221,36 @@ export const UserManagement: React.FC = () => {
                 )}
               </div>
 
-              {/* Right Column */}
+              {/* Right Column - Thông tin cá nhân & avatar */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-slate-700 border-b pb-2">Thông tin cá nhân</h4>
-                
+
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center">
+                    {formData.photoURL ? (
+                      <img
+                        src={formData.photoURL}
+                        alt={formData.displayName || 'Avatar'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-slate-500 text-sm">
+                        {formData.displayName ? formData.displayName.charAt(0).toUpperCase() : '?'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Avatar URL</label>
+                    <input
+                      type="text"
+                      value={formData.photoURL}
+                      onChange={(e) => setFormData({ ...formData, photoURL: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Ngày sinh</label>
                   <input
@@ -1063,16 +1305,101 @@ export const UserManagement: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Third Column - Thông tin nhân sự */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-700 border-b pb-2">Thông tin nhân sự (tùy chọn)</h4>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Trạng thái làm việc</label>
+                  <input
+                    type="text"
+                    value={formData.employmentStatus}
+                    onChange={(e) => setFormData({ ...formData, employmentStatus: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="Nhân viên chính thức / Thử việc / Thực tập..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Ngày bắt đầu làm</label>
+                  <input
+                    type="date"
+                    value={formData.employmentStartDate}
+                    onChange={(e) => setFormData({ ...formData, employmentStartDate: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tình trạng hôn nhân</label>
+                  <input
+                    type="text"
+                    value={formData.employmentMaritalStatus}
+                    onChange={(e) => setFormData({ ...formData, employmentMaritalStatus: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="Độc thân / Đã kết hôn..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Chi nhánh</label>
+                  <input
+                    type="text"
+                    value={formData.employmentBranch}
+                    onChange={(e) => setFormData({ ...formData, employmentBranch: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="Hà Nội / Hồ Chí Minh..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Team</label>
+                  <input
+                    type="text"
+                    value={formData.employmentTeam}
+                    onChange={(e) => setFormData({ ...formData, employmentTeam: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="Frontend Team, Backend Team..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">% lương</label>
+                    <input
+                      type="number"
+                      value={formData.employmentSalaryPercentage}
+                      onChange={(e) => setFormData({ ...formData, employmentSalaryPercentage: Number(e.target.value) })}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      placeholder="Ví dụ: 100"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-6">
+                    <input
+                      id="employmentActive"
+                      type="checkbox"
+                      checked={formData.employmentActive}
+                      onChange={(e) => setFormData({ ...formData, employmentActive: e.target.checked })}
+                      className="w-4 h-4 text-brand-600 rounded focus:ring-brand-500"
+                    />
+                    <label htmlFor="employmentActive" className="text-sm text-slate-700">
+                      Đang active trong hệ thống nhân sự
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 p-6 border-t border-slate-200 bg-slate-50">
               <Button onClick={handleSave} className="flex-1 flex items-center justify-center gap-2">
                 <Save size={18} />
-                Lưu
+                {editingUser ? 'Cập nhật' : 'Thêm mới'}
               </Button>
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50"
+                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-100 bg-white"
               >
                 Hủy
               </button>

@@ -30,12 +30,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onRegister, onNavigateH
     if (userProfile) {
       switch (userProfile.role) {
         case 'admin':
+        case 'staff':
           router.push('/admin');
           break;
         case 'teacher':
           router.push('/teacher');
           break;
-        case 'staff':
         case 'student':
           router.push('/student');
           break;
