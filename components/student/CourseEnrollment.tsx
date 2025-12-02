@@ -14,7 +14,7 @@ export const CourseEnrollment: React.FC = () => {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-  const [departments, setDepartments] = useState<Array<{id: string, name: string}>>([]);
+  const [departments, setDepartments] = useState<Array<{ id: string, name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
@@ -30,7 +30,7 @@ export const CourseEnrollment: React.FC = () => {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      
+
       // Load departments
       const deptSnapshot = await getDocs(collection(db, 'departments'));
       const depts = deptSnapshot.docs.map(doc => ({
@@ -38,7 +38,7 @@ export const CourseEnrollment: React.FC = () => {
         name: doc.data().name
       }));
       setDepartments(depts);
-      
+
       // Load courses
       const coursesRef = collection(db, 'courses');
       const snapshot = await getDocs(coursesRef);
@@ -47,18 +47,18 @@ export const CourseEnrollment: React.FC = () => {
         createdAt: doc.data().createdAt?.toDate(),
         updatedAt: doc.data().updatedAt?.toDate()
       })) as Course[];
-      
+
       // Lọc khóa học theo phòng ban của user
       if (userProfile?.departmentId) {
         // Chỉ hiển thị khóa học của phòng ban mình + khóa học chung
-        coursesData = coursesData.filter(course => 
+        coursesData = coursesData.filter(course =>
           course.departmentId === 'all' || course.departmentId === userProfile.departmentId
         );
       } else {
         // Nếu user không có phòng ban, chỉ hiển thị khóa học chung
         coursesData = coursesData.filter(course => course.departmentId === 'all');
       }
-      
+
       setCourses(coursesData);
     } catch (error) {
       console.error('Error loading courses:', error);
@@ -98,18 +98,18 @@ export const CourseEnrollment: React.FC = () => {
       {/* All Available Courses */}
       <div>
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Khóa học của bạn</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Khóa học của bạn</h2>
           {userProfile?.departmentId ? (
-            <p className="text-slate-600">
+            <p className="text-slate-300">
               Hiển thị các khóa học dành cho phòng ban của bạn. Các khóa học của phòng ban khác sẽ bị ẩn.
             </p>
           ) : (
-            <p className="text-slate-600">
+            <p className="text-slate-300">
               Bạn chưa thuộc phòng ban nào. Chỉ hiển thị các khóa học chung.
             </p>
           )}
         </div>
-        
+
         <div className="flex gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -118,13 +118,13 @@ export const CourseEnrollment: React.FC = () => {
               placeholder="Tìm kiếm khóa học..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white placeholder-slate-400"
             />
           </div>
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value as any)}
-            className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898]"
           >
             <option value="all">Tất cả cấp độ</option>
             <option value="beginner">Cơ bản</option>
@@ -134,9 +134,9 @@ export const CourseEnrollment: React.FC = () => {
         </div>
 
         {filteredCourses.length === 0 ? (
-          <div className="text-center py-12 bg-slate-50 rounded-xl">
-            <BookOpen className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">Không tìm thấy khóa học nào</p>
+          <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
+            <BookOpen className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+            <p className="text-slate-400">Không tìm thấy khóa học nào</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

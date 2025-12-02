@@ -81,51 +81,51 @@ export const SalaryManagement: React.FC = () => {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Quản lý lương</h1>
-        <p className="text-slate-600">Quản lý bảng lương nhân viên</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Quản lý lương</h1>
+        <p className="text-slate-300">Quản lý bảng lương nhân viên</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="bg-[#5e3ed0]/20 rounded-xl p-6 border border-white/10 backdrop-blur-md">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-green-100 p-3 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="bg-green-500/20 p-3 rounded-lg">
+              <DollarSign className="w-6 h-6 text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Tổng lương tháng</p>
-              <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalSalary)}</p>
+              <p className="text-sm text-slate-300">Tổng lương tháng</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(totalSalary)}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="bg-[#5e3ed0]/20 rounded-xl p-6 border border-white/10 backdrop-blur-md">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+            <div className="bg-blue-500/20 p-3 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Tổng thưởng</p>
-              <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalBonus)}</p>
+              <p className="text-sm text-slate-300">Tổng thưởng</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(totalBonus)}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="bg-[#5e3ed0]/20 rounded-xl p-6 border border-white/10 backdrop-blur-md">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-purple-600" />
+            <div className="bg-purple-500/20 p-3 rounded-lg">
+              <Calendar className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Số nhân viên</p>
-              <p className="text-2xl font-bold text-slate-900">{filteredSalaries.length}</p>
+              <p className="text-sm text-slate-300">Số nhân viên</p>
+              <p className="text-2xl font-bold text-white">{filteredSalaries.length}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200 mb-6">
+      <div className="bg-[#5e3ed0]/20 rounded-xl p-6 border border-white/10 mb-6 backdrop-blur-md">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
@@ -135,14 +135,14 @@ export const SalaryManagement: React.FC = () => {
                 placeholder="Tìm kiếm nhân viên..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white placeholder-slate-400"
               />
             </div>
           </div>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898] [&>option]:text-white"
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
               <option key={month} value={month}>Tháng {month}</option>
@@ -151,13 +151,13 @@ export const SalaryManagement: React.FC = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898] [&>option]:text-white"
           >
             {[2024, 2025, 2026].map(year => (
               <option key={year} value={year}>{year}</option>
             ))}
           </select>
-          <Button className="flex items-center gap-2">
+          <Button className="flex items-center gap-2 bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25">
             <Download size={18} />
             Xuất Excel
           </Button>
@@ -165,37 +165,36 @@ export const SalaryManagement: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 overflow-hidden backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[#5e3ed0]/40 border-b border-white/10">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Nhân viên</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Phòng ban</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900">Lương cơ bản</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900">Thưởng</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900">Khấu trừ</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900">Tổng lương</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">Trạng thái</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-white">Nhân viên</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-white">Phòng ban</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-white">Lương cơ bản</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-white">Thưởng</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-white">Khấu trừ</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-white">Tổng lương</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-white">Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-white/10">
               {filteredSalaries.map((salary) => (
-                <tr key={salary.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={salary.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-slate-900">{salary.userName}</div>
+                    <div className="font-medium text-white">{salary.userName}</div>
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{salary.department}</td>
-                  <td className="px-6 py-4 text-right text-slate-900">{formatCurrency(salary.baseSalary)}</td>
-                  <td className="px-6 py-4 text-right text-green-600">{formatCurrency(salary.bonus)}</td>
-                  <td className="px-6 py-4 text-right text-red-600">{formatCurrency(salary.deduction)}</td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-900">{formatCurrency(salary.totalSalary)}</td>
+                  <td className="px-6 py-4 text-slate-300">{salary.department}</td>
+                  <td className="px-6 py-4 text-right text-white">{formatCurrency(salary.baseSalary)}</td>
+                  <td className="px-6 py-4 text-right text-green-400">{formatCurrency(salary.bonus)}</td>
+                  <td className="px-6 py-4 text-right text-red-400">{formatCurrency(salary.deduction)}</td>
+                  <td className="px-6 py-4 text-right font-bold text-[#53cafd]">{formatCurrency(salary.totalSalary)}</td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      salary.status === 'paid' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${salary.status === 'paid'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      }`}>
                       {salary.status === 'paid' ? 'Đã trả' : 'Chờ xử lý'}
                     </span>
                   </td>
@@ -207,9 +206,9 @@ export const SalaryManagement: React.FC = () => {
       </div>
 
       {filteredSalaries.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl border border-slate-200 mt-6">
-          <DollarSign className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600">Không tìm thấy dữ liệu lương</p>
+        <div className="text-center py-12 bg-[#5e3ed0]/20 rounded-xl border border-white/10 mt-6 backdrop-blur-md">
+          <DollarSign className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+          <p className="text-slate-300">Không tìm thấy dữ liệu lương</p>
         </div>
       )}
     </div>

@@ -31,17 +31,17 @@ const App: React.FC = () => {
 
   if (currentView === 'login' || currentView === 'register') {
     return (
-      <Auth 
-        initialMode={currentView} 
-        onBack={() => handleViewChange('home')} 
+      <Auth
+        initialMode={currentView}
+        onBack={() => handleViewChange('home')}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-500 selection:text-white text-black">
-      <Navbar 
-        onLogin={() => handleViewChange('login')} 
+    <div className="min-h-screen font-sans text-white selection:bg-brand-500 selection:text-white">
+      <Navbar
+        onLogin={() => handleViewChange('login')}
         onRegister={() => handleViewChange('register')}
         onNavigateHome={() => handleViewChange('home')}
       />

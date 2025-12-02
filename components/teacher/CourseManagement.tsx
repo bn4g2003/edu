@@ -18,36 +18,34 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ course, onBa
     <div className="space-y-6">
       {/* Header with Tabs */}
       <div>
-        <button onClick={onBack} className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2">
+        <button onClick={onBack} className="text-[#53cafd] hover:text-[#3db9f5] mb-4 flex items-center gap-2 transition-colors">
           <ArrowLeft size={20} />
           Quay lại danh sách khóa học
         </button>
-        
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-900">{course.title}</h2>
-            <p className="text-slate-600">{course.teacherName}</p>
+
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 overflow-hidden backdrop-blur-md">
+          <div className="p-6 border-b border-white/10">
+            <h2 className="text-2xl font-bold text-white">{course.title}</h2>
+            <p className="text-slate-300">{course.teacherName}</p>
           </div>
-          
-          <div className="flex border-b border-slate-200">
+
+          <div className="flex border-b border-white/10">
             <button
               onClick={() => setActiveTab('lessons')}
-              className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${
-                activeTab === 'lessons'
-                  ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+              className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'lessons'
+                  ? 'text-[#53cafd] border-b-2 border-[#53cafd] bg-[#53cafd]/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
             >
               <PlayCircle size={20} />
               Quản lý bài học
             </button>
             <button
               onClick={() => setActiveTab('students')}
-              className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${
-                activeTab === 'students'
-                  ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+              className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'students'
+                  ? 'text-[#53cafd] border-b-2 border-[#53cafd] bg-[#53cafd]/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
             >
               <Users size={20} />
               Học sinh & Thống kê
@@ -59,9 +57,9 @@ export const CourseManagement: React.FC<CourseManagementProps> = ({ course, onBa
       {/* Content */}
       <div>
         {activeTab === 'lessons' ? (
-          <LessonManagement course={course} onBack={() => {}} />
+          <LessonManagement course={course} onBack={() => { }} />
         ) : (
-          <CourseDetail course={course} onBack={() => {}} />
+          <CourseDetail course={course} onBack={() => { }} />
         )}
       </div>
     </div>

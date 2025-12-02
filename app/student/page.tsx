@@ -36,37 +36,37 @@ export default function StudentPage() {
 
   const loadLearningStats = async () => {
     if (!userProfile?.uid) return;
-    
+
     try {
       setLoadingStats(true);
-      
+
       // Lấy tất cả enrollment của user
       const enrollmentsRef = collection(db, 'enrollments');
       const q = query(enrollmentsRef, where('userId', '==', userProfile.uid));
       const snapshot = await getDocs(q);
-      
+
       let totalProgress = 0;
       let completed = 0;
       let inProgress = 0;
       let totalTime = 0;
       let certificates = 0;
-      
+
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         const progress = data.progress || 0;
         totalProgress += progress;
-        
+
         if (progress >= 100) {
           completed++;
           certificates++; // Giả sử hoàn thành = có chứng chỉ
         } else if (progress > 0) {
           inProgress++;
         }
-        
+
         // Tính thời gian học (giả sử mỗi khóa học trung bình 10 giờ)
         totalTime += (progress / 100) * 10;
       });
-      
+
       setStats({
         totalCourses: snapshot.docs.length,
         completedCourses: completed,
@@ -103,26 +103,26 @@ export default function StudentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-[#5e3ed0]/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-green-500 p-2 rounded-lg">
-                <BookOpen className="w-6 h-6 text-white" />
+              <div className="bg-[#53cafd]/20 p-2 rounded-lg">
+                <BookOpen className="w-6 h-6 text-[#53cafd]" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Student Dashboard</h1>
-                <p className="text-xs text-slate-500">Học tập của tôi</p>
+                <h1 className="text-xl font-bold text-white">Student Dashboard</h1>
+                <p className="text-xs text-slate-300">Học tập của tôi</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-slate-900">{userProfile.displayName}</p>
-                <p className="text-xs text-slate-500">{userProfile.email}</p>
+                <p className="text-sm font-medium text-white">{userProfile.displayName}</p>
+                <p className="text-xs text-slate-300">{userProfile.email}</p>
               </div>
-              <Button onClick={handleSignOut} className="flex items-center gap-2">
+              <Button onClick={handleSignOut} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border-none">
                 <LogOut size={16} />
                 Đăng xuất
               </Button>
@@ -134,12 +134,10 @@ export default function StudentPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-8 text-white mb-8">
+        <div className="bg-gradient-to-r from-[#5e3ed0]/40 to-[#53cafd]/40 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-white mb-8">
           <h2 className="text-3xl font-bold mb-2">Chào {userProfile.displayName}!</h2>
-          <p className="text-green-100">Tiếp tục hành trình học tập của bạn</p>
+          <p className="text-slate-200">Tiếp tục hành trình học tập của bạn</p>
         </div>
-
-
 
         {/* Course Enrollment */}
         <CourseEnrollment />

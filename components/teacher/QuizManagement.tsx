@@ -54,7 +54,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate()
       })) as Question[];
-      
+
       questionsData.sort((a, b) => a.order - b.order);
       setQuestions(questionsData);
     } catch (error) {
@@ -245,27 +245,27 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6">
+    <div className="min-h-screen bg-[#311898] py-6">
       <div className="max-w-5xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <button onClick={onBack} className="text-brand-600 hover:text-brand-700 mb-3 flex items-center gap-2">
+        <div className="bg-[#5e3ed0]/20 rounded-xl shadow-sm border border-white/10 p-6 mb-6 backdrop-blur-md">
+          <button onClick={onBack} className="text-[#53cafd] hover:text-[#3db9f5] mb-3 flex items-center gap-2 transition-colors">
             ← Quay lại danh sách bài học
           </button>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-1">
+              <h3 className="text-2xl font-bold text-white mb-1">
                 {isReadOnly ? 'Xem bài kiểm tra' : 'Quản lý bài kiểm tra'}
               </h3>
-              <p className="text-slate-600">Bài học: <span className="font-medium">{lesson.title}</span></p>
+              <p className="text-slate-300">Bài học: <span className="font-medium text-white">{lesson.title}</span></p>
               {questions.length > 0 && (
-                <p className="text-sm text-slate-500 mt-1">
-                  Tổng số câu: <span className="font-bold text-purple-600">{questions.length}</span>
-                  {lesson.quizDuration && <span> | Thời gian: <span className="font-bold text-purple-600">{lesson.quizDuration} phút</span></span>}
+                <p className="text-sm text-slate-400 mt-1">
+                  Tổng số câu: <span className="font-bold text-[#53cafd]">{questions.length}</span>
+                  {lesson.quizDuration && <span> | Thời gian: <span className="font-bold text-[#53cafd]">{lesson.quizDuration} phút</span></span>}
                 </p>
               )}
               {isReadOnly && (
-                <p className="text-sm text-blue-600 mt-2">
+                <p className="text-sm text-[#53cafd] mt-2">
                   🔒 Chế độ chỉ xem - Không thể chỉnh sửa
                 </p>
               )}
@@ -275,7 +275,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                 <>
                   <Button
                     onClick={() => setShowResults(true)}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg"
+                    className="flex items-center gap-2 bg-[#53cafd] hover:bg-[#3db9f5] shadow-lg shadow-[#53cafd]/25 text-white border-none"
                   >
                     <BarChart3 size={18} />
                     Xem kết quả
@@ -283,7 +283,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                   {!isReadOnly && (
                     <button
                       onClick={handleDeleteQuiz}
-                      className="px-4 py-2 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors flex items-center gap-2"
+                      className="px-4 py-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 font-medium transition-colors flex items-center gap-2"
                     >
                       <Trash2 size={18} />
                       Xóa bài kiểm tra
@@ -292,7 +292,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                 </>
               )}
               {!isReadOnly && (
-                <Button onClick={handleCreateQuiz} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 shadow-lg">
+                <Button onClick={handleCreateQuiz} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-600/25 text-white border-none">
                   <Plus size={18} />
                   {questions.length > 0 ? 'Tạo lại' : 'Tạo bài kiểm tra'}
                 </Button>
@@ -303,38 +303,38 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
 
         {/* Content */}
         {correctAnswers.length === 0 && questions.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+          <div className="bg-[#5e3ed0]/20 rounded-xl shadow-sm border border-white/10 p-12 text-center backdrop-blur-md">
             <div className="max-w-md mx-auto">
-              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-10 h-10 text-purple-600" />
+              <div className="w-20 h-20 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/30">
+                <FileText className="w-10 h-10 text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Chưa có bài kiểm tra</h3>
-              <p className="text-slate-600 mb-6">Tạo bài kiểm tra với số câu hỏi và đáp án đúng</p>
-              <Button onClick={handleCreateQuiz} className="bg-purple-600 hover:bg-purple-700 shadow-lg">
+              <h3 className="text-xl font-bold text-white mb-2">Chưa có bài kiểm tra</h3>
+              <p className="text-slate-300 mb-6">Tạo bài kiểm tra với số câu hỏi và đáp án đúng</p>
+              <Button onClick={handleCreateQuiz} className="bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-600/25 text-white border-none">
                 <Plus size={18} className="mr-2" />
                 Tạo bài kiểm tra
               </Button>
             </div>
           </div>
         ) : correctAnswers.length > 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-[#5e3ed0]/20 rounded-xl shadow-sm border border-white/10 p-6 backdrop-blur-md">
             <div className="mb-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Thiết lập đáp án đúng</h3>
-                  <p className="text-slate-600">Chọn đáp án đúng cho từng câu hỏi (A, B, C, hoặc D)</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Thiết lập đáp án đúng</h3>
+                  <p className="text-slate-300">Chọn đáp án đúng cho từng câu hỏi (A, B, C, hoặc D)</p>
                   <div className="mt-3 flex items-center gap-4 text-sm">
-                    <span className="text-slate-600">Thời gian:</span>
-                    <span className="font-bold text-purple-600">{bulkData.duration} phút</span>
-                    <span className="text-slate-400">|</span>
-                    <span className="text-slate-600">Tổng số câu:</span>
-                    <span className="font-bold text-purple-600">{correctAnswers.length} câu</span>
+                    <span className="text-slate-300">Thời gian:</span>
+                    <span className="font-bold text-[#53cafd]">{bulkData.duration} phút</span>
+                    <span className="text-slate-500">|</span>
+                    <span className="text-slate-300">Tổng số câu:</span>
+                    <span className="font-bold text-[#53cafd]">{correctAnswers.length} câu</span>
                   </div>
                 </div>
-                
+
                 {/* Quick Actions */}
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-slate-700 mb-3">⚡ Chọn nhanh tất cả:</p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <p className="text-xs font-bold text-slate-300 mb-3">⚡ Chọn nhanh tất cả:</p>
                   <div className="flex gap-2">
                     {[0, 1, 2, 3].map((optIndex) => (
                       <button
@@ -343,14 +343,14 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                           const newAnswers = correctAnswers.map(() => optIndex);
                           setCorrectAnswers(newAnswers);
                         }}
-                        className="w-10 h-10 rounded-lg font-bold text-sm bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all shadow-sm"
+                        className="w-10 h-10 rounded-lg font-bold text-sm bg-white/10 border border-white/20 hover:border-[#53cafd] hover:bg-[#53cafd]/20 transition-all shadow-sm text-white"
                         title={`Đặt tất cả là ${String.fromCharCode(65 + optIndex)}`}
                       >
                         {String.fromCharCode(65 + optIndex)}
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">Hoặc dùng phím 1, 2, 3, 4</p>
+                  <p className="text-xs text-slate-400 mt-2">Hoặc dùng phím 1, 2, 3, 4</p>
                 </div>
               </div>
             </div>
@@ -358,9 +358,9 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
             {/* Compact Grid Layout */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
               {correctAnswers.map((answer, index) => (
-                <div 
-                  key={index} 
-                  className="border-2 border-slate-200 rounded-lg p-3 bg-slate-50 hover:border-purple-300 transition-all"
+                <div
+                  key={index}
+                  className="border border-white/10 rounded-lg p-3 bg-white/5 hover:border-purple-500/50 transition-all"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     const key = e.key.toUpperCase();
@@ -376,12 +376,11 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                   }}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-600">Câu {index + 1}</span>
-                    <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-                      answer !== undefined 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-slate-200 text-slate-400'
-                    }`}>
+                    <span className="text-xs font-bold text-slate-300">Câu {index + 1}</span>
+                    <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${answer !== undefined
+                        ? 'bg-green-500 text-white'
+                        : 'bg-white/10 text-slate-400'
+                      }`}>
                       {answer !== undefined ? String.fromCharCode(65 + answer) : '?'}
                     </div>
                   </div>
@@ -394,11 +393,10 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                           newAnswers[index] = optIndex;
                           setCorrectAnswers(newAnswers);
                         }}
-                        className={`h-8 rounded font-bold text-xs transition-all ${
-                          answer === optIndex
+                        className={`h-8 rounded font-bold text-xs transition-all ${answer === optIndex
                             ? 'bg-green-500 text-white shadow-md scale-110'
-                            : 'bg-white text-slate-600 border border-slate-200 hover:border-green-400 hover:bg-green-50'
-                        }`}
+                            : 'bg-white/5 text-slate-400 border border-white/10 hover:border-green-400 hover:bg-green-500/20'
+                          }`}
                       >
                         {String.fromCharCode(65 + optIndex)}
                       </button>
@@ -409,16 +407,16 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
             </div>
 
             {/* Progress Indicator */}
-            <div className="mb-6 bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <div className="mb-6 bg-white/5 rounded-lg p-4 border border-white/10">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">Tiến độ hoàn thành</span>
-                <span className="text-sm font-bold text-purple-600">
+                <span className="text-sm font-medium text-slate-300">Tiến độ hoàn thành</span>
+                <span className="text-sm font-bold text-[#53cafd]">
                   {correctAnswers.filter(a => a !== undefined).length}/{correctAnswers.length}
                 </span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-purple-500 to-green-500 h-2 rounded-full transition-all duration-300"
+              <div className="w-full bg-white/10 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-purple-500 to-[#53cafd] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(correctAnswers.filter(a => a !== undefined).length / correctAnswers.length) * 100}%` }}
                 />
               </div>
@@ -431,14 +429,14 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                     setCorrectAnswers([]);
                   }
                 }}
-                className="px-6 py-3 border-2 border-slate-200 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                className="px-6 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 font-medium transition-colors"
               >
                 Hủy
               </button>
               <div className="flex-1" />
-              <Button 
-                onClick={handleSaveQuiz} 
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 shadow-lg px-8"
+              <Button
+                onClick={handleSaveQuiz}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/25 px-8 text-white border-none"
               >
                 <Save size={18} />
                 Lưu bài kiểm tra ({correctAnswers.length} câu)
@@ -449,28 +447,28 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
           <div className="space-y-4">
             {questions.map((question, index) => {
               const isEmpty = !question.question && question.options.every(opt => !opt);
-              
+
               return (
-                <div key={question.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-all">
+                <div key={question.id} className="bg-[#5e3ed0]/20 rounded-xl shadow-sm border border-white/10 p-6 hover:border-[#53cafd]/50 transition-all backdrop-blur-md">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg shadow-purple-500/30">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       {isEmpty ? (
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-bold text-slate-900">Câu hỏi trống</h3>
-                            <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded">
+                            <h3 className="text-lg font-bold text-white">Câu hỏi trống</h3>
+                            <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-medium rounded border border-orange-500/30">
                               Chỉ có đáp án
                             </span>
                           </div>
-                          <p className="text-sm text-slate-600 mb-3">
+                          <p className="text-sm text-slate-300 mb-3">
                             Giáo viên sẽ chỉ thấy số câu và 4 nút A/B/C/D
                           </p>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-600">Đáp án đúng:</span>
-                            <div className="px-4 py-2 bg-green-50 border-2 border-green-500 rounded-lg font-bold text-green-700">
+                            <span className="text-sm text-slate-300">Đáp án đúng:</span>
+                            <div className="px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg font-bold text-green-400">
                               {String.fromCharCode(65 + question.correctAnswer)}
                             </div>
                           </div>
@@ -478,8 +476,8 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                       ) : (
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-bold text-slate-900">{question.question}</h3>
-                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                            <h3 className="text-lg font-bold text-white">{question.question}</h3>
+                            <span className="px-2 py-1 bg-[#53cafd]/20 text-[#53cafd] text-xs font-medium rounded border border-[#53cafd]/30">
                               Có nội dung
                             </span>
                           </div>
@@ -487,16 +485,15 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                             {question.options.map((option, optIndex) => (
                               <div
                                 key={optIndex}
-                                className={`text-sm px-4 py-3 rounded-lg border-2 transition-all ${
-                                  optIndex === question.correctAnswer
-                                    ? 'bg-green-50 border-green-500 text-green-700 font-medium shadow-sm'
-                                    : 'bg-slate-50 border-slate-200 text-slate-600'
-                                }`}
+                                className={`text-sm px-4 py-3 rounded-lg border transition-all ${optIndex === question.correctAnswer
+                                    ? 'bg-green-500/10 border-green-500/50 text-green-400 font-medium shadow-sm'
+                                    : 'bg-white/5 border-white/10 text-slate-300'
+                                  }`}
                               >
                                 <span className="font-bold mr-2">{String.fromCharCode(65 + optIndex)}.</span>
                                 {option}
                                 {optIndex === question.correctAnswer && (
-                                  <span className="ml-2 text-green-600">✓ Đúng</span>
+                                  <span className="ml-2 text-green-400">✓ Đúng</span>
                                 )}
                               </div>
                             ))}
@@ -515,15 +512,15 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
         {/* Bulk Create Modal */}
         {showBulkModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#1a103d] rounded-2xl shadow-2xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto border border-white/10">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-900">Tạo hàng loạt câu hỏi</h3>
-                  <p className="text-sm text-slate-600 mt-1">Tạo câu hỏi trống, chỉ có đáp án đúng</p>
+                  <h3 className="text-2xl font-bold text-white">Tạo hàng loạt câu hỏi</h3>
+                  <p className="text-sm text-slate-300 mt-1">Tạo câu hỏi trống, chỉ có đáp án đúng</p>
                 </div>
-                <button 
-                  onClick={() => setShowBulkModal(false)} 
-                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg transition-colors"
+                <button
+                  onClick={() => setShowBulkModal(false)}
+                  className="text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -531,45 +528,44 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Số lượng câu hỏi *</label>
+                  <label className="block text-sm font-bold text-slate-300 mb-2">Số lượng câu hỏi *</label>
                   <input
                     type="number"
                     value={bulkData.count}
                     onChange={(e) => setBulkData({ ...bulkData, count: Number(e.target.value) })}
                     min={1}
                     max={100}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-bold text-center"
+                    className="w-full px-4 py-3 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#53cafd] focus:border-transparent bg-white/5 text-lg font-bold text-center text-white"
                   />
-                  <p className="text-xs text-slate-500 mt-2 text-center">Từ 1 đến 100 câu hỏi</p>
+                  <p className="text-xs text-slate-400 mt-2 text-center">Từ 1 đến 100 câu hỏi</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3">Đáp án đúng mặc định *</label>
+                  <label className="block text-sm font-bold text-slate-300 mb-3">Đáp án đúng mặc định *</label>
                   <div className="grid grid-cols-2 gap-3">
                     {['A', 'B', 'C', 'D'].map((letter, index) => (
-                      <label 
-                        key={index} 
-                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          bulkData.correctAnswer === index
-                            ? 'bg-green-50 border-green-500 shadow-md'
-                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                        }`}
+                      <label
+                        key={index}
+                        className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${bulkData.correctAnswer === index
+                            ? 'bg-green-500/10 border-green-500/50 shadow-md'
+                            : 'bg-white/5 border-white/10 hover:border-white/20'
+                          }`}
                       >
                         <input
                           type="radio"
                           name="bulkCorrectAnswer"
                           checked={bulkData.correctAnswer === index}
                           onChange={() => setBulkData({ ...bulkData, correctAnswer: index })}
-                          className="w-5 h-5 text-green-600"
+                          className="w-5 h-5 text-green-500"
                         />
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center font-bold text-slate-700 border-2 border-slate-300">
+                          <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center font-bold text-white border border-white/20">
                             {letter}
                           </div>
-                          <span className="font-medium text-slate-700">Đáp án {letter}</span>
+                          <span className="font-medium text-slate-300">Đáp án {letter}</span>
                         </div>
                         {bulkData.correctAnswer === index && (
-                          <span className="ml-auto text-green-600">✓</span>
+                          <span className="ml-auto text-green-500">✓</span>
                         )}
                       </label>
                     ))}
@@ -577,16 +573,16 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Thời gian làm bài (phút) *</label>
+                  <label className="block text-sm font-bold text-slate-300 mb-2">Thời gian làm bài (phút) *</label>
                   <input
                     type="number"
                     value={bulkData.duration}
                     onChange={(e) => setBulkData({ ...bulkData, duration: Number(e.target.value) })}
                     min={1}
                     max={180}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-bold text-center"
+                    className="w-full px-4 py-3 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#53cafd] focus:border-transparent bg-white/5 text-lg font-bold text-center text-white"
                   />
-                  <p className="text-xs text-slate-500 mt-2 text-center">Từ 1 đến 180 phút</p>
+                  <p className="text-xs text-slate-400 mt-2 text-center">Từ 1 đến 180 phút</p>
                 </div>
 
                 <div>
@@ -599,20 +595,20 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                     }}
                     folder="quiz-documents"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Tài liệu tham khảo cho học viên khi làm bài (PDF, Word, PowerPoint, Excel)
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-4">
+                <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4">
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Wand2 className="w-5 h-5 text-white" />
+                    <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-purple-500/30">
+                      <Wand2 className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-purple-900 mb-1">Lưu ý</p>
-                      <p className="text-xs text-purple-800">
-                        Hệ thống sẽ tạo <span className="font-bold">{bulkData.count} câu hỏi trống</span> với đáp án đúng là <span className="font-bold">{String.fromCharCode(65 + bulkData.correctAnswer)}</span>. 
+                      <p className="text-sm font-bold text-purple-300 mb-1">Lưu ý</p>
+                      <p className="text-xs text-purple-200">
+                        Hệ thống sẽ tạo <span className="font-bold">{bulkData.count} câu hỏi trống</span> với đáp án đúng là <span className="font-bold">{String.fromCharCode(65 + bulkData.correctAnswer)}</span>.
                         Giáo viên sẽ chỉ thấy số câu và 4 nút A/B/C/D.
                       </p>
                     </div>
@@ -621,16 +617,16 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
               </div>
 
               <div className="flex gap-3 mt-8">
-                <Button 
-                  onClick={handleBulkCreate} 
-                  className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-3 shadow-lg"
+                <Button
+                  onClick={handleBulkCreate}
+                  className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-3 shadow-lg shadow-purple-600/25 text-white border-none"
                 >
                   <Wand2 size={18} />
                   Tạo {bulkData.count} câu hỏi
                 </Button>
                 <button
                   onClick={() => setShowBulkModal(false)}
-                  className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                  className="flex-1 px-4 py-3 border border-white/20 rounded-lg hover:bg-white/10 font-medium transition-colors text-white"
                 >
                   Hủy
                 </button>
@@ -642,23 +638,23 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
         {/* Bulk Form Modal - Step 2: Fill all questions */}
         {showBulkFormModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pb-4 border-b border-slate-200">
+            <div className="bg-[#1a103d] rounded-2xl shadow-2xl p-8 w-full max-w-6xl max-h-[90vh] overflow-y-auto border border-white/10">
+              <div className="flex justify-between items-center mb-6 sticky top-0 bg-[#1a103d] pb-4 border-b border-white/10 z-10">
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-900">
+                  <h3 className="text-2xl font-bold text-white">
                     {editingQuestion ? 'Chỉnh sửa câu hỏi' : `Điền nội dung ${bulkForms.length} câu hỏi`}
                   </h3>
-                  <p className="text-sm text-slate-600 mt-1">Điền đầy đủ câu hỏi và đáp án, tích chọn đáp án đúng</p>
+                  <p className="text-sm text-slate-300 mt-1">Điền đầy đủ câu hỏi và đáp án, tích chọn đáp án đúng</p>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     if (confirm('Hủy bỏ tất cả câu hỏi đang nhập?')) {
                       setShowBulkFormModal(false);
                       setBulkForms([]);
                       setEditingQuestion(null);
                     }
-                  }} 
-                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg transition-colors"
+                  }}
+                  className="text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -666,18 +662,18 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
 
               <div className="space-y-6">
                 {bulkForms.map((form, formIndex) => (
-                  <div key={formIndex} className="border-2 border-slate-200 rounded-xl p-6 bg-slate-50 relative">
+                  <div key={formIndex} className="border border-white/10 rounded-xl p-6 bg-white/5 relative">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-purple-500/30">
                           {formIndex + 1}
                         </div>
-                        <h4 className="text-lg font-bold text-slate-900">Câu hỏi {formIndex + 1}</h4>
+                        <h4 className="text-lg font-bold text-white">Câu hỏi {formIndex + 1}</h4>
                       </div>
                       {!editingQuestion && bulkForms.length > 1 && (
                         <button
                           onClick={() => handleRemoveFromModal(formIndex)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                           title="Xóa câu hỏi này"
                         >
                           <Trash2 size={18} />
@@ -687,7 +683,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Nội dung câu hỏi *</label>
+                        <label className="block text-sm font-bold text-slate-300 mb-2">Nội dung câu hỏi *</label>
                         <textarea
                           value={form.question}
                           onChange={(e) => {
@@ -696,22 +692,21 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                             setBulkForms(newForms);
                           }}
                           rows={2}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
+                          className="w-full px-4 py-3 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#53cafd] focus:border-transparent bg-white/5 text-white placeholder-slate-500"
                           placeholder="Nhập câu hỏi..."
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Các đáp án *</label>
+                        <label className="block text-sm font-bold text-slate-300 mb-2">Các đáp án *</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {form.options.map((option, optIndex) => (
-                            <div 
+                            <div
                               key={optIndex}
-                              className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all bg-white ${
-                                form.correctAnswer === optIndex 
-                                  ? 'border-green-500 bg-green-50' 
-                                  : 'border-slate-200'
-                              }`}
+                              className={`flex items-center gap-2 p-3 rounded-lg border transition-all bg-white/5 ${form.correctAnswer === optIndex
+                                  ? 'border-green-500 bg-green-500/10'
+                                  : 'border-white/10'
+                                }`}
                             >
                               <input
                                 type="radio"
@@ -722,9 +717,9 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                                   newForms[formIndex].correctAnswer = optIndex;
                                   setBulkForms(newForms);
                                 }}
-                                className="w-4 h-4 text-green-600"
+                                className="w-4 h-4 text-green-500"
                               />
-                              <div className="w-6 h-6 bg-slate-100 rounded flex items-center justify-center font-bold text-xs text-slate-700">
+                              <div className="w-6 h-6 bg-white/10 rounded flex items-center justify-center font-bold text-xs text-slate-300">
                                 {String.fromCharCode(65 + optIndex)}
                               </div>
                               <input
@@ -735,7 +730,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                                   newForms[formIndex].options[optIndex] = e.target.value;
                                   setBulkForms(newForms);
                                 }}
-                                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                                className="flex-1 px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] bg-transparent text-sm text-white placeholder-slate-500"
                                 placeholder={`Đáp án ${String.fromCharCode(65 + optIndex)}`}
                               />
                             </div>
@@ -747,11 +742,11 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                 ))}
               </div>
 
-              <div className="flex gap-3 mt-8 sticky bottom-0 bg-white pt-4 border-t border-slate-200">
+              <div className="flex gap-3 mt-8 sticky bottom-0 bg-[#1a103d] pt-4 border-t border-white/10 z-10">
                 {!editingQuestion && !isReadOnly && (
                   <button
                     onClick={handleAddMoreInModal}
-                    className="px-6 py-3 border-2 border-purple-500 text-purple-600 rounded-lg hover:bg-purple-50 font-medium transition-colors flex items-center gap-2"
+                    className="px-6 py-3 border border-purple-500/50 text-purple-400 rounded-lg hover:bg-purple-500/10 font-medium transition-colors flex items-center gap-2"
                   >
                     <Plus size={18} />
                     Thêm câu hỏi
@@ -768,13 +763,13 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({ lesson, onBack, 
                           setEditingQuestion(null);
                         }
                       }}
-                      className="px-6 py-3 border-2 border-slate-200 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                      className="px-6 py-3 border border-white/20 rounded-lg hover:bg-white/10 font-medium transition-colors text-white"
                     >
                       Hủy
                     </button>
-                    <Button 
-                      onClick={handleSaveBulkForms} 
-                      className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-3 shadow-lg"
+                    <Button
+                      onClick={handleSaveBulkForms}
+                      className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-3 shadow-lg shadow-purple-600/25 text-white border-none"
                     >
                       <Save size={18} />
                       {editingQuestion ? 'Cập nhật' : `Lưu ${bulkForms.length} câu hỏi`}

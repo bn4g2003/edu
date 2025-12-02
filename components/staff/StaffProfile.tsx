@@ -70,35 +70,35 @@ export const StaffProfile: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#311898] flex items-center justify-center">
         <div className="text-white">Đang tải...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-900 to-slate-900">
+    <div className="min-h-screen bg-[#311898]">
       <div className="max-w-4xl mx-auto p-4 md:p-8 pt-6">
 
         {/* Profile Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 overflow-hidden">
+        <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden">
           {/* Avatar Section */}
-          <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-8 text-center">
+          <div className="bg-gradient-to-r from-[#53cafd]/20 to-blue-600/20 p-8 text-center border-b border-white/10">
             <div className="relative inline-block mb-4">
-              <img 
+              <img
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&size=160&background=random`}
-                alt={user.displayName} 
-                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl"
+                alt={user.displayName}
+                className="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-xl"
               />
             </div>
             <h2 className="text-2xl font-bold text-white mb-1">{user.displayName}</h2>
-            <p className="text-white/80">{user.email}</p>
+            <p className="text-slate-300">{user.email}</p>
             <div className="flex justify-center gap-2 mt-4">
-              <span className="px-4 py-1 bg-white/20 rounded-full text-white text-sm font-medium">
+              <span className="px-4 py-1 bg-white/10 rounded-full text-white text-sm font-medium border border-white/10">
                 {user.role === 'admin' ? 'Quản trị viên' : user.role === 'staff' ? 'Nhân viên' : user.role === 'teacher' ? 'Giáo viên' : 'Học viên'}
               </span>
               {user.position && (
-                <span className="px-4 py-1 bg-white/20 rounded-full text-white text-sm font-medium">
+                <span className="px-4 py-1 bg-[#53cafd]/20 rounded-full text-[#53cafd] text-sm font-medium border border-[#53cafd]/30">
                   {user.position}
                 </span>
               )}
@@ -112,7 +112,7 @@ export const StaffProfile: React.FC = () => {
               {!editing ? (
                 <button
                   onClick={() => setEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#53cafd] text-white rounded-xl hover:bg-[#3db9f5] transition-colors shadow-lg shadow-[#53cafd]/25"
                 >
                   <Edit2 size={18} />
                   Chỉnh sửa
@@ -131,7 +131,7 @@ export const StaffProfile: React.FC = () => {
                         workLocation: user.workLocation || '',
                       });
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors border border-white/10"
                   >
                     <X size={18} />
                     Hủy
@@ -139,7 +139,7 @@ export const StaffProfile: React.FC = () => {
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 shadow-lg shadow-green-500/25"
                   >
                     <Save size={18} />
                     {loading ? 'Đang lưu...' : 'Lưu'}
@@ -150,17 +150,17 @@ export const StaffProfile: React.FC = () => {
 
             <div className="space-y-4">
               {/* Họ và tên */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <User className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Họ và tên</label>
+                  <User className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Họ và tên</label>
                 </div>
                 {editing ? (
                   <input
                     type="text"
                     value={formData.displayName}
                     onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-brand-500 focus:outline-none"
+                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-[#53cafd] focus:outline-none focus:ring-1 focus:ring-[#53cafd]"
                   />
                 ) : (
                   <p className="text-white font-medium">{user.displayName}</p>
@@ -168,20 +168,20 @@ export const StaffProfile: React.FC = () => {
               </div>
 
               {/* Email */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <Mail className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Email</label>
+                  <Mail className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Email</label>
                 </div>
                 <p className="text-white font-medium">{user.email}</p>
-                <p className="text-white/40 text-xs mt-1">Email không thể thay đổi</p>
+                <p className="text-slate-500 text-xs mt-1">Email không thể thay đổi</p>
               </div>
 
               {/* Số điện thoại */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <Phone className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Số điện thoại</label>
+                  <Phone className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Số điện thoại</label>
                 </div>
                 {editing ? (
                   <input
@@ -189,7 +189,7 @@ export const StaffProfile: React.FC = () => {
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                     placeholder="Nhập số điện thoại"
-                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-brand-500 focus:outline-none"
+                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-[#53cafd] focus:outline-none focus:ring-1 focus:ring-[#53cafd]"
                   />
                 ) : (
                   <p className="text-white font-medium">{user.phoneNumber || 'Chưa cập nhật'}</p>
@@ -197,17 +197,17 @@ export const StaffProfile: React.FC = () => {
               </div>
 
               {/* Ngày sinh */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Ngày sinh</label>
+                  <Calendar className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Ngày sinh</label>
                 </div>
                 {editing ? (
                   <input
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-brand-500 focus:outline-none"
+                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-[#53cafd] focus:outline-none focus:ring-1 focus:ring-[#53cafd]"
                   />
                 ) : (
                   <p className="text-white font-medium">
@@ -217,10 +217,10 @@ export const StaffProfile: React.FC = () => {
               </div>
 
               {/* Địa chỉ */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <MapPin className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Địa chỉ</label>
+                  <MapPin className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Địa chỉ</label>
                 </div>
                 {editing ? (
                   <input
@@ -228,7 +228,7 @@ export const StaffProfile: React.FC = () => {
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="Nhập địa chỉ"
-                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-brand-500 focus:outline-none"
+                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-[#53cafd] focus:outline-none focus:ring-1 focus:ring-[#53cafd]"
                   />
                 ) : (
                   <p className="text-white font-medium">{user.address || 'Chưa cập nhật'}</p>
@@ -236,10 +236,10 @@ export const StaffProfile: React.FC = () => {
               </div>
 
               {/* Quốc gia */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <Globe className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Quốc gia</label>
+                  <Globe className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Quốc gia</label>
                 </div>
                 {editing ? (
                   <input
@@ -247,7 +247,7 @@ export const StaffProfile: React.FC = () => {
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     placeholder="Nhập quốc gia"
-                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-brand-500 focus:outline-none"
+                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-[#53cafd] focus:outline-none focus:ring-1 focus:ring-[#53cafd]"
                   />
                 ) : (
                   <p className="text-white font-medium">{user.country || 'Chưa cập nhật'}</p>
@@ -255,10 +255,10 @@ export const StaffProfile: React.FC = () => {
               </div>
 
               {/* Vị trí làm việc */}
-              <div className="bg-white/5 rounded-xl p-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <Briefcase className="text-brand-400" size={20} />
-                  <label className="text-white/60 text-sm">Vị trí làm việc</label>
+                  <Briefcase className="text-[#53cafd]" size={20} />
+                  <label className="text-slate-400 text-sm">Vị trí làm việc</label>
                 </div>
                 {editing ? (
                   <input
@@ -266,7 +266,7 @@ export const StaffProfile: React.FC = () => {
                     value={formData.workLocation}
                     onChange={(e) => setFormData({ ...formData, workLocation: e.target.value })}
                     placeholder="Nhập vị trí làm việc"
-                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-brand-500 focus:outline-none"
+                    className="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-[#53cafd] focus:outline-none focus:ring-1 focus:ring-[#53cafd]"
                   />
                 ) : (
                   <p className="text-white font-medium">{user.workLocation || 'Chưa cập nhật'}</p>
@@ -275,25 +275,25 @@ export const StaffProfile: React.FC = () => {
 
               {/* Phòng ban */}
               {departmentName && (
-                <div className="bg-white/5 rounded-xl p-4">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                   <div className="flex items-center gap-3 mb-2">
-                    <Building2 className="text-brand-400" size={20} />
-                    <label className="text-white/60 text-sm">Phòng ban</label>
+                    <Building2 className="text-[#53cafd]" size={20} />
+                    <label className="text-slate-400 text-sm">Phòng ban</label>
                   </div>
                   <p className="text-white font-medium">{departmentName}</p>
-                  <p className="text-white/40 text-xs mt-1">Liên hệ admin để thay đổi</p>
+                  <p className="text-slate-500 text-xs mt-1">Liên hệ admin để thay đổi</p>
                 </div>
               )}
 
               {/* Lương cơ bản */}
               {user.monthlySalary && (
-                <div className="bg-white/5 rounded-xl p-4">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                   <div className="flex items-center gap-3 mb-2">
-                    <DollarSign className="text-brand-400" size={20} />
-                    <label className="text-white/60 text-sm">Lương cơ bản</label>
+                    <DollarSign className="text-[#53cafd]" size={20} />
+                    <label className="text-slate-400 text-sm">Lương cơ bản</label>
                   </div>
                   <p className="text-white font-medium">{user.monthlySalary.toLocaleString('vi-VN')} VNĐ</p>
-                  <p className="text-white/40 text-xs mt-1">Liên hệ admin để thay đổi</p>
+                  <p className="text-slate-500 text-xs mt-1">Liên hệ admin để thay đổi</p>
                 </div>
               )}
             </div>

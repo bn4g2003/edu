@@ -50,7 +50,7 @@ export const DepartmentManagement: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       // Load departments
       const deptSnapshot = await getDocs(collection(db, 'departments'));
       const depts = deptSnapshot.docs.map(doc => ({
@@ -110,7 +110,7 @@ export const DepartmentManagement: React.FC = () => {
 
       const deptId = editingDept?.id || `dept_${Date.now()}`;
       const manager = formData.managerId ? users.find(u => u.uid === formData.managerId) : null;
-      
+
       const deptData: any = {
         name: formData.name,
         description: formData.description,
@@ -121,7 +121,7 @@ export const DepartmentManagement: React.FC = () => {
       };
 
       await setDoc(doc(db, 'departments', deptId), deptData);
-      
+
       alert(editingDept ? 'Cập nhật phòng ban thành công!' : 'Thêm phòng ban thành công!');
       setShowModal(false);
       loadData();
@@ -152,10 +152,10 @@ export const DepartmentManagement: React.FC = () => {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Quản lý phòng ban</h1>
-          <p className="text-slate-600">Chọn trưởng phòng từ danh sách nhân viên trong phòng ban</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Quản lý phòng ban</h1>
+          <p className="text-slate-300">Chọn trưởng phòng từ danh sách nhân viên trong phòng ban</p>
         </div>
-        <Button onClick={handleAdd} className="flex items-center gap-2">
+        <Button onClick={handleAdd} className="flex items-center gap-2 bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25">
           <Plus size={20} />
           Thêm phòng ban
         </Button>
@@ -170,89 +170,89 @@ export const DepartmentManagement: React.FC = () => {
             placeholder="Tìm kiếm phòng ban theo tên, mô tả, trưởng phòng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white placeholder-slate-400"
           />
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Tổng phòng ban</p>
-          <p className="text-2xl font-bold text-slate-900">{departments.length}</p>
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Tổng phòng ban</p>
+          <p className="text-2xl font-bold text-white">{departments.length}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Có trưởng phòng</p>
-          <p className="text-2xl font-bold text-purple-600">
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Có trưởng phòng</p>
+          <p className="text-2xl font-bold text-[#53cafd]">
             {departments.filter(d => d.managerId).length}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Tổng nhân viên</p>
-          <p className="text-2xl font-bold text-blue-600">
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Tổng nhân viên</p>
+          <p className="text-2xl font-bold text-pink-400">
             {users.length}
           </p>
         </div>
       </div>
 
       {/* Departments Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 overflow-hidden backdrop-blur-md">
         {filteredDepartments.length === 0 ? (
           <div className="text-center py-12">
-            <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">
+            <Building2 className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+            <p className="text-slate-300">
               {searchTerm ? 'Không tìm thấy phòng ban nào' : 'Chưa có phòng ban nào'}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-[#5e3ed0]/40 border-b border-white/10">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Phòng ban
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Mô tả
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Trưởng phòng
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Số nhân viên
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Thao tác
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-white/10">
                 {filteredDepartments.map((dept) => (
-                  <tr key={dept.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={dept.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="bg-purple-100 p-2 rounded-lg">
-                          <Building2 className="w-5 h-5 text-purple-600" />
+                        <div className="bg-purple-500/20 p-2 rounded-lg">
+                          <Building2 className="w-5 h-5 text-purple-300" />
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{dept.name}</p>
-                          <p className="text-xs text-slate-500">ID: {dept.id}</p>
+                          <p className="font-semibold text-white">{dept.name}</p>
+                          <p className="text-xs text-slate-400">ID: {dept.id}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-600 max-w-md line-clamp-2">
+                      <p className="text-sm text-slate-300 max-w-md line-clamp-2">
                         {dept.description || '-'}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {dept.managerName ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#53cafd]/20 text-[#53cafd] rounded-full text-sm font-medium">
                           <Shield size={14} />
                           {dept.managerName}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm font-medium">
                           ⚠️ Chưa có
                         </span>
                       )}
@@ -260,7 +260,7 @@ export const DepartmentManagement: React.FC = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => setViewStaffDept(dept)}
-                        className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
                       >
                         <Users size={16} />
                         <span>{getStaffCount(dept.id)}</span>
@@ -270,14 +270,14 @@ export const DepartmentManagement: React.FC = () => {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleEdit(dept)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-[#53cafd] hover:bg-white/10 rounded-lg transition-colors"
                           title="Chỉnh sửa"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(dept)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-pink-500 hover:bg-white/10 rounded-lg transition-colors"
                           title="Xóa"
                         >
                           <Trash2 size={18} />
@@ -295,42 +295,42 @@ export const DepartmentManagement: React.FC = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-900">
+          <div className="bg-[#311898]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white">
                 {editingDept ? 'Chỉnh sửa phòng ban' : 'Thêm phòng ban mới'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white/10 rounded-lg text-white">
                 <X size={20} />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Tên phòng ban</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Tên phòng ban</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white"
                   placeholder="Ví dụ: Phòng Kỹ thuật"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Mô tả</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white"
                   rows={3}
                   placeholder="Mô tả về phòng ban..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Trưởng phòng</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Trưởng phòng</label>
                 <select
                   value={formData.managerId}
                   onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898] [&>option]:text-white"
                 >
                   <option value="">-- Chọn trưởng phòng --</option>
                   {editingDept && getUsersInDepartment(editingDept.id).map(user => (
@@ -339,18 +339,18 @@ export const DepartmentManagement: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-500 mt-1">
-                  {editingDept 
+                <p className="text-xs text-slate-400 mt-1">
+                  {editingDept
                     ? `Chọn từ ${getUsersInDepartment(editingDept.id).length} nhân viên trong phòng`
                     : 'Lưu phòng ban trước, sau đó sửa để chọn trưởng phòng'}
                 </p>
               </div>
             </div>
-            <div className="p-6 border-t border-slate-200 flex gap-3">
-              <Button onClick={() => setShowModal(false)} className="flex-1 bg-slate-500 hover:bg-slate-600">
+            <div className="p-6 border-t border-white/10 flex gap-3">
+              <Button onClick={() => setShowModal(false)} className="flex-1 bg-white/10 hover:bg-white/20 text-white border-none">
                 Hủy
               </Button>
-              <Button onClick={handleSave} className="flex-1 flex items-center justify-center gap-2">
+              <Button onClick={handleSave} className="flex-1 flex items-center justify-center gap-2 bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25">
                 <Save size={18} />
                 Lưu
               </Button>
@@ -364,53 +364,53 @@ export const DepartmentManagement: React.FC = () => {
       {/* View Staff Modal */}
       {viewStaffDept && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="bg-[#311898]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#5e3ed0]/20">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Danh sách nhân viên</h3>
-                <p className="text-sm text-slate-600 mt-1">{viewStaffDept.name}</p>
+                <h3 className="text-xl font-bold text-white">Danh sách nhân viên</h3>
+                <p className="text-sm text-slate-300 mt-1">{viewStaffDept.name}</p>
               </div>
-              <button 
-                onClick={() => setViewStaffDept(null)} 
-                className="p-2 hover:bg-white rounded-lg transition-colors"
+              <button
+                onClick={() => setViewStaffDept(null)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6">
               {users.filter(u => u.departmentId === viewStaffDept.id).length === 0 ? (
                 <div className="text-center py-12">
-                  <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                  <p className="text-slate-600">Chưa có nhân viên nào trong phòng ban này</p>
+                  <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                  <p className="text-slate-300">Chưa có nhân viên nào trong phòng ban này</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {users
                     .filter(u => u.departmentId === viewStaffDept.id)
                     .map((user) => (
-                      <div 
-                        key={user.uid} 
-                        className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                      <div
+                        key={user.uid}
+                        className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#53cafd] to-[#5e3ed0] rounded-full flex items-center justify-center text-white font-bold text-lg">
                             {user.displayName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <h4 className="font-semibold text-slate-900">{user.displayName}</h4>
-                            <p className="text-sm text-slate-600">{user.email}</p>
+                            <h4 className="font-semibold text-white">{user.displayName}</h4>
+                            <p className="text-sm text-slate-300">{user.email}</p>
                           </div>
                         </div>
                         <div className="text-right">
                           {user.uid === viewStaffDept.managerId && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#53cafd]/20 text-[#53cafd] rounded-full text-xs font-medium">
                               <Shield size={12} />
                               Trưởng phòng
                             </span>
                           )}
                           {user.monthlySalary && (
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm text-slate-300 mt-1">
                               {user.monthlySalary.toLocaleString('vi-VN')}đ/tháng
                             </p>
                           )}
@@ -421,10 +421,10 @@ export const DepartmentManagement: React.FC = () => {
               )}
             </div>
 
-            <div className="p-6 border-t border-slate-200 bg-slate-50">
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <span>Tổng số nhân viên: <strong className="text-slate-900">{users.filter(u => u.departmentId === viewStaffDept.id).length}</strong></span>
-                <Button onClick={() => setViewStaffDept(null)} className="bg-slate-500 hover:bg-slate-600">
+            <div className="p-6 border-t border-white/10 bg-[#5e3ed0]/20">
+              <div className="flex items-center justify-between text-sm text-slate-300">
+                <span>Tổng số nhân viên: <strong className="text-white">{users.filter(u => u.departmentId === viewStaffDept.id).length}</strong></span>
+                <Button onClick={() => setViewStaffDept(null)} className="bg-white/10 hover:bg-white/20 text-white border-none">
                   Đóng
                 </Button>
               </div>

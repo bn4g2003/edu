@@ -33,43 +33,46 @@ const plans = [
 
 export const Pricing: React.FC = () => {
   return (
-    <section id="pricing" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="pricing" className="py-20 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-slate-900">Đầu Tư Vào Kỹ Năng Hôm Nay</h2>
-          <p className="mt-4 text-slate-600">Thăng tiến sự nghiệp ngày mai với các gói đào tạo phù hợp.</p>
+          <h2 className="text-3xl font-extrabold text-white">Đầu Tư Vào Kỹ Năng Hôm Nay</h2>
+          <p className="mt-4 text-slate-300">Thăng tiến sự nghiệp ngày mai với các gói đào tạo phù hợp.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
-            <div key={index} className={`relative flex flex-col p-8 rounded-3xl ${plan.popular ? 'bg-slate-900 text-white shadow-2xl scale-105 z-10' : 'bg-slate-50 text-slate-900 border border-gray-100'}`}>
+            <div key={index} className={`relative flex flex-col p-8 rounded-3xl backdrop-blur-md border transition-all duration-300 ${plan.popular
+                ? 'bg-[#5e3ed0]/40 text-white shadow-2xl scale-105 z-10 border-[#53cafd]/50'
+                : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
+              }`}>
               {plan.popular && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-brand-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-[#53cafd] to-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg">
                   Phổ biến nhất
                 </div>
               )}
-              
+
               <div className="mb-8">
                 <h3 className="text-xl font-bold">{plan.name}</h3>
-                <p className={`mt-2 text-sm ${plan.popular ? 'text-slate-300' : 'text-slate-500'}`}>{plan.description}</p>
+                <p className={`mt-2 text-sm ${plan.popular ? 'text-slate-200' : 'text-slate-400'}`}>{plan.description}</p>
                 <div className="mt-6 flex items-baseline gap-1">
                   <span className="text-4xl font-extrabold">{plan.price}</span>
-                  {plan.period && <span className={`text-sm ${plan.popular ? 'text-slate-300' : 'text-slate-500'}`}>{plan.period}</span>}
+                  {plan.period && <span className={`text-sm ${plan.popular ? 'text-slate-200' : 'text-slate-400'}`}>{plan.period}</span>}
                 </div>
               </div>
 
               <ul className="flex-1 space-y-4 mb-8">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Check className={`w-5 h-5 flex-shrink-0 ${plan.popular ? 'text-brand-400' : 'text-brand-600'}`} />
-                    <span className="text-sm">{feature}</span>
+                    <Check className={`w-5 h-5 flex-shrink-0 ${plan.popular ? 'text-[#53cafd]' : 'text-[#53cafd]'}`} />
+                    <span className="text-sm text-slate-300">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <Button 
-                variant={plan.variant} 
-                className={`w-full ${plan.popular ? 'bg-brand-600 hover:bg-brand-500 text-white border-none' : ''}`}
+              <Button
+                variant={plan.variant}
+                className={`w-full ${plan.popular ? 'bg-[#53cafd] hover:bg-[#3db9f5] text-white border-none shadow-lg shadow-[#53cafd]/30' : 'bg-white/10 hover:bg-white/20 text-white border-none'}`}
               >
                 {plan.cta}
               </Button>

@@ -13,10 +13,10 @@ interface CourseDetailPageProps {
   isAdmin?: boolean;
 }
 
-export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ 
-  course, 
+export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
+  course,
   onBack,
-  isAdmin = false 
+  isAdmin = false
 }) => {
   const [activeTab, setActiveTab] = useState<'lessons' | 'students'>('lessons');
   const [showStudentManagement, setShowStudentManagement] = useState(false);
@@ -25,21 +25,21 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200">
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 backdrop-blur-md">
         <div className="p-6">
-          <button 
-            onClick={onBack} 
-            className="text-blue-600 hover:text-blue-700 flex items-center gap-2 font-medium mb-4"
+          <button
+            onClick={onBack}
+            className="text-[#53cafd] hover:text-[#3db9f5] flex items-center gap-2 font-medium mb-4"
           >
             <ArrowLeft size={20} />
             Quay lại danh sách
           </button>
-          
+
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">{course.title}</h2>
-              <p className="text-slate-600">{course.description}</p>
-              <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
+              <h2 className="text-2xl font-bold text-white mb-1">{course.title}</h2>
+              <p className="text-slate-300">{course.description}</p>
+              <div className="flex items-center gap-3 mt-2 text-sm text-slate-400">
                 <span>Danh mục: {course.category}</span>
                 <span>•</span>
                 <span>Thời lượng: {course.duration}h</span>
@@ -48,32 +48,30 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
               </div>
             </div>
             {isAdmin && (
-              <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+              <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">
                 Chế độ Admin
               </span>
             )}
           </div>
         </div>
-        
-        <div className="flex border-t border-slate-200">
+
+        <div className="flex border-t border-white/10">
           <button
             onClick={() => setActiveTab('lessons')}
-            className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'lessons'
-                ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
+            className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'lessons'
+                ? 'text-[#53cafd] border-b-2 border-[#53cafd] bg-[#53cafd]/10'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
           >
             <PlayCircle size={20} />
             Quản lý bài học
           </button>
           <button
             onClick={() => setActiveTab('students')}
-            className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'students'
-                ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
+            className={`flex-1 px-6 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'students'
+                ? 'text-[#53cafd] border-b-2 border-[#53cafd] bg-[#53cafd]/10'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
           >
             <Users size={20} />
             Học viên & Thống kê
@@ -97,9 +95,9 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
       {/* Content */}
       <div>
         {activeTab === 'lessons' ? (
-          <LessonManagement course={course} onBack={() => {}} />
+          <LessonManagement course={course} onBack={() => { }} />
         ) : (
-          <CourseDetail key={refreshKey} course={course} onBack={() => {}} />
+          <CourseDetail key={refreshKey} course={course} onBack={() => { }} />
         )}
       </div>
 

@@ -157,7 +157,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       if (!response.ok) {
         throw new Error('Failed to delete file');
       }
-      
+
       onRemove();
     } catch (error) {
       console.error('Error deleting file:', error);
@@ -168,30 +168,30 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   return (
     <div className="space-y-4">
       {currentDocumentUrl ? (
-        <div className="border-2 border-green-200 bg-green-50 rounded-xl p-4">
+        <div className="border border-green-500/20 bg-green-500/10 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <File className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-green-500/30">
+              <File className="w-5 h-5 text-green-400" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Đã có tài liệu</span>
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-medium text-green-400">Đã có tài liệu</span>
               </div>
-              <p className="text-sm text-green-700 truncate">{currentDocumentName}</p>
+              <p className="text-sm text-green-200 truncate">{currentDocumentName}</p>
               <div className="flex gap-2 mt-2">
                 <a
                   href={currentDocumentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-green-600 hover:text-green-700 underline"
+                  className="text-xs text-green-400 hover:text-green-300 underline"
                 >
                   Xem tài liệu
                 </a>
                 {onRemove && (
                   <button
                     onClick={handleRemove}
-                    className="text-xs text-red-600 hover:text-red-700 underline"
+                    className="text-xs text-red-400 hover:text-red-300 underline"
                   >
                     Xóa
                   </button>
@@ -206,22 +206,21 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-            dragActive
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-slate-300 hover:border-slate-400'
-          }`}
+          className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${dragActive
+              ? 'border-[#53cafd] bg-[#53cafd]/10'
+              : 'border-white/20 hover:border-white/40'
+            }`}
         >
           {uploading ? (
             <div className="space-y-4">
-              <Loader className="w-12 h-12 text-blue-500 mx-auto animate-spin" />
+              <Loader className="w-12 h-12 text-[#53cafd] mx-auto animate-spin" />
               <div>
-                <p className="text-sm font-medium text-slate-900 mb-2">
+                <p className="text-sm font-medium text-white mb-2">
                   Đang upload... {uploadProgress}%
                 </p>
-                <div className="w-full max-w-xs mx-auto h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div className="w-full max-w-xs mx-auto h-2 bg-white/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-300"
+                    className="h-full bg-[#53cafd] transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -230,10 +229,10 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
           ) : (
             <>
               <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-900 font-medium mb-2">
+              <p className="text-white font-medium mb-2">
                 Kéo thả file vào đây hoặc nhấn để chọn
               </p>
-              <p className="text-sm text-slate-500 mb-4">
+              <p className="text-sm text-slate-400 mb-4">
                 Hỗ trợ: PDF, Word, PowerPoint, Excel, Text (tối đa 50MB)
               </p>
               <label className="inline-block">
@@ -244,7 +243,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
                   className="hidden"
                   disabled={uploading}
                 />
-                <span className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium cursor-pointer transition-colors">
+                <span className="inline-block px-6 py-3 bg-[#53cafd] hover:bg-[#3db9f5] text-white rounded-lg font-medium cursor-pointer transition-colors shadow-[#53cafd]/25">
                   Chọn file
                 </span>
               </label>
@@ -254,9 +253,9 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       )}
 
       {error && (
-        <div className="flex items-start gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-start gap-2 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
     </div>

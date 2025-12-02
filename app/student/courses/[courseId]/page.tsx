@@ -13,7 +13,7 @@ export default function CourseDetailPage() {
   const router = useRouter();
   const params = useParams();
   const courseId = params.courseId as string;
-  
+
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,27 +38,27 @@ export default function CourseDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const courseRef = doc(db, 'courses', courseId);
       const courseSnap = await getDoc(courseRef);
-      
+
       if (!courseSnap.exists()) {
         setError('Không tìm thấy khóa học');
         return;
       }
-      
+
       const courseData = {
         ...courseSnap.data(),
         createdAt: courseSnap.data().createdAt?.toDate(),
         updatedAt: courseSnap.data().updatedAt?.toDate()
       } as Course;
-      
+
       // Check if user is enrolled (staff can access all courses)
       if (userProfile?.role !== 'staff' && !courseData.students?.includes(userProfile?.uid || '')) {
         setError('Bạn chưa đăng ký khóa học này');
         return;
       }
-      
+
       setCourse(courseData);
     } catch (err) {
       console.error('Error loading course:', err);
@@ -75,10 +75,10 @@ export default function CourseDetailPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#311898]">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Đang tải...</p>
+          <div className="w-16 h-16 border-4 border-[#53cafd] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/80">Đang tải...</p>
         </div>
       </div>
     );
@@ -90,12 +90,12 @@ export default function CourseDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#311898]">
+        <div className="text-center bg-[#5e3ed0]/20 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+          <p className="text-red-400 mb-4 text-lg font-medium">{error}</p>
           <button
             onClick={handleBack}
-            className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600"
+            className="px-6 py-2 bg-[#53cafd] text-white rounded-lg hover:bg-[#3db9f5] transition-colors shadow-lg shadow-[#53cafd]/25"
           >
             Quay lại Dashboard
           </button>

@@ -7,20 +7,20 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  variant = 'primary', 
-  size = 'md', 
-  children, 
+export const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  size = 'md',
+  children,
   className = '',
-  ...props 
+  ...props
 }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
-  
+
   const variants = {
-    primary: "bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/30 border border-transparent focus:ring-brand-500",
-    secondary: "bg-white text-brand-700 hover:bg-brand-50 border border-transparent shadow-md focus:ring-white",
-    outline: "bg-transparent border-2 border-brand-600 text-brand-600 hover:bg-brand-50 focus:ring-brand-500",
-    ghost: "bg-transparent text-slate-600 hover:text-brand-600 hover:bg-slate-100 focus:ring-slate-400"
+    primary: "bg-[#53cafd] hover:bg-[#3db9f5] text-white shadow-lg shadow-[#53cafd]/30 border border-transparent focus:ring-[#53cafd]",
+    secondary: "bg-white/10 text-white hover:bg-white/20 border border-transparent shadow-md focus:ring-white/50 backdrop-blur-sm",
+    outline: "bg-transparent border-2 border-[#53cafd] text-[#53cafd] hover:bg-[#53cafd]/10 focus:ring-[#53cafd]",
+    ghost: "bg-transparent text-slate-300 hover:text-white hover:bg-white/10 focus:ring-slate-400"
   };
 
   const sizes = {
@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <button 
+    <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >

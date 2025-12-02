@@ -3,7 +3,7 @@ import { BookOpen, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin }
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-900 text-slate-300 py-16">
+    <footer className="bg-[#311898]/80 backdrop-blur-md text-slate-300 py-16 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}

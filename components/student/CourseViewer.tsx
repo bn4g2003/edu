@@ -39,13 +39,13 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   const CDN_HOSTNAME = process.env.NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME || 'vz-69258c0a-d89.b-cdn.net';
-  
+
   // Check if user is staff (needs anti-cheat features)
   const isStaff = userProfile?.role === 'staff';
 
   // Get all unique tags from lessons
   const allTags = Array.from(new Set(lessons.flatMap(lesson => lesson.tags || []))).sort();
-  
+
   // Get current course info
   const currentCourse = allCourses.find(c => c.id === selectedCourseId) || course;
 
@@ -120,7 +120,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     };
 
     const video = videoRef.current;
-    
+
     const handlePlay = () => {
       setIsPlaying(true);
       startAttentionCheck();
@@ -158,7 +158,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
       // Native HLS support (Safari)
       videoRef.current.src = videoUrl;
-      
+
       // Set start time after video loads
       if (savedProgress && savedProgress.watchedSeconds > 5) {
         console.log('⏩ Will seek to:', savedProgress.watchedSeconds, 'seconds');
@@ -172,7 +172,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     } else {
       // Use HLS.js for other browsers
       const Hls = (await import('hls.js')).default;
-      
+
       if (Hls.isSupported()) {
         if (hlsRef.current) {
           hlsRef.current.destroy();
@@ -221,7 +221,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       })) as Course[];
 
       // Filter courses that user is enrolled in
-      const userCourses = coursesData.filter(c => 
+      const userCourses = coursesData.filter(c =>
         c.students?.includes(userProfile.uid) || userProfile.role === 'admin'
       );
 
@@ -242,11 +242,11 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
         createdAt: doc.data().createdAt?.toDate(),
         updatedAt: doc.data().updatedAt?.toDate()
       })) as Lesson[];
-      
+
       // Sort in memory instead of using orderBy
       lessonsData.sort((a, b) => a.order - b.order);
       setLessons(lessonsData);
-      
+
       // Auto select first lesson
       if (lessonsData.length > 0) {
         setSelectedLesson(lessonsData[0]);
@@ -271,7 +271,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       setProgressLoaded(true);
       return;
     }
-    
+
     try {
       const progressRef = collection(db, 'progress');
       const q = query(
@@ -281,7 +281,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       );
       const snapshot = await getDocs(q);
       const progressMap: Record<string, LessonProgress> = {};
-      
+
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         progressMap[data.lessonId] = {
@@ -289,7 +289,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
           lastWatchedAt: data.lastWatchedAt?.toDate ? data.lastWatchedAt.toDate() : new Date()
         } as LessonProgress;
       });
-      
+
       setProgress(progressMap);
       setProgressLoaded(true);
     } catch (error) {
@@ -300,7 +300,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
 
   const loadQuizResults = async () => {
     if (!userProfile) return;
-    
+
     try {
       const resultsRef = collection(db, 'quizResults');
       const q = query(
@@ -310,12 +310,12 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       );
       const snapshot = await getDocs(q);
       const resultsMap: Record<string, any> = {};
-      
+
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         resultsMap[data.lessonId] = data;
       });
-      
+
       setQuizResults(resultsMap);
     } catch (error) {
       console.error('Error loading quiz results:', error);
@@ -325,11 +325,11 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   const isLessonLocked = (lesson: Lesson, index: number): boolean => {
     // First lesson is never locked
     if (index === 0) return false;
-    
+
     // Get previous lesson
     const previousLesson = filteredLessons[index - 1];
     if (!previousLesson) return false;
-    
+
     // If previous lesson has quiz, check if passed with 70%
     if (previousLesson.hasQuiz) {
       const quizResult = quizResults[previousLesson.id];
@@ -337,7 +337,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
         return true;
       }
     }
-    
+
     return false;
   };
 
@@ -368,7 +368,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
 
   const handlePlayPause = () => {
     if (!videoRef.current) return;
-    
+
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
@@ -406,10 +406,10 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
     try {
       const progressId = `${userProfile.uid}_${selectedLesson.id}`;
       const existingProgress = progress[selectedLesson.id];
-      
+
       // Calculate if should be completed
       const shouldBeCompleted = watchedSeconds / totalSeconds > 0.9;
-      
+
       // Determine final values with rules:
       // 1. completed: once true, always true
       // 2. watchedSeconds: only update if new value is greater
@@ -418,11 +418,11 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
         Math.floor(watchedSeconds),
         existingProgress?.watchedSeconds || 0
       );
-      
+
       // Only save if there's an actual change
-      if (existingProgress && 
-          existingProgress.completed === finalCompleted && 
-          existingProgress.watchedSeconds >= finalWatchedSeconds) {
+      if (existingProgress &&
+        existingProgress.completed === finalCompleted &&
+        existingProgress.watchedSeconds >= finalWatchedSeconds) {
         console.log('⏭️ No progress update needed');
         return;
       }
@@ -446,7 +446,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       });
 
       await setDoc(doc(db, 'progress', progressId), progressData);
-      
+
       setProgress(prev => ({
         ...prev,
         [selectedLesson.id]: progressData
@@ -464,22 +464,22 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
   };
 
   if (loading) {
-    return <div className="text-center py-8">Đang tải...</div>;
+    return <div className="text-center py-8 text-white">Đang tải...</div>;
   }
 
   // Debug: Log banner URL
   console.log('🖼️ Course banner:', course.banner);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#311898]">
       {/* Banner Section - Modern Hero Design */}
       <div className="w-full relative overflow-hidden">
         {course.banner ? (
           <>
             {/* Banner Image with Parallax Effect */}
             <div className="absolute inset-0">
-              <img 
-                src={course.banner} 
+              <img
+                src={course.banner}
                 alt={`Banner ${course.title}`}
                 className="w-full h-full object-cover scale-105"
                 onError={(e) => {
@@ -489,19 +489,19 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                 onLoad={() => console.log('✅ Banner loaded successfully')}
               />
               {/* Multi-layer Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/70"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-brand-900/60 via-transparent to-brand-900/40"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-[#311898]"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#311898]/80 via-transparent to-[#311898]/60"></div>
             </div>
-            
+
             {/* Content Overlay */}
             <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 lg:py-20">
-              <button 
-                onClick={onBack} 
+              <button
+                onClick={onBack}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-lg transition-all mb-6 border border-white/20"
               >
                 ← Quay lại khóa học
               </button>
-              
+
               <div className="max-w-3xl">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white drop-shadow-lg">
                   {course.title}
@@ -509,26 +509,25 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                 <p className="text-base md:text-lg text-white/90 mb-6 drop-shadow-md leading-relaxed">
                   {course.description}
                 </p>
-                
+
                 {/* Course Meta Info */}
                 <div className="flex flex-wrap items-center gap-3 md:gap-4">
                   <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
                     <Clock size={18} className="text-white/80" />
                     <span className="text-white font-medium">{course.duration} giờ</span>
                   </div>
-                  
+
                   <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
                     <span className="text-white font-medium">👨‍🏫 {course.teacherName}</span>
                   </div>
-                  
-                  <div className={`px-4 py-2 backdrop-blur-md rounded-lg border ${
-                    course.level === 'beginner' ? 'bg-green-500/20 border-green-400/30 text-green-100' :
+
+                  <div className={`px-4 py-2 backdrop-blur-md rounded-lg border ${course.level === 'beginner' ? 'bg-green-500/20 border-green-400/30 text-green-100' :
                     course.level === 'intermediate' ? 'bg-yellow-500/20 border-yellow-400/30 text-yellow-100' :
-                    'bg-red-500/20 border-red-400/30 text-red-100'
-                  }`}>
+                      'bg-red-500/20 border-red-400/30 text-red-100'
+                    }`}>
                     <span className="font-medium">
-                      {course.level === 'beginner' ? '📚 Cơ bản' : 
-                       course.level === 'intermediate' ? '📖 Trung cấp' : '🎓 Nâng cao'}
+                      {course.level === 'beginner' ? '📚 Cơ bản' :
+                        course.level === 'intermediate' ? '📖 Trung cấp' : '🎓 Nâng cao'}
                     </span>
                   </div>
                 </div>
@@ -537,30 +536,30 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
           </>
         ) : (
           // Fallback gradient background if no banner
-          <div className="bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 text-white">
+          <div className="bg-gradient-to-br from-[#311898] via-[#5e3ed0] to-[#311898] text-white">
             <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
-              <button 
-                onClick={onBack} 
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all mb-6"
+              <button
+                onClick={onBack}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all mb-6 border border-white/10"
               >
                 ← Quay lại khóa học
               </button>
-              
+
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{course.title}</h1>
               <p className="text-base md:text-lg text-white/90 mb-6 max-w-3xl">{course.description}</p>
-              
+
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg border border-white/10">
                   <Clock size={18} />
                   <span className="font-medium">{course.duration} giờ</span>
                 </div>
-                <div className="px-4 py-2 bg-white/10 rounded-lg">
+                <div className="px-4 py-2 bg-white/10 rounded-lg border border-white/10">
                   <span className="font-medium">👨‍🏫 {course.teacherName}</span>
                 </div>
-                <div className="px-4 py-2 bg-white/10 rounded-lg">
+                <div className="px-4 py-2 bg-white/10 rounded-lg border border-white/10">
                   <span className="font-medium">
-                    {course.level === 'beginner' ? '📚 Cơ bản' : 
-                     course.level === 'intermediate' ? '📖 Trung cấp' : '🎓 Nâng cao'}
+                    {course.level === 'beginner' ? '📚 Cơ bản' :
+                      course.level === 'intermediate' ? '📖 Trung cấp' : '🎓 Nâng cao'}
                   </span>
                 </div>
               </div>
@@ -572,9 +571,9 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       {/* Demo Video */}
       {course.demoVideoId && !selectedLesson && (
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="bg-white rounded-xl p-6 mb-6">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Video giới thiệu khóa học</h2>
-            <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden">
+          <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10">
+            <h2 className="text-xl font-bold text-white mb-4">Video giới thiệu khóa học</h2>
+            <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/10">
               <video
                 src={`https://${CDN_HOSTNAME}/${course.demoVideoId}/playlist.m3u8`}
                 controls
@@ -594,14 +593,15 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
           {/* Content Area */}
           <div className="lg:col-span-2">
             {selectedLesson && (
-              <div className="bg-white rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/10">
+                <div className="flex items-center gap-2">
                   {selectedLesson.videoId && (
                     <button
                       onClick={() => setViewMode('video')}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        viewMode === 'video' ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${viewMode === 'video'
+                        ? 'bg-[#53cafd] text-white shadow-lg shadow-[#53cafd]/25'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
                     >
                       <Play size={16} />
                       Video
@@ -610,9 +610,10 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   {selectedLesson.documentUrl && (
                     <button
                       onClick={() => setViewMode('document')}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        viewMode === 'document' ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${viewMode === 'document'
+                        ? 'bg-[#53cafd] text-white shadow-lg shadow-[#53cafd]/25'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
                     >
                       <FileText size={16} />
                       Tài liệu
@@ -621,9 +622,10 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   {selectedLesson.hasQuiz && (
                     <button
                       onClick={() => setViewMode('quiz')}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        viewMode === 'quiz' ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${viewMode === 'quiz'
+                        ? 'bg-[#53cafd] text-white shadow-lg shadow-[#53cafd]/25'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
                     >
                       <HelpCircle size={16} />
                       Bài kiểm tra
@@ -636,9 +638,9 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
             {/* Video View */}
             {viewMode === 'video' && selectedLesson && selectedLesson.videoId ? (
               <div>
-                <div 
+                <div
                   ref={videoContainerRef}
-                  className="bg-black rounded-xl overflow-hidden relative" 
+                  className="bg-black rounded-xl overflow-hidden relative border border-white/10 shadow-2xl"
                   style={{ paddingTop: '56.25%' }}
                 >
                   <video
@@ -654,54 +656,54 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                     <source src={`https://${CDN_HOSTNAME}/${selectedLesson.videoId}/playlist.m3u8`} type="application/x-mpegURL" />
                     Trình duyệt của bạn không hỗ trợ video.
                   </video>
-                  
+
                   {/* Custom Controls for Staff */}
                   {isStaff && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4" style={{ pointerEvents: 'auto' }}>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4" style={{ pointerEvents: 'auto' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {/* Restart Button */}
                           <button
                             onClick={handleRestart}
-                            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+                            className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors backdrop-blur-sm"
                             title="Xem lại từ đầu"
                           >
                             <RotateCcw size={18} />
                           </button>
-                          
+
                           {/* Rewind 10s */}
                           <button
                             onClick={handleRewind}
-                            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+                            className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors backdrop-blur-sm"
                             title="Tua lùi 10s"
                           >
                             <Rewind size={18} />
                           </button>
-                          
+
                           {/* Play/Pause */}
                           <button
                             onClick={handlePlayPause}
-                            className="w-12 h-12 bg-white/30 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-colors"
+                            className="w-12 h-12 bg-[#53cafd] hover:bg-[#3db9f5] rounded-full flex items-center justify-center text-white transition-colors shadow-lg shadow-[#53cafd]/25"
                           >
                             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                           </button>
-                          
-                          <span className="text-white text-sm ml-2">
+
+                          <span className="text-white text-sm ml-2 font-medium">
                             {isPlaying ? 'Đang phát' : 'Đã dừng'}
                           </span>
                         </div>
-                        
+
                         {/* Fullscreen */}
                         <button
                           onClick={handleFullscreen}
-                          className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+                          className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors backdrop-blur-sm"
                           title="Toàn màn hình"
                         >
                           <Maximize size={20} />
                         </button>
                       </div>
                       <div className="mt-2 text-center">
-                        <span className="text-white/70 text-xs">
+                        <span className="text-white/60 text-xs">
                           Sử dụng các nút điều khiển để xem video
                         </span>
                       </div>
@@ -710,9 +712,9 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                 </div>
               </div>
             ) : viewMode === 'video' ? (
-              <div className="bg-slate-900 rounded-xl relative" style={{ paddingTop: '56.25%' }}>
+              <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl relative border border-white/10" style={{ paddingTop: '56.25%' }}>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white">
+                  <div className="text-center text-white/50">
                     <Play className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p>Bài học này chưa có video</p>
                   </div>
@@ -722,25 +724,25 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
 
             {/* Document View */}
             {viewMode === 'document' && selectedLesson && selectedLesson.documentUrl ? (
-              <div className="bg-white rounded-xl p-8">
+              <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-8 border border-white/10">
                 <div className="text-center">
-                  <FileText className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Tài liệu bài học</h3>
-                  <p className="text-slate-600 mb-4">{selectedLesson.documentName}</p>
+                  <FileText className="w-16 h-16 text-[#53cafd] mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Tài liệu bài học</h3>
+                  <p className="text-white/70 mb-4">{selectedLesson.documentName}</p>
                   <a
                     href={selectedLesson.documentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    className="inline-block px-6 py-3 bg-[#53cafd] text-white rounded-lg hover:bg-[#3db9f5] transition-all shadow-lg shadow-[#53cafd]/25"
                   >
                     Tải xuống tài liệu
                   </a>
                 </div>
               </div>
             ) : viewMode === 'document' ? (
-              <div className="bg-white rounded-xl p-8 text-center">
-                <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <p className="text-slate-600">Bài học này chưa có tài liệu</p>
+              <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-8 text-center border border-white/10">
+                <FileText className="w-16 h-16 text-white/30 mx-auto mb-4" />
+                <p className="text-white/60">Bài học này chưa có tài liệu</p>
               </div>
             ) : null}
 
@@ -756,14 +758,14 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   onComplete={() => setTakingQuiz(false)}
                 />
               ) : (
-                <div className="bg-white rounded-xl p-8">
+                <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-8 border border-white/10">
                   <div className="text-center">
-                    <HelpCircle className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Bài kiểm tra</h3>
-                    <p className="text-slate-600 mb-4">Kiểm tra kiến thức của bạn về bài học này</p>
+                    <HelpCircle className="w-16 h-16 text-[#53cafd] mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-white mb-2">Bài kiểm tra</h3>
+                    <p className="text-white/70 mb-4">Kiểm tra kiến thức của bạn về bài học này</p>
                     <button
                       onClick={() => setTakingQuiz(true)}
-                      className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                      className="px-6 py-3 bg-[#53cafd] text-white rounded-lg hover:bg-[#3db9f5] transition-all shadow-lg shadow-[#53cafd]/25"
                     >
                       Bắt đầu làm bài
                     </button>
@@ -771,19 +773,19 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                 </div>
               )
             ) : viewMode === 'quiz' ? (
-              <div className="bg-white rounded-xl p-8 text-center">
-                <HelpCircle className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <p className="text-slate-600">Bài học này chưa có bài kiểm tra</p>
+              <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-8 text-center border border-white/10">
+                <HelpCircle className="w-16 h-16 text-white/30 mx-auto mb-4" />
+                <p className="text-white/60">Bài học này chưa có bài kiểm tra</p>
               </div>
             ) : null}
 
             {selectedLesson && (
-              <div className="bg-white rounded-xl p-6 mt-4">
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">{selectedLesson.title}</h2>
-                <p className="text-slate-600 mb-4">{selectedLesson.description}</p>
+              <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl p-6 mt-4 border border-white/10">
+                <h2 className="text-2xl font-bold text-white mb-2">{selectedLesson.title}</h2>
+                <p className="text-white/70 mb-4">{selectedLesson.description}</p>
                 <div className="flex items-center gap-4 text-sm">
                   {selectedLesson.duration && (
-                    <div className="flex items-center gap-2 text-slate-500">
+                    <div className="flex items-center gap-2 text-white/60">
                       <Clock size={16} />
                       <span>Thời lượng: {formatDuration(selectedLesson.duration)}</span>
                     </div>
@@ -792,18 +794,18 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                     <div className="flex items-center gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-slate-600">
+                          <span className="text-xs text-white/60">
                             Đã xem: {formatDuration(progress[selectedLesson.id].watchedSeconds)}
                           </span>
                           {progress[selectedLesson.id].completed && (
-                            <CheckCircle size={14} className="text-green-500" />
+                            <CheckCircle size={14} className="text-green-400" />
                           )}
                         </div>
-                        <div className="w-48 h-2 bg-slate-200 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-brand-500 transition-all"
-                            style={{ 
-                              width: `${Math.min(100, (progress[selectedLesson.id].watchedSeconds / progress[selectedLesson.id].totalSeconds) * 100)}%` 
+                        <div className="w-48 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#53cafd] transition-all"
+                            style={{
+                              width: `${Math.min(100, (progress[selectedLesson.id].watchedSeconds / progress[selectedLesson.id].totalSeconds) * 100)}%`
                             }}
                           />
                         </div>
@@ -817,30 +819,29 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
 
           {/* Lesson List */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24">
-              <div className="p-4 border-b border-slate-200">
-                <h3 className="font-bold text-slate-900">Nội dung khóa học</h3>
-                <p className="text-sm text-slate-600">{currentCourse.title}</p>
-                <p className="text-xs text-slate-500 mt-1">
+            <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden sticky top-24">
+              <div className="p-4 border-b border-white/10">
+                <h3 className="font-bold text-white">Nội dung khóa học</h3>
+                <p className="text-sm text-white/60">{currentCourse.title}</p>
+                <p className="text-xs text-white/50 mt-1">
                   {selectedTag === 'all' ? `${lessons.length} bài học` : `${filteredLessons.length}/${lessons.length} bài học`}
                 </p>
               </div>
 
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
                 {filteredLessons.length === 0 ? (
-                  <div className="p-6 text-center text-slate-500">
+                  <div className="p-6 text-center text-white/50">
                     <p className="text-sm">
                       {selectedTag === 'all' ? 'Chưa có bài học nào' : `Không có bài học nào với tag "${selectedTag}"`}
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-200">
+                  <div className="divide-y divide-white/5">
                     {filteredLessons.map((lesson, index) => {
                       const hasContent = lesson.videoId || lesson.documentUrl || lesson.hasQuiz;
                       const locked = isLessonLocked(lesson, index);
                       const previousLesson = index > 0 ? filteredLessons[index - 1] : null;
-                      const previousQuizResult = previousLesson ? quizResults[previousLesson.id] : null;
-                      
+
                       return (
                         <button
                           key={lesson.id}
@@ -858,41 +859,39 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                             }
                           }}
                           disabled={!hasContent || locked}
-                          className={`w-full p-4 text-left transition-colors ${
-                            selectedLesson?.id === lesson.id ? 'bg-brand-50 border-l-4 border-brand-500' : ''
-                          } ${locked ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-slate-50'} ${!hasContent && !locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`w-full p-4 text-left transition-colors ${selectedLesson?.id === lesson.id ? 'bg-[#53cafd]/20 border-l-4 border-[#53cafd]' : ''
+                            } ${locked ? 'opacity-50 cursor-not-allowed bg-white/5' : 'hover:bg-white/5'} ${!hasContent && !locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold relative ${
-                              locked ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
-                            }`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold relative ${locked ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white/70'
+                              }`}>
                               {locked ? <Lock size={16} /> : lesson.order}
                               {!locked && progress[lesson.id]?.completed && (
-                                <CheckCircle size={12} className="absolute -top-1 -right-1 text-green-500 bg-white rounded-full" />
+                                <CheckCircle size={12} className="absolute -top-1 -right-1 text-green-400 bg-[#311898] rounded-full" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className={`font-medium mb-1 line-clamp-2 ${locked ? 'text-slate-500' : 'text-slate-900'}`}>
+                              <h4 className={`font-medium mb-1 line-clamp-2 ${locked ? 'text-white/50' : 'text-white'}`}>
                                 {lesson.title}
                                 {locked && (
-                                  <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                                  <span className="ml-2 text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30">
                                     Cần đạt 70% bài trước
                                   </span>
                                 )}
                               </h4>
                               {!locked && progress[lesson.id] && (
                                 <div className="mb-1">
-                                  <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-brand-500"
-                                      style={{ 
-                                        width: `${Math.min(100, (progress[lesson.id].watchedSeconds / progress[lesson.id].totalSeconds) * 100)}%` 
+                                  <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-[#53cafd]"
+                                      style={{
+                                        width: `${Math.min(100, (progress[lesson.id].watchedSeconds / progress[lesson.id].totalSeconds) * 100)}%`
                                       }}
                                     />
                                   </div>
                                 </div>
                               )}
-                              <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+                              <div className="flex items-center gap-2 text-xs text-white/50 flex-wrap">
                                 {lesson.videoId && (
                                   <span className="flex items-center gap-1">
                                     <Play size={12} />
@@ -900,13 +899,13 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                                   </span>
                                 )}
                                 {lesson.documentUrl && (
-                                  <span className="flex items-center gap-1 text-blue-600">
+                                  <span className="flex items-center gap-1 text-[#53cafd]">
                                     <FileText size={12} />
                                     Tài liệu
                                   </span>
                                 )}
                                 {lesson.hasQuiz && (
-                                  <span className="flex items-center gap-1 text-purple-600">
+                                  <span className="flex items-center gap-1 text-purple-400">
                                     <HelpCircle size={12} />
                                     Bài kiểm tra
                                   </span>
@@ -931,18 +930,17 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
 
           {/* Right Sidebar - Tag Filter & Course Switcher */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-slate-200 p-4 sticky top-24">
-              <h3 className="font-bold text-slate-900 mb-3">Lọc theo chủ đề</h3>
-              
+            <div className="bg-[#5e3ed0]/20 backdrop-blur-md rounded-xl border border-white/10 p-4 sticky top-24">
+              <h3 className="font-bold text-white mb-3">Lọc theo chủ đề</h3>
+
               {allTags.length > 0 ? (
                 <div className="space-y-1">
                   <button
                     onClick={() => setSelectedTag('all')}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedTag === 'all'
-                        ? 'bg-brand-500 text-white'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedTag === 'all'
+                        ? 'bg-[#53cafd] text-white shadow-lg shadow-[#53cafd]/25'
+                        : 'text-white/70 hover:bg-white/10'
+                      }`}
                   >
                     Tất cả ({lessons.length})
                   </button>
@@ -952,11 +950,10 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                       <button
                         key={tag}
                         onClick={() => setSelectedTag(tag)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          selectedTag === tag
-                            ? 'bg-brand-500 text-white'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedTag === tag
+                            ? 'bg-[#53cafd] text-white shadow-lg shadow-[#53cafd]/25'
+                            : 'text-white/70 hover:bg-white/10'
+                          }`}
                       >
                         {tag} ({count})
                       </button>
@@ -964,13 +961,13 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">Chưa có tag nào</p>
+                <p className="text-sm text-white/50">Chưa có tag nào</p>
               )}
 
               {/* Course Switcher */}
               {allCourses.length > 1 && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <h3 className="font-bold text-slate-900 mb-3">Khóa học khác</h3>
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <h3 className="font-bold text-white mb-3">Khóa học khác</h3>
                   <div className="space-y-1">
                     {allCourses.map((c) => (
                       <button
@@ -980,11 +977,10 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
                           setSelectedTag('all');
                           setSelectedLesson(null);
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                          selectedCourseId === c.id
-                            ? 'bg-purple-100 text-purple-700 font-medium'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCourseId === c.id
+                            ? 'bg-[#5e3ed0]/40 text-[#53cafd] font-medium border border-[#53cafd]/30'
+                            : 'text-white/70 hover:bg-white/10'
+                          }`}
                       >
                         <div className="line-clamp-2">{c.title}</div>
                       </button>
@@ -1000,23 +996,23 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) =>
       {/* Attention Check Popup (Staff only) */}
       {showAttentionCheck && isStaff && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-[#1e1e2d] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+            <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-yellow-500/30">
+              <svg className="w-8 h-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Bạn có đang xem video?</h3>
-            <p className="text-slate-600 mb-6">
+            <h3 className="text-2xl font-bold text-white mb-2">Bạn có đang xem video?</h3>
+            <p className="text-white/70 mb-6">
               Vui lòng xác nhận bạn đang theo dõi bài học để tiếp tục
             </p>
             <button
               onClick={handleAttentionCheckContinue}
-              className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium text-lg transition-colors"
+              className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium text-lg transition-colors shadow-lg shadow-green-500/25"
             >
               Tiếp tục xem
             </button>
-            <p className="text-xs text-slate-500 mt-4">
+            <p className="text-xs text-white/40 mt-4">
               Video sẽ tự động dừng nếu không có phản hồi
             </p>
           </div>

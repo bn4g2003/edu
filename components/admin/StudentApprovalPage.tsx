@@ -38,7 +38,7 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
   const loadRequests = async () => {
     try {
       setLoading(true);
-      
+
       // Load all courses
       const coursesSnapshot = await getDocs(collection(db, 'courses'));
       const courses = coursesSnapshot.docs.map(doc => ({
@@ -55,7 +55,7 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
 
       // Build pending requests list
       const pendingRequests: PendingRequest[] = [];
-      
+
       courses.forEach(course => {
         if (course.pendingStudents && course.pendingStudents.length > 0) {
           course.pendingStudents.forEach(userId => {
@@ -97,7 +97,7 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
     try {
       setProcessing(request.userId + request.courseId);
       const courseRef = doc(db, 'courses', request.courseId);
-      
+
       await updateDoc(courseRef, {
         students: arrayUnion(request.userId),
         pendingStudents: arrayRemove(request.userId)
@@ -119,7 +119,7 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
     try {
       setProcessing(request.userId + request.courseId);
       const courseRef = doc(db, 'courses', request.courseId);
-      
+
       await updateDoc(courseRef, {
         pendingStudents: arrayRemove(request.userId)
       });
@@ -142,22 +142,22 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
     <div className="p-8 space-y-6">
       {/* Header */}
       <div>
-        <button 
-          onClick={onBack} 
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-2 font-medium mb-4"
+        <button
+          onClick={onBack}
+          className="text-[#53cafd] hover:text-[#3db9f5] flex items-center gap-2 font-medium mb-4"
         >
           <ArrowLeft size={20} />
           Quay lại
         </button>
-        
+
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-1">Duyệt yêu cầu đăng ký</h2>
-            <p className="text-slate-600">Phê duyệt hoặc từ chối yêu cầu đăng ký khóa học</p>
+            <h2 className="text-2xl font-bold text-white mb-1">Duyệt yêu cầu đăng ký</h2>
+            <p className="text-slate-300">Phê duyệt hoặc từ chối yêu cầu đăng ký khóa học</p>
           </div>
-          <div className="text-center bg-yellow-100 px-6 py-3 rounded-xl">
-            <div className="text-3xl font-bold text-yellow-700">{requests.length}</div>
-            <div className="text-sm text-yellow-700">Yêu cầu chờ duyệt</div>
+          <div className="text-center bg-yellow-500/20 px-6 py-3 rounded-xl border border-yellow-500/30">
+            <div className="text-3xl font-bold text-yellow-400">{requests.length}</div>
+            <div className="text-sm text-yellow-400">Yêu cầu chờ duyệt</div>
           </div>
         </div>
       </div>
@@ -170,45 +170,45 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
           placeholder="Tìm kiếm theo tên khóa học, nhân viên..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white placeholder-slate-400"
         />
       </div>
 
       {/* Requests Table */}
       {filteredRequests.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <p className="text-slate-600 text-lg">Không có yêu cầu nào đang chờ duyệt</p>
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-12 text-center backdrop-blur-md">
+          <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+          <p className="text-slate-300 text-lg">Không có yêu cầu nào đang chờ duyệt</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 overflow-hidden backdrop-blur-md">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[#5e3ed0]/40 border-b border-white/10">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Nhân viên</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Email</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Khóa học</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">Thao tác</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Nhân viên</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Email</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Khóa học</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-300">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-white/10">
               {filteredRequests.map((request) => {
                 const isProcessing = processing === request.userId + request.courseId;
                 return (
-                  <tr key={request.userId + request.courseId} className="hover:bg-slate-50 transition-colors">
+                  <tr key={request.userId + request.courseId} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-slate-900">{request.userName}</div>
+                      <div className="font-medium text-white">{request.userName}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">{request.userEmail}</td>
+                    <td className="px-6 py-4 text-slate-400">{request.userEmail}</td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-slate-900">{request.courseTitle}</div>
+                      <div className="font-medium text-white">{request.courseTitle}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleApprove(request)}
                           disabled={isProcessing}
-                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
+                          className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/50 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
                         >
                           <CheckCircle size={16} />
                           {isProcessing ? 'Đang xử lý...' : 'Duyệt'}
@@ -216,7 +216,7 @@ export const StudentApprovalPage: React.FC<StudentApprovalPageProps> = ({ onBack
                         <button
                           onClick={() => handleReject(request)}
                           disabled={isProcessing}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
+                          className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
                         >
                           <XCircle size={16} />
                           Từ chối

@@ -42,28 +42,28 @@ const features = [
 
 export const Features: React.FC = () => {
   return (
-    <section id="features" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="features" className="py-20 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-base font-semibold text-brand-600 uppercase tracking-wide">Tại sao chọn chúng tôi?</h2>
-          <p className="mt-2 text-3xl font-extrabold text-slate-900 sm:text-4xl">
+          <h2 className="text-base font-semibold text-[#53cafd] uppercase tracking-wide">Tại sao chọn chúng tôi?</h2>
+          <p className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
             Nền Tảng Đào Tạo Nội Bộ Toàn Diện
           </p>
-          <p className="mt-4 max-w-2xl text-xl text-slate-500 mx-auto">
+          <p className="mt-4 max-w-2xl text-xl text-slate-300 mx-auto">
             Không chỉ là thư viện video—đây là công cụ thúc đẩy sự nghiệp cho mọi nhân viên trong tổ chức.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="group relative bg-slate-50 p-8 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100">
+            <div key={index} className="group relative bg-[#5e3ed0]/20 backdrop-blur-md p-8 rounded-2xl hover:bg-[#5e3ed0]/30 hover:shadow-xl transition-all duration-300 border border-white/10 hover:border-[#53cafd]/50">
               <div className={`inline-flex items-center justify-center p-3 rounded-xl shadow-lg mb-6 ${feature.color} transform group-hover:scale-110 transition-transform`}>
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-brand-600 transition-colors">
+              <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#53cafd] transition-colors">
                 {feature.title}
               </h3>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-300 leading-relaxed">
                 {feature.description}
               </p>
             </div>

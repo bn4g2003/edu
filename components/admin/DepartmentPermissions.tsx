@@ -61,42 +61,42 @@ export const DepartmentPermissions: React.FC<DepartmentPermissionsProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-[#311898] border border-white/10 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-purple-50 to-blue-50">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#5e3ed0]/20">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <Shield className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-purple-500/20 rounded-xl">
+              <Shield className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Phân quyền phòng ban</h3>
-              <p className="text-sm text-slate-600">{department.name}</p>
+              <h3 className="text-xl font-bold text-white">Phân quyền phòng ban</h3>
+              <p className="text-sm text-slate-300">{department.name}</p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <X size={24} className="text-slate-600" />
+            <X size={24} className="text-slate-300 hover:text-white" />
           </button>
         </div>
 
         {/* Quick Actions */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex gap-3">
+        <div className="p-4 bg-white/5 border-b border-white/10 flex gap-3">
           <button
             onClick={selectAll}
-            className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
+            className="px-4 py-2 text-sm bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors font-medium border border-blue-500/30"
           >
             Chọn tất cả
           </button>
           <button
             onClick={clearAll}
-            className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
+            className="px-4 py-2 text-sm bg-white/10 text-slate-300 rounded-lg hover:bg-white/20 transition-colors font-medium border border-white/10"
           >
             Bỏ chọn tất cả
           </button>
-          <div className="ml-auto text-sm text-slate-600 flex items-center">
-            Đã chọn: <span className="font-bold ml-1">{selectedPermissions.length}/{PERMISSIONS.length}</span>
+          <div className="ml-auto text-sm text-slate-300 flex items-center">
+            Đã chọn: <span className="font-bold ml-1 text-white">{selectedPermissions.length}/{PERMISSIONS.length}</span>
           </div>
         </div>
 
@@ -108,27 +108,26 @@ export const DepartmentPermissions: React.FC<DepartmentPermissionsProps> = ({
               return (
                 <label
                   key={permission.id}
-                  className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                    isSelected
-                      ? 'border-purple-500 bg-purple-50 shadow-md'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
+                  className={`flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all ${isSelected
+                      ? 'border-purple-500/50 bg-purple-500/20 shadow-md'
+                      : 'border-white/10 hover:border-white/20 hover:bg-white/5'
+                    }`}
                 >
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => togglePermission(permission.action)}
-                    className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                    className="mt-1 w-5 h-5 text-purple-500 rounded focus:ring-purple-500 cursor-pointer bg-white/10 border-white/20"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-slate-900 mb-1">
+                    <div className="font-semibold text-white mb-1">
                       {permission.name}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-slate-300">
                       {permission.description}
                     </div>
                     <div className="mt-2">
-                      <code className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">
+                      <code className="text-xs bg-white/10 px-2 py-1 rounded text-slate-300">
                         {permission.action}
                       </code>
                     </div>
@@ -140,11 +139,11 @@ export const DepartmentPermissions: React.FC<DepartmentPermissionsProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-200 bg-slate-50 flex gap-3">
+        <div className="p-6 border-t border-white/10 bg-white/5 flex gap-3">
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+            className="flex-1 flex items-center justify-center gap-2 bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25"
           >
             <Save size={18} />
             {saving ? 'Đang lưu...' : 'Lưu quyền'}
@@ -152,7 +151,7 @@ export const DepartmentPermissions: React.FC<DepartmentPermissionsProps> = ({
           <button
             onClick={onClose}
             disabled={saving}
-            className="flex-1 px-4 py-2 border-2 border-slate-300 rounded-lg hover:bg-slate-100 transition-colors font-medium text-slate-700"
+            className="flex-1 px-4 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors font-medium text-white"
           >
             Hủy
           </button>

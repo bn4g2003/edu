@@ -74,7 +74,7 @@ export const DashboardSimple: React.FC = () => {
       // Load enrollments
       const enrollmentsSnapshot = await getDocs(collection(db, 'enrollments'));
       const enrollments = enrollmentsSnapshot.docs.map(doc => doc.data());
-      
+
       // Calculate average progress
       const totalProgress = enrollments.reduce((sum, e) => sum + (e.progress || 0), 0);
       const averageProgress = enrollments.length > 0 ? totalProgress / enrollments.length : 0;
@@ -83,21 +83,21 @@ export const DashboardSimple: React.FC = () => {
       const learningTrend: { month: string; hours: number; lessons: number }[] = [];
       const now = new Date();
       const monthlyHours: number[] = [];
-      
+
       for (let i = 5; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const monthName = date.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
-        
+
         const monthProgress = progressData.filter(p => {
           const progressDate = p.lastWatched?.toDate?.() || new Date();
           const progressMonth = `${progressDate.getFullYear()}-${String(progressDate.getMonth() + 1).padStart(2, '0')}`;
           return progressMonth === monthStr;
         });
-        
+
         const hours = monthProgress.reduce((sum, p) => sum + (p.watchedSeconds || 0), 0) / 3600;
         const lessons = monthProgress.filter(p => p.completed).length;
-        
+
         monthlyHours.push(hours);
         learningTrend.push({
           month: monthName,
@@ -108,7 +108,7 @@ export const DashboardSimple: React.FC = () => {
 
       // Simple linear regression for prediction
       const learningForecast: { month: string; actual?: number; predicted?: number }[] = [];
-      
+
       // Add historical data (last 3 months)
       for (let i = 2; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -118,13 +118,13 @@ export const DashboardSimple: React.FC = () => {
           actual: monthlyHours[5 - i]
         });
       }
-      
+
       // Calculate trend (simple average growth)
       const recentHours = monthlyHours.slice(-3);
-      const avgGrowth = recentHours.length > 1 
+      const avgGrowth = recentHours.length > 1
         ? (recentHours[recentHours.length - 1] - recentHours[0]) / (recentHours.length - 1)
         : 0;
-      
+
       // Predict next 3 months
       let lastValue = monthlyHours[monthlyHours.length - 1];
       for (let i = 1; i <= 3; i++) {
@@ -155,26 +155,26 @@ export const DashboardSimple: React.FC = () => {
       }));
 
       // Department comprehensive stats
-      const deptStats: Record<string, { 
-        hours: number; 
-        users: number; 
+      const deptStats: Record<string, {
+        hours: number;
+        users: number;
         lessonsCompleted: number;
         avgQuizScore: number;
         quizCount: number;
       }> = {};
-      
+
       departments.forEach(dept => {
         const deptUsers = approvedUsers.filter(u => u.departmentId === dept.id);
         const deptUserIds = deptUsers.map(u => u.uid);
         const deptProgress = progressData.filter(p => deptUserIds.includes(p.userId));
         const deptQuizzes = quizResults.filter(q => deptUserIds.includes(q.userId));
-        
+
         const hours = deptProgress.reduce((sum, p) => sum + (p.watchedSeconds || 0), 0) / 3600;
         const lessonsCompleted = deptProgress.filter(p => p.completed).length;
-        const avgQuizScore = deptQuizzes.length > 0 
-          ? deptQuizzes.reduce((sum, q) => sum + q.score, 0) / deptQuizzes.length 
+        const avgQuizScore = deptQuizzes.length > 0
+          ? deptQuizzes.reduce((sum, q) => sum + q.score, 0) / deptQuizzes.length
           : 0;
-        
+
         deptStats[dept.name] = {
           hours: parseFloat(hours.toFixed(1)),
           users: deptUsers.length,
@@ -183,11 +183,11 @@ export const DashboardSimple: React.FC = () => {
           quizCount: deptQuizzes.length
         };
       });
-      
+
       const learningByDepartment = Object.entries(deptStats)
         .map(([name, stats]) => ({ name, hours: stats.hours }))
         .sort((a, b) => b.hours - a.hours);
-      
+
       const departmentComparison = Object.entries(deptStats).map(([name, stats]) => ({
         name,
         'Giờ học': stats.hours,
@@ -262,7 +262,7 @@ export const DashboardSimple: React.FC = () => {
 
   return (
     <div className="p-8 space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-white">Dashboard</h1>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
@@ -316,18 +316,18 @@ export const DashboardSimple: React.FC = () => {
       </div>
 
       {/* Learning Trend Chart */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="text-brand-600" size={20} />
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <TrendingUp className="text-[#53cafd]" size={20} />
           Xu hướng học tập 6 tháng gần đây
         </h3>
         <ResponsiveContainer width="100%" height={350}>
           <LineChart data={stats.learningTrend}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis yAxisId="left" label={{ value: 'Giờ học', angle: -90, position: 'insideLeft' }} />
-            <YAxis yAxisId="right" orientation="right" label={{ value: 'Bài hoàn thành', angle: 90, position: 'insideRight' }} />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" />
+            <YAxis yAxisId="left" stroke="rgba(255,255,255,0.5)" label={{ value: 'Giờ học', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)' }} />
+            <YAxis yAxisId="right" orientation="right" stroke="rgba(255,255,255,0.5)" label={{ value: 'Bài hoàn thành', angle: 90, position: 'insideRight', fill: 'rgba(255,255,255,0.5)' }} />
+            <Tooltip contentStyle={{ backgroundColor: '#311898', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
             <Legend />
             <Line yAxisId="left" type="monotone" dataKey="hours" stroke="#3b82f6" strokeWidth={3} name="Giờ học" />
             <Line yAxisId="right" type="monotone" dataKey="lessons" stroke="#10b981" strokeWidth={3} name="Bài hoàn thành" />
@@ -336,15 +336,15 @@ export const DashboardSimple: React.FC = () => {
       </div>
 
       {/* Department Comparison Chart - Grouped Bar Chart tối ưu hơn cho so sánh categorical */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">So sánh chỉ số học tập theo phòng ban</h3>
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
+        <h3 className="text-lg font-bold text-white mb-4">So sánh chỉ số học tập theo phòng ban</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={stats.departmentComparison}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis yAxisId="left" label={{ value: 'Giờ học / Bài hoàn thành', angle: -90, position: 'insideLeft' }} />
-            <YAxis yAxisId="right" orientation="right" label={{ value: 'Điểm TB / Số người', angle: 90, position: 'insideRight' }} />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" />
+            <YAxis yAxisId="left" stroke="rgba(255,255,255,0.5)" label={{ value: 'Giờ học / Bài hoàn thành', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)' }} />
+            <YAxis yAxisId="right" orientation="right" stroke="rgba(255,255,255,0.5)" label={{ value: 'Điểm TB / Số người', angle: 90, position: 'insideRight', fill: 'rgba(255,255,255,0.5)' }} />
+            <Tooltip contentStyle={{ backgroundColor: '#311898', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
             <Legend />
             <Bar yAxisId="left" dataKey="Giờ học" fill="#3b82f6" />
             <Bar yAxisId="left" dataKey="Bài hoàn thành" fill="#10b981" />
@@ -357,54 +357,54 @@ export const DashboardSimple: React.FC = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Learning Forecast */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900">Dự đoán xu hướng học tập</h3>
+            <h3 className="text-lg font-bold text-white">Dự đoán xu hướng học tập</h3>
             <div className="flex items-center gap-2 text-xs">
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                <span className="text-slate-600">Thực tế</span>
+                <span className="text-slate-300">Thực tế</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                <span className="text-slate-600">Dự đoán</span>
+                <span className="text-slate-300">Dự đoán</span>
               </div>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={stats.learningForecast}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis label={{ value: 'Giờ học', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" />
+              <YAxis stroke="rgba(255,255,255,0.5)" label={{ value: 'Giờ học', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)' }} />
+              <Tooltip contentStyle={{ backgroundColor: '#311898', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="actual" 
-                stroke="#3b82f6" 
-                strokeWidth={3} 
+              <Line
+                type="monotone"
+                dataKey="actual"
+                stroke="#3b82f6"
+                strokeWidth={3}
                 name="Thực tế"
                 dot={{ fill: '#3b82f6', r: 5 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="predicted" 
-                stroke="#8b5cf6" 
-                strokeWidth={3} 
+              <Line
+                type="monotone"
+                dataKey="predicted"
+                stroke="#8b5cf6"
+                strokeWidth={3}
                 strokeDasharray="5 5"
                 name="Dự đoán"
                 dot={{ fill: '#8b5cf6', r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
-          <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-            <p className="text-sm text-purple-900">
+          <div className="mt-4 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+            <p className="text-sm text-purple-200">
               <span className="font-semibold">💡 Insight:</span> Dựa trên xu hướng 3 tháng gần đây, hệ thống dự đoán giờ học sẽ {
-                stats.learningForecast.length > 3 && 
-                stats.learningForecast[stats.learningForecast.length - 1]?.predicted && 
-                stats.learningForecast[2]?.actual && 
-                stats.learningForecast[stats.learningForecast.length - 1].predicted! > stats.learningForecast[2].actual 
-                  ? 'tăng' 
+                stats.learningForecast.length > 3 &&
+                  stats.learningForecast[stats.learningForecast.length - 1]?.predicted &&
+                  stats.learningForecast[2]?.actual &&
+                  stats.learningForecast[stats.learningForecast.length - 1].predicted! > stats.learningForecast[2].actual
+                  ? 'tăng'
                   : 'giảm'
               } trong 3 tháng tới.
             </p>
@@ -412,8 +412,8 @@ export const DashboardSimple: React.FC = () => {
         </div>
 
         {/* Users by Position */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Nhân viên theo chức vụ</h3>
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
+          <h3 className="text-lg font-bold text-white mb-4">Nhân viên theo chức vụ</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -430,21 +430,21 @@ export const DashboardSimple: React.FC = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#311898', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Learning by Department */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Giờ học theo phòng ban</h3>
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
+        <h3 className="text-lg font-bold text-white mb-4">Giờ học theo phòng ban</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={stats.learningByDepartment}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis label={{ value: 'Giờ học', angle: -90, position: 'insideLeft' }} />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" />
+            <YAxis stroke="rgba(255,255,255,0.5)" label={{ value: 'Giờ học', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)' }} />
+            <Tooltip contentStyle={{ backgroundColor: '#311898', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
             <Legend />
             <Bar dataKey="hours" fill="#3b82f6" name="Giờ học" />
           </BarChart>
@@ -454,57 +454,55 @@ export const DashboardSimple: React.FC = () => {
       {/* Top Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Learners */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-4">
-            <Trophy className="text-yellow-500" size={24} />
-            <h3 className="text-lg font-bold text-slate-900">Top 10 Học nhiều nhất</h3>
+            <Trophy className="text-yellow-400" size={24} />
+            <h3 className="text-lg font-bold text-white">Top 10 Học nhiều nhất</h3>
           </div>
           <div className="space-y-2">
             {stats.topLearners.map((user, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                 <div className="flex items-center gap-3">
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                    index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-300'
-                  }`}>
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-600'
+                    }`}>
                     {index + 1}
                   </span>
                   <div>
-                    <p className="font-medium text-slate-900">{user.name}</p>
-                    <p className="text-xs text-slate-500">{user.department}</p>
+                    <p className="font-medium text-white">{user.name}</p>
+                    <p className="text-xs text-slate-400">{user.department}</p>
                   </div>
                 </div>
-                <span className="font-bold text-blue-600">{user.hours}h</span>
+                <span className="font-bold text-[#53cafd]">{user.hours}h</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Top Quiz Scorers */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 p-6 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-4">
-            <Award className="text-green-500" size={24} />
-            <h3 className="text-lg font-bold text-slate-900">Top 10 Điểm kiểm tra cao nhất</h3>
+            <Award className="text-green-400" size={24} />
+            <h3 className="text-lg font-bold text-white">Top 10 Điểm kiểm tra cao nhất</h3>
           </div>
           <div className="space-y-2">
             {stats.topQuizScorers.length > 0 ? (
               stats.topQuizScorers.map((user, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                   <div className="flex items-center gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                      index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-300'
-                    }`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-orange-600' : 'bg-slate-600'
+                      }`}>
                       {index + 1}
                     </span>
                     <div>
-                      <p className="font-medium text-slate-900">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.quizCount} bài kiểm tra</p>
+                      <p className="font-medium text-white">{user.name}</p>
+                      <p className="text-xs text-slate-400">{user.quizCount} bài kiểm tra</p>
                     </div>
                   </div>
-                  <span className="font-bold text-green-600">{user.score} điểm</span>
+                  <span className="font-bold text-green-400">{user.score} điểm</span>
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-500 py-8">Chưa có dữ liệu kiểm tra</p>
+              <p className="text-center text-slate-400 py-8">Chưa có dữ liệu kiểm tra</p>
             )}
           </div>
         </div>

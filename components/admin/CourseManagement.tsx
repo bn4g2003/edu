@@ -38,8 +38,8 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
     demoVideoId: '',
     departmentId: ''
   });
-  const [departments, setDepartments] = useState<Array<{id: string, name: string, managerId?: string, managerName?: string}>>([]);
-  const [users, setUsers] = useState<Array<{uid: string, departmentId?: string}>>([]);
+  const [departments, setDepartments] = useState<Array<{ id: string, name: string, managerId?: string, managerName?: string }>>([]);
+  const [users, setUsers] = useState<Array<{ uid: string, departmentId?: string }>>([]);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
 
@@ -54,7 +54,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       const coursesRef = collection(db, 'courses');
       const coursesSnapshot = await getDocs(coursesRef);
       const coursesData = coursesSnapshot.docs.map(doc => ({
@@ -88,7 +88,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
 
   const filterCourses = () => {
     let filtered = courses;
-    
+
     // Nếu là trưởng phòng (không phải admin), chỉ thấy khóa học có nhân viên phòng mình được add vào
     if (currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && currentUser?.departmentId) {
       filtered = filtered.filter(course => {
@@ -102,7 +102,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
         return false;
       });
     }
-    
+
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(course =>
@@ -134,11 +134,11 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
 
   const handleAdd = () => {
     setEditingCourse(null);
-    
+
     // Nếu là trưởng phòng, mặc định chọn phòng ban của mình
     const isManager = currentUser?.role !== 'admin' && currentUser?.departmentId && departments.find(d => d.managerId === currentUser.uid);
     const defaultDepartmentId = isManager ? currentUser.departmentId : '';
-    
+
     setFormData({
       title: '',
       description: '',
@@ -176,10 +176,10 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
       const users = snapshot.docs.map(doc => doc.data());
-      
+
       console.log('📊 Total users in database:', users.length);
       console.log('🎯 Selected departmentId:', departmentId);
-      
+
       if (departmentId === 'all') {
         // Chung: lấy tất cả nhân viên (staff, teacher, student) đã được duyệt hoặc admin
         const allUsers = users.filter(u => {
@@ -221,10 +221,10 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
       console.log('🖼️ Thumbnail URL:', formData.thumbnail);
       console.log('🎨 Banner URL:', formData.banner);
       console.log('📦 Full formData:', formData);
-      
+
       // Tự động cập nhật danh sách students dựa trên departmentId
       const students = await getStudentsForDepartment(formData.departmentId);
-      
+
       console.log('✅ Students to be saved:', students.length, students);
 
       if (editingCourse) {
@@ -336,15 +336,15 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Quản lý khóa học</h2>
+          <h2 className="text-2xl font-bold text-white">Quản lý khóa học</h2>
           {currentUser?.role !== 'admin' && currentUser?.position === 'Trưởng phòng' && (
-            <p className="text-sm text-blue-600 mt-1">
+            <p className="text-sm text-[#53cafd] mt-1">
               🏢 Bạn đang xem khóa học của phòng ban: <strong>{departments.find(d => d.id === currentUser.departmentId)?.name}</strong>
             </p>
           )}
         </div>
         <div className="flex gap-3">
-          <Button 
+          <Button
             onClick={async () => {
               if (!confirm('Cập nhật lại danh sách học viên cho TẤT CẢ khóa học dựa trên phòng ban?\n\nLưu ý: Thao tác này sẽ ghi đè danh sách học viên hiện tại.')) {
                 return;
@@ -366,14 +366,14 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                 setLoading(false);
               }
             }}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
+            className="flex items-center gap-2 bg-[#5e3ed0]/20 hover:bg-[#5e3ed0]/40 text-white border border-white/10"
           >
             <Users size={18} />
             Cập nhật học viên
           </Button>
           {/* Chỉ admin mới được thêm khóa học */}
           {currentUser?.role === 'admin' && (
-            <Button onClick={handleAdd} className="flex items-center gap-2">
+            <Button onClick={handleAdd} className="flex items-center gap-2 bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25">
               <Plus size={18} />
               Thêm khóa học
             </Button>
@@ -389,13 +389,13 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
             placeholder="Tìm kiếm khóa học..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white placeholder-slate-400"
           />
         </div>
         <select
           value={filterLevel}
           onChange={(e) => setFilterLevel(e.target.value as any)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898] [&>option]:text-white"
         >
           <option value="all">Tất cả cấp độ</option>
           <option value="beginner">Cơ bản</option>
@@ -405,7 +405,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898] [&>option]:text-white"
         >
           <option value="all">Tất cả danh mục</option>
           {categories.map(cat => (
@@ -415,63 +415,63 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Tổng khóa học</p>
-          <p className="text-2xl font-bold text-slate-900">{courses.length}</p>
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Tổng khóa học</p>
+          <p className="text-2xl font-bold text-white">{courses.length}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Cơ bản</p>
-          <p className="text-2xl font-bold text-green-600">{courses.filter(c => c.level === 'beginner').length}</p>
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Cơ bản</p>
+          <p className="text-2xl font-bold text-green-400">{courses.filter(c => c.level === 'beginner').length}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Trung cấp</p>
-          <p className="text-2xl font-bold text-yellow-600">{courses.filter(c => c.level === 'intermediate').length}</p>
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Trung cấp</p>
+          <p className="text-2xl font-bold text-yellow-400">{courses.filter(c => c.level === 'intermediate').length}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-600">Nâng cao</p>
-          <p className="text-2xl font-bold text-red-600">{courses.filter(c => c.level === 'advanced').length}</p>
+        <div className="bg-[#5e3ed0]/20 p-4 rounded-lg border border-white/10 backdrop-blur-md">
+          <p className="text-sm text-slate-300">Nâng cao</p>
+          <p className="text-2xl font-bold text-red-400">{courses.filter(c => c.level === 'advanced').length}</p>
         </div>
       </div>
 
       {/* Course List Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-[#5e3ed0]/20 rounded-xl border border-white/10 overflow-hidden backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[#5e3ed0]/40 border-b border-white/10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Khóa học
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Danh mục
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Cấp độ
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Đối tượng
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Học viên
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Thời lượng
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Thao tác
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-white/10">
               {filteredCourses.map((course) => (
-                <tr key={course.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={course.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
                     <div>
-                      <div className="font-medium text-slate-900">{course.title}</div>
-                      <div className="text-sm text-slate-500 line-clamp-1">{course.description}</div>
+                      <div className="font-medium text-white">{course.title}</div>
+                      <div className="text-sm text-slate-300 line-clamp-1">{course.description}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-900">
+                  <td className="px-6 py-4 text-sm text-white">
                     {course.category}
                   </td>
                   <td className="px-6 py-4 text-center">
@@ -498,7 +498,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                       <span className="text-xs">người</span>
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center text-sm text-slate-900">
+                  <td className="px-6 py-4 text-center text-sm text-white">
                     {course.duration}h
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -517,14 +517,14 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                         <>
                           <button
                             onClick={() => handleEdit(course)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-[#53cafd] hover:bg-white/10 rounded-lg transition-colors"
                             title="Chỉnh sửa"
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(course)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-pink-500 hover:bg-white/10 rounded-lg transition-colors"
                             title="Xóa"
                           >
                             <Trash2 size={16} />
@@ -538,66 +538,66 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
             </tbody>
           </table>
         </div>
-        
+
         {filteredCourses.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">Không tìm thấy khóa học nào</p>
+            <BookOpen className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+            <p className="text-slate-300">Không tìm thấy khóa học nào</p>
           </div>
         )}
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#311898]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-slate-900">
+              <h3 className="text-xl font-bold text-white">
                 {editingCourse ? 'Chỉnh sửa khóa học' : 'Thêm khóa học mới'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white">
                 <X size={24} />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tên khóa học *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Tên khóa học *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Mô tả</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Danh mục *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Danh mục *</label>
                 <input
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="VD: Lập trình, Thiết kế..."
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Đối tượng học *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Đối tượng học *</label>
                 <select
                   value={formData.departmentId}
                   onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                   disabled={!!(currentUser?.role !== 'admin' && currentUser?.departmentId && departments.find(d => d.managerId === currentUser.uid))}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white disabled:bg-white/10 disabled:cursor-not-allowed [&>option]:bg-[#311898] [&>option]:text-white"
                 >
                   <option value="">-- Không hiển thị cho ai --</option>
                   <option value="all">🌐 Chung (Tất cả nhân viên)</option>
@@ -606,13 +606,13 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                   ))}
                 </select>
                 {currentUser?.role !== 'admin' && currentUser?.departmentId && departments.find(d => d.managerId === currentUser.uid) ? (
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="text-xs text-[#53cafd] mt-1">
                     🔒 Trưởng phòng chỉ có thể tạo khóa học cho phòng ban của mình
                   </p>
                 ) : (
-                  <p className="text-xs text-slate-500 mt-1">
-                    • <strong>Chung</strong>: Tất cả nhân viên đều thấy<br/>
-                    • <strong>Phòng ban cụ thể</strong>: Chỉ nhân viên phòng ban đó thấy<br/>
+                  <p className="text-xs text-slate-400 mt-1">
+                    • <strong>Chung</strong>: Tất cả nhân viên đều thấy<br />
+                    • <strong>Phòng ban cụ thể</strong>: Chỉ nhân viên phòng ban đó thấy<br />
                     • <strong>Không chọn</strong>: Không ai thấy (nháp)
                   </p>
                 )}
@@ -620,11 +620,11 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Cấp độ</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Cấp độ</label>
                   <select
                     value={formData.level}
                     onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white [&>option]:bg-[#311898] [&>option]:text-white"
                   >
                     <option value="beginner">Cơ bản</option>
                     <option value="intermediate">Trung cấp</option>
@@ -633,12 +633,12 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Thời lượng (giờ)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Thời lượng (giờ)</label>
                   <input
                     type="number"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53cafd] text-white"
                   />
                 </div>
               </div>
@@ -675,8 +675,8 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
                   folder="courses/banners"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  📐 <strong>Kích cỡ khuyến nghị:</strong> 1920x600px (tỷ lệ 16:5) hoặc 1920x1080px (16:9)<br/>
-                  📦 <strong>Kích thước file:</strong> Tối đa 5MB<br/>
+                  📐 <strong>Kích cỡ khuyến nghị:</strong> 1920x600px (tỷ lệ 16:5) hoặc 1920x1080px (16:9)<br />
+                  📦 <strong>Kích thước file:</strong> Tối đa 5MB<br />
                   📄 <strong>Định dạng:</strong> JPG, PNG, WebP
                 </p>
                 {uploadingBanner && (
@@ -700,8 +700,8 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={handleSave}
                 disabled={uploadingThumbnail || uploadingBanner}
                 className="flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -710,7 +710,7 @@ export const CourseManagement: React.FC<CourseManagementProps> = () => {
               </Button>
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50"
+                className="flex-1 px-4 py-2 border border-white/10 rounded-lg hover:bg-white/10 text-white"
               >
                 Hủy
               </button>

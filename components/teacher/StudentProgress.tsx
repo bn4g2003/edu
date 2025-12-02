@@ -52,7 +52,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
       const progressRef = collection(db, 'progress');
       const progressQuery = query(progressRef, where('courseId', '==', course.id));
       const progressSnapshot = await getDocs(progressQuery);
-      
+
       const progressMap: Record<string, LessonProgress[]> = {};
       progressSnapshot.docs.forEach(doc => {
         const data = doc.data() as LessonProgress;
@@ -61,7 +61,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
         }
         progressMap[data.userId].push(data);
       });
-      
+
       setProgress(progressMap);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -74,7 +74,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${mins}m`;
     }
@@ -111,7 +111,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
       <div className="bg-white rounded-2xl p-6 w-full max-w-6xl my-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-2xl font-bold text-slate-900">{course.title}</h3>
+            <h3 className="text-2xl font-bold text-white">{course.title}</h3>
             <p className="text-slate-600">Thống kê tiến độ giáo viên</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -137,7 +137,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
                         {student.displayName.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-900">{student.displayName}</h4>
+                        <h4 className="font-bold text-white">{student.displayName}</h4>
                         <p className="text-sm text-slate-500">{student.email}</p>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
                   {/* Progress bar */}
                   <div className="mb-3">
                     <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all"
                         style={{ width: `${stats.completionRate}%` }}
                       />
@@ -184,8 +184,8 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
                     <div className="mt-3 space-y-2">
                       {lessons.filter(l => l.videoId).map((lesson) => {
                         const lessonProgress = studentProgress.find(p => p.lessonId === lesson.id);
-                        const watchedPercent = lessonProgress 
-                          ? (lessonProgress.watchedSeconds / lessonProgress.totalSeconds) * 100 
+                        const watchedPercent = lessonProgress
+                          ? (lessonProgress.watchedSeconds / lessonProgress.totalSeconds) * 100
                           : 0;
 
                         return (
@@ -194,11 +194,11 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ course, onClos
                               {lesson.order}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-900 truncate">{lesson.title}</p>
+                              <p className="font-medium text-white truncate">{lesson.title}</p>
                               {lessonProgress ? (
                                 <div className="flex items-center gap-2 mt-1">
                                   <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                    <div 
+                                    <div
                                       className="h-full bg-green-500"
                                       style={{ width: `${Math.min(100, watchedPercent)}%` }}
                                     />

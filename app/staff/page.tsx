@@ -13,7 +13,7 @@ export default function StaffPage() {
 
   return (
     <ProtectedRoute allowedRoles={['staff']}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-900 to-slate-900">
+      <div className="min-h-screen">
         {/* Navigation Bar */}
         <div className="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4">
@@ -21,22 +21,20 @@ export default function StaffPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setActiveTab('checkin')}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all ${
-                    activeTab === 'checkin'
+                  className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all ${activeTab === 'checkin'
                       ? 'bg-brand-600 text-white'
                       : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   <Clock size={20} />
                   Chấm công
                 </button>
                 <button
                   onClick={() => setActiveTab('profile')}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all ${
-                    activeTab === 'profile'
+                  className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all ${activeTab === 'profile'
                       ? 'bg-brand-600 text-white'
                       : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   <User size={20} />
                   Thông tin cá nhân
