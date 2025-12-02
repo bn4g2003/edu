@@ -62,17 +62,6 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
       if (mode === 'login') {
         const profile = await signIn(email, password);
         if (profile) {
-          // Chỉ nhân viên (staff) mới mở cửa sổ checkin
-          if (profile.role === 'staff') {
-            window.open('https://checkin-ten-gamma.vercel.app/', '_blank');
-          }
-          // Admin mở trang admin và tự động đăng nhập (nếu hỗ trợ)
-          if (profile.role === 'admin') {
-            // Mở trang admin
-            window.open('https://checkin-ten-gamma.vercel.app/admin', '_blank');
-            // Lưu ý: Việc tự động điền thông tin đăng nhập trên trang khác domain là không thể thực hiện trực tiếp từ phía client do bảo mật trình duyệt (CORS/Same-origin policy).
-            // Tuy nhiên, ta đã mở trang đích theo yêu cầu.
-          }
           // Chuyển hướng đến dashboard
           redirectByRole(profile.role);
         }
