@@ -1,22 +1,33 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Navbar } from '@/components/Navbar';
-import { Hero } from '@/components/Hero';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Auth } from '@/components/Auth';
-import { ChatbaseWidget } from '@/components/ChatbaseWidget';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ViewState = 'home' | 'login' | 'register';
-
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('home');
   const { userProfile, loading } = useAuth();
+  const router = useRouter();
 
-  const handleViewChange = (view: ViewState) => {
-    setCurrentView(view);
-    window.scrollTo(0, 0);
-  };
+  useEffect(() => {
+    if (!loading && userProfile) {
+      // Đã đăng nhập -> chuyển hướng theo role
+      switch (userProfile.role) {
+        case 'admin':
+        case 'staff':
+          router.push('/admin');
+          break;
+        case 'teacher':
+          router.push('/teacher');
+          break;
+        case 'student':
+          router.push('/student');
+          break;
+        default:
+          router.push('/admin');
+      }
+    }
+  }, [userProfile, loading, router]);
 
   if (loading) {
     return (
@@ -29,27 +40,24 @@ const App: React.FC = () => {
     );
   }
 
-  if (currentView === 'login' || currentView === 'register') {
+  // Nếu đã đăng nhập, hiển thị loading trong khi chuyển hướng
+  if (userProfile) {
     return (
-      <Auth
-        initialMode={currentView}
-        onBack={() => handleViewChange('home')}
-      />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Đang chuyển hướng...</p>
+        </div>
+      </div>
     );
   }
 
+  // Chưa đăng nhập -> hiển thị trang đăng nhập
   return (
-    <div className="min-h-screen font-sans text-white selection:bg-brand-500 selection:text-white">
-      <Navbar
-        onLogin={() => handleViewChange('login')}
-        onRegister={() => handleViewChange('register')}
-        onNavigateHome={() => handleViewChange('home')}
-      />
-      <main>
-        <Hero />
-      </main>
-      <ChatbaseWidget />
-    </div>
+    <Auth
+      initialMode="login"
+      onBack={() => {}} // Không cần nút back vì không có landing page
+    />
   );
 };
 

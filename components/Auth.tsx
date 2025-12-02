@@ -9,10 +9,11 @@ import { UserRole, UserProfile } from '@/types/user';
 
 interface AuthProps {
   initialMode?: 'login' | 'register';
-  onBack: () => void;
+  onBack?: () => void;
+  showBackButton?: boolean;
 }
 
-export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => {
+export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack, showBackButton = false }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -151,12 +152,14 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack }) => 
 
         {/* Right Side - Form */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative bg-white/5">
-          <button
-            onClick={onBack}
-            className="absolute top-8 left-8 flex items-center text-slate-400 hover:text-white transition-colors lg:hidden"
-          >
-            <ArrowLeft size={20} className="mr-2" /> Quay lại
-          </button>
+          {showBackButton && onBack && (
+            <button
+              onClick={onBack}
+              className="absolute top-8 left-8 flex items-center text-slate-400 hover:text-white transition-colors lg:hidden"
+            >
+              <ArrowLeft size={20} className="mr-2" /> Quay lại
+            </button>
+          )}
 
           <div className="w-full max-w-md space-y-8 animate-in slide-in-from-right-5 duration-500">
             <div className="text-center lg:text-left">
