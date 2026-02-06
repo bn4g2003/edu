@@ -33,8 +33,8 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
   });
   const [tagInput, setTagInput] = useState('');
 
-  // Check if user is admin (can edit)
-  const isAdmin = currentUser?.role === 'admin';
+  // Check if user can manage lessons (admin or course teacher)
+  const canManage = currentUser?.role === 'admin' || currentUser?.uid === course.teacherId;
 
   const CDN_HOSTNAME = process.env.NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME || 'vz-69258c0a-d89.b-cdn.net';
 
@@ -210,6 +210,42 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
     }
   };
 
+  const handleVideoDelete = async (lesson: Lesson) => {
+    if (!confirm('Bạn có chắc muốn xóa video này?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      if (lesson.videoId) {
+        const response = await fetch(`/api/bunny/video/${lesson.videoId}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete video from Bunny.net');
+        }
+      }
+
+      // Update lesson in Firestore to remove video info
+      const lessonRef = doc(db, 'lessons', lesson.id);
+      await updateDoc(lessonRef, {
+        videoId: deleteField(),
+        videoUrl: deleteField(),
+        duration: deleteField(),
+        updatedAt: new Date()
+      });
+
+      alert('Xóa video thành công!');
+      loadLessons();
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      alert('Lỗi khi xóa video');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDocumentUploadComplete = async (lesson: Lesson, url: string, name: string) => {
     try {
       const lessonRef = doc(db, 'lessons', lesson.id);
@@ -253,7 +289,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
   };
 
   if (managingQuiz) {
-    return <QuizManagement lesson={managingQuiz} onBack={() => setManagingQuiz(null)} isReadOnly={!isAdmin} />;
+    return <QuizManagement lesson={managingQuiz} onBack={() => setManagingQuiz(null)} isReadOnly={!canManage} />;
   }
 
   if (loading) {
@@ -271,7 +307,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
               <p className="text-slate-300">Khóa học: <span className="font-medium text-[#53cafd]">{course.title}</span></p>
               <p className="text-sm text-slate-400 mt-1">Tổng số bài học: <span className="font-bold text-[#53cafd]">{lessons.length}</span></p>
             </div>
-            {isAdmin && (
+            {canManage && (
               <Button onClick={handleAdd} className="flex items-center gap-2 shadow-lg bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25">
                 <Plus size={18} />
                 Thêm bài học
@@ -289,9 +325,9 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Chưa có bài học nào</h3>
               <p className="text-slate-300 mb-6">
-                {isAdmin ? 'Thêm bài học đầu tiên cho khóa học này' : 'Khóa học này chưa có bài học nào'}
+                {canManage ? 'Thêm bài học đầu tiên cho khóa học này' : 'Khóa học này chưa có bài học nào'}
               </p>
-              {isAdmin && (
+              {canManage && (
                 <Button onClick={handleAdd} className="shadow-lg bg-[#53cafd] hover:bg-[#3db9f5] border-none text-white shadow-[#53cafd]/25">
                   <Plus size={18} className="mr-2" />
                   Thêm bài học
@@ -327,7 +363,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                         )}
                       </div>
                     )}
-                    {isAdmin && (
+                    {canManage && (
                       <div className="flex gap-1">
                         <button onClick={() => handleEdit(lesson)} className="p-2 text-[#53cafd] hover:bg-[#53cafd]/20 rounded-lg transition-colors" title="Sửa">
                           <Edit2 size={16} />
@@ -362,15 +398,26 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                               {formatDuration(lesson.duration)}
                             </p>
                           )}
-                          <button
-                            onClick={() => setPreviewingLesson(lesson)}
-                            className="w-full px-2 py-1.5 bg-green-500/20 text-green-400 border border-green-500/50 rounded-md hover:bg-green-500/30 text-xs font-medium flex items-center justify-center gap-1 transition-colors"
-                          >
-                            <Play size={12} />
-                            Xem
-                          </button>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => setPreviewingLesson(lesson)}
+                              className="flex-1 px-2 py-1.5 bg-green-500/20 text-green-400 border border-green-500/50 rounded-md hover:bg-green-500/30 text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+                            >
+                              <Play size={12} />
+                              Xem
+                            </button>
+                            {canManage && (
+                              <button
+                                onClick={() => handleVideoDelete(lesson)}
+                                className="px-2 py-1.5 bg-red-500/20 text-red-400 border border-red-500/50 rounded-md hover:bg-red-500/30 text-xs font-medium flex items-center justify-center transition-colors"
+                                title="Xóa video"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      ) : isAdmin ? (
+                      ) : canManage ? (
                         <label className="cursor-pointer block">
                           <input
                             type="file"
@@ -401,7 +448,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                         <h4 className="font-semibold text-white text-xs">Tài liệu</h4>
                       </div>
 
-                      {isAdmin ? (
+                      {canManage ? (
                         <DocumentUploader
                           lessonId={lesson.id}
                           currentDocumentUrl={lesson.documentUrl}
@@ -451,7 +498,7 @@ export const LessonManagement: React.FC<LessonManagementProps> = ({ course, onBa
                           className="w-full px-2 py-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/50 rounded-md hover:bg-purple-500/30 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
                         >
                           <HelpCircle size={12} />
-                          {isAdmin ? 'Quản lý' : 'Xem'}
+                          {canManage ? 'Quản lý' : 'Xem'}
                         </button>
                       </div>
                     </div>

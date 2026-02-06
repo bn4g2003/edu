@@ -10,15 +10,18 @@
     "create-admin": "tsx scripts/createAdmin.ts",
     "seed": "tsx scripts/seedData.ts"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@google/genai": "^1.30.0",
     "firebase": "^12.6.0",
     "framer-motion": "^12.23.24",
     "hls.js": "^1.6.15",
     "lucide-react": "^0.554.0",
-    "next": "16.0.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "recharts": "^3.5.0"
   },
   "devDependencies": {
@@ -27,7 +30,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.3",
+    "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"
