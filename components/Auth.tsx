@@ -139,16 +139,14 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack, showB
           </div>
 
           <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-            <div className="flex items-center gap-3 text-white cursor-pointer" onClick={onBack}>
-              <div className="h-10 w-10 bg-gradient-to-br from-[#53cafd] to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">K</span>
-              </div>
-              <span className="text-2xl font-bold tracking-tight">Kama</span>
+            <div className="flex flex-col items-start gap-1 text-white cursor-pointer" onClick={onBack}>
+              <span className="text-3xl font-bold text-yellow-400">Việt Nam</span>
+              <span className="text-2xl font-bold text-red-500">Kỷ nguyên vươn mình</span>
             </div>
 
             <div className="space-y-6 max-w-md">
               <blockquote className="text-2xl font-medium leading-relaxed text-slate-100">
-                "Ta sẽ đóng những con tàu đi khắp đại dương. Nhưng trước hết phải có những con người đẹp nhất, biết căm thù và biết yêu thương. Thế hệ trẻ Việt Nam liên tục học tập và phát triển vươn mình ra biển lớn."
+                "Ta sẽ đóng những con tàu đi khắp đại dương. Nhưng trước hết phải có những con người đẹp nhất, biết căm thù và biết yêu thương."
               </blockquote>
               <div className="flex items-center gap-4">
                 <img
@@ -162,7 +160,10 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack, showB
                 />
                 <div>
                   <div className="font-bold text-white">Người Cộng Sản</div>
-                  <div className="text-slate-300 text-sm">Quyết đánh và quyết thắng. Biết đánh - dám đánh và biết thắng</div>
+                  <div className="text-slate-300 text-sm">
+                    Quyết đánh và quyết thắng.<br />
+                    Biết đánh - dám đánh và biết thắng
+                  </div>
                 </div>
               </div>
             </div>
@@ -191,7 +192,7 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack, showB
               </h2>
               <p className="mt-2 text-slate-300">
                 {mode === 'login'
-                  ? 'Nhập thông tin để tiếp tục lộ trình học tập của bạn.'
+                  ? 'Thế hệ trẻ Việt Nam liên tục học tập và phát triển vươn mình ra biển lớn'
                   : 'Bắt đầu hành trình chinh phục tri thức ngay hôm nay.'}
               </p>
             </div>
