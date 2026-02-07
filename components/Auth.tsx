@@ -106,17 +106,36 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack, showB
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl flex rounded-3xl overflow-hidden shadow-2xl bg-[#5e3ed0]/30 backdrop-blur-xl border border-white/10">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Background Image for entire page */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <img
+          src="https://www.appsheet.com/template/gettablefileurl?appName=Appsheet-325045268&tableName=Kho%20%E1%BA%A3nh&fileName=Kho%20%E1%BA%A3nh_Images%2Fb8a05340.%E1%BA%A2nh.014538.jpg"
+          alt="Background"
+          className="w-full h-full object-cover opacity-30"
+          style={{ minWidth: '100%', minHeight: '100%' }}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/soldier-background.jpg';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/50"></div>
+      </div>
+      <div className="w-full max-w-5xl flex rounded-3xl overflow-hidden shadow-2xl bg-[#5e3ed0]/30 backdrop-blur-xl border border-white/10 relative z-10">
         {/* Left Side - Visuals (Hidden on mobile) */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-[#311898]/50 text-white overflow-hidden">
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1610484826967-09c5720778c7?q=80&w=2070&auto=format&fit=crop"
-              alt="Library"
-              className="w-full h-full object-cover opacity-30 mix-blend-overlay"
+              src="https://www.appsheet.com/template/gettablefileurl?appName=Appsheet-325045268&tableName=Kho%20%E1%BA%A3nh&fileName=Kho%20%E1%BA%A3nh_Images%2Fb8a05340.%E1%BA%A2nh.014538.jpg"
+              alt="Soldier Background"
+              className="w-full h-full object-cover opacity-20 mix-blend-overlay scale-110 blur-sm"
+              style={{ minWidth: '120%', minHeight: '120%', objectPosition: 'center' }}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/soldier-background.jpg';
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#311898] via-[#311898]/60 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#311898] via-[#311898]/60 to-transparent backdrop-blur-sm"></div>
           </div>
 
           <div className="relative z-10 flex flex-col justify-between p-12 w-full">
@@ -129,17 +148,21 @@ export const Auth: React.FC<AuthProps> = ({ initialMode = 'login', onBack, showB
 
             <div className="space-y-6 max-w-md">
               <blockquote className="text-2xl font-medium leading-relaxed text-slate-100">
-                "Kama không chỉ là một nền tảng học tập, nó là bệ phóng sự nghiệp của tôi. Từ một người mới bắt đầu, tôi đã trở thành Senior Developer chỉ sau 6 tháng."
+                "Ta sẽ đóng những con tàu đi khắp đại dương. Nhưng trước hết phải có những con người đẹp nhất, biết căm thù và biết yêu thương. Thế hệ trẻ Việt Nam liên tục học tập và phát triển vươn mình ra biển lớn."
               </blockquote>
               <div className="flex items-center gap-4">
                 <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60"
+                  src="https://www.appsheet.com/template/gettablefileurl?appName=Appsheet-325045268&tableName=Kho%20%E1%BA%A3nh&fileName=Kho%20%E1%BA%A3nh_Images%2F1967b416.%E1%BA%A2nh.013339.jpg"
                   alt="User"
-                  className="w-12 h-12 rounded-full border-2 border-white/20"
+                  className="w-12 h-12 rounded-full border-2 border-white/20 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/avvarta.jpg';
+                  }}
                 />
                 <div>
-                  <div className="font-bold text-white">Hoàng Nam</div>
-                  <div className="text-slate-300 text-sm">Senior Developer tại TechUni</div>
+                  <div className="font-bold text-white">Người Cộng Sản</div>
+                  <div className="text-slate-300 text-sm">Quyết đánh và quyết thắng. Biết đánh - dám đánh và biết thắng</div>
                 </div>
               </div>
             </div>
